@@ -1,0 +1,51 @@
+{
+    "name": "tappay/laravel-tap-payment",
+    "description": "A modern, fluent Laravel SDK for the Tap Payments v2 API.",
+    "type": "library",
+    "keywords": ["laravel", "tap", "payments", "sdk", "gateway", "tap-payments"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Waqas Majeed"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "guzzlehttp/guzzle": "^7.0",
+        "illuminate/contracts": "^11.0|^12.0",
+        "illuminate/database": "^11.0|^12.0",
+        "illuminate/http": "^11.0|^12.0",
+        "illuminate/routing": "^11.0|^12.0",
+        "illuminate/support": "^11.0|^12.0"
+    },
+    "require-dev": {
+        "mockery/mockery": "^1.6",
+        "orchestra/testbench": "^9.0",
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "TapPay\\Tap\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "TapPay\\Tap\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "TapPay\\Tap\\TapServiceProvider"
+            ],
+            "aliases": {
+                "Tap": "TapPay\\Tap\\Facades\\Tap"
+            }
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
