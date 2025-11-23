@@ -231,4 +231,256 @@ class ChargeBuilderTest extends TestCase
 
         $this->assertSame('TX-12345', $data['reference']['transaction']);
     }
+
+    #[Test]
+    public function it_can_use_all_payment_methods(): void
+    {
+        $builder = new ChargeBuilder($this->chargeService);
+        $data = $builder->amount(10)->withAllMethods()->toArray();
+
+        $this->assertSame('src_all', $data['source']['id']);
+    }
+
+    #[Test]
+    public function it_can_use_benefit_payment(): void
+    {
+        $builder = new ChargeBuilder($this->chargeService);
+        $data = $builder->amount(10)->withBenefit()->toArray();
+
+        $this->assertSame('src_bh.benefit', $data['source']['id']);
+    }
+
+    #[Test]
+    public function it_can_use_omannet_payment(): void
+    {
+        $builder = new ChargeBuilder($this->chargeService);
+        $data = $builder->amount(10)->withOmanNet()->toArray();
+
+        $this->assertSame('src_om.omannet', $data['source']['id']);
+    }
+
+    #[Test]
+    public function it_can_use_naps_payment(): void
+    {
+        $builder = new ChargeBuilder($this->chargeService);
+        $data = $builder->amount(10)->withNAPS()->toArray();
+
+        $this->assertSame('src_qa.naps', $data['source']['id']);
+    }
+
+    #[Test]
+    public function it_throws_exception_for_invalid_token_id(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Token ID must start with "tok_"');
+
+        $builder = new ChargeBuilder($this->chargeService);
+        $builder->withToken('invalid_token');
+    }
+
+    #[Test]
+    public function it_throws_exception_for_invalid_authorization_id(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Authorization ID must start with "auth_"');
+
+        $builder = new ChargeBuilder($this->chargeService);
+        $builder->captureAuthorization('invalid_auth');
+    }
+
+    #[Test]
+    public function it_can_disable_save_card(): void
+    {
+        $builder = new ChargeBuilder($this->chargeService);
+        $data = $builder->amount(10)->saveCard(false)->toArray();
+
+        $this->assertFalse($data['save_card']);
+    }
+
+    #[Test]
+    public function it_can_set_statement_descriptor(): void
+    {
+        $builder = new ChargeBuilder($this->chargeService);
+        $data = $builder
+            ->amount(10)
+            ->statementDescriptor('ACME Corp Payment')
+            ->toArray();
+
+        $this->assertSame('ACME Corp Payment', $data['statement_descriptor']);
+    }
+
+    #[Test]
+    public function it_can_set_full_receipt_configuration(): void
+    {
+        $builder = new ChargeBuilder($this->chargeService);
+        $data = $builder
+            ->amount(10)
+            ->receipt([
+                'email' => true,
+                'sms' => true,
+                'language' => 'en',
+            ])
+            ->toArray();
+
+        $this->assertTrue($data['receipt']['email']);
+        $this->assertTrue($data['receipt']['sms']);
+        $this->assertSame('en', $data['receipt']['language']);
+    }
+
+    #[Test]
+    public function it_can_set_auto_capture_configuration(): void
+    {
+        $builder = new ChargeBuilder($this->chargeService);
+        $data = $builder
+            ->amount(10)
+            ->auto([
+                'type' => 'VOID',
+                'time' => 100,
+            ])
+            ->toArray();
+
+        $this->assertSame('VOID', $data['auto']['type']);
+        $this->assertSame(100, $data['auto']['time']);
+    }
+
+    #[Test]
+    public function it_throws_exception_for_amount_below_minimum(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Amount must be at least 0.001');
+
+        $builder = new ChargeBuilder($this->chargeService);
+        $builder->amount(0.0005);
+    }
+
+    #[Test]
+    public function it_accepts_minimum_valid_amount(): void
+    {
+        $builder = new ChargeBuilder($this->chargeService);
+        $data = $builder->amount(0.001)->toArray();
+
+        $this->assertSame(0.001, $data['amount']);
+    }
+
+    #[Test]
+    public function it_can_set_full_customer_object(): void
+    {
+        $builder = new ChargeBuilder($this->chargeService);
+        $data = $builder
+            ->amount(10)
+            ->customer([
+                'id' => 'cus_test_123',
+                'first_name' => 'John',
+                'last_name' => 'Doe',
+                'email' => 'john@example.com',
+            ])
+            ->toArray();
+
+        $this->assertSame('cus_test_123', $data['customer']['id']);
+        $this->assertSame('John', $data['customer']['first_name']);
+        $this->assertSame('Doe', $data['customer']['last_name']);
+        $this->assertSame('john@example.com', $data['customer']['email']);
+    }
+
+    #[Test]
+    public function it_can_chain_customer_id_after_customer_object(): void
+    {
+        $builder = new ChargeBuilder($this->chargeService);
+        $data = $builder
+            ->amount(10)
+            ->customer(['first_name' => 'John'])
+            ->customerId('cus_override')
+            ->toArray();
+
+        $this->assertSame('cus_override', $data['customer']['id']);
+        $this->assertSame('John', $data['customer']['first_name']);
+    }
+
+    #[Test]
+    public function it_returns_immutable_copy_on_to_array(): void
+    {
+        $builder = new ChargeBuilder($this->chargeService);
+        $builder->amount(100)->currency('KWD');
+
+        $array1 = $builder->toArray();
+
+        // Modifying returned array shouldn't affect builder
+        $array1['amount'] = 200;
+        $array1['currency'] = 'SAR';
+
+        $array2 = $builder->toArray();
+
+        // Builder should still have original values
+        $this->assertSame(100.0, $array2['amount']);
+        $this->assertSame('KWD', $array2['currency']);
+    }
+
+    #[Test]
+    public function it_can_disable_email_receipt(): void
+    {
+        $builder = new ChargeBuilder($this->chargeService);
+        $data = $builder
+            ->amount(10)
+            ->emailReceipt(false)
+            ->toArray();
+
+        $this->assertFalse($data['receipt']['email']);
+    }
+
+    #[Test]
+    public function it_can_disable_sms_receipt(): void
+    {
+        $builder = new ChargeBuilder($this->chargeService);
+        $data = $builder
+            ->amount(10)
+            ->smsReceipt(false)
+            ->toArray();
+
+        $this->assertFalse($data['receipt']['sms']);
+    }
+
+    #[Test]
+    public function it_can_build_complex_charge_with_all_options(): void
+    {
+        $builder = new ChargeBuilder($this->chargeService);
+        $data = $builder
+            ->amount(150.75)
+            ->currency('SAR')
+            ->description('Premium subscription')
+            ->customer([
+                'first_name' => 'Ahmed',
+                'last_name' => 'Ali',
+                'email' => 'ahmed@example.com',
+            ])
+            ->customerId('cus_premium_123')
+            ->withMADA()
+            ->saveCard(true)
+            ->statementDescriptor('ACME Premium')
+            ->redirectUrl('https://example.com/success')
+            ->postUrl('https://example.com/webhook')
+            ->reference('ORDER-2024-001')
+            ->metadata(['plan' => 'premium', 'duration' => 'yearly'])
+            ->addMetadata('promo_code', 'SAVE20')
+            ->emailReceipt(true)
+            ->smsReceipt(true)
+            ->auto(['type' => 'VOID', 'time' => 168])
+            ->toArray();
+
+        $this->assertSame(150.75, $data['amount']);
+        $this->assertSame('SAR', $data['currency']);
+        $this->assertSame('Premium subscription', $data['description']);
+        $this->assertSame('cus_premium_123', $data['customer']['id']);
+        $this->assertSame('Ahmed', $data['customer']['first_name']);
+        $this->assertSame('src_sa.mada', $data['source']['id']);
+        $this->assertTrue($data['save_card']);
+        $this->assertSame('ACME Premium', $data['statement_descriptor']);
+        $this->assertSame('https://example.com/success', $data['redirect']['url']);
+        $this->assertSame('https://example.com/webhook', $data['post']['url']);
+        $this->assertSame('ORDER-2024-001', $data['reference']['transaction']);
+        $this->assertSame('premium', $data['metadata']['plan']);
+        $this->assertSame('SAVE20', $data['metadata']['promo_code']);
+        $this->assertTrue($data['receipt']['email']);
+        $this->assertTrue($data['receipt']['sms']);
+        $this->assertSame('VOID', $data['auto']['type']);
+    }
 }

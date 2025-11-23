@@ -149,4 +149,71 @@ class ChargeServiceTest extends TestCase
 
         $this->chargeService->create(['amount' => 10]);
     }
+
+    #[Test]
+    public function it_can_update_a_charge(): void
+    {
+        $this->mockHandler->append(new Response(200, [], json_encode([
+            'id' => 'chg_test_update',
+            'amount' => 10.50,
+            'currency' => 'USD',
+            'status' => 'CAPTURED',
+            'metadata' => [
+                'order_id' => 'ORD-12345',
+                'updated' => true,
+            ],
+        ])));
+
+        $charge = $this->chargeService->update('chg_test_update', [
+            'metadata' => [
+                'order_id' => 'ORD-12345',
+                'updated' => true,
+            ],
+        ]);
+
+        $this->assertSame('chg_test_update', $charge->id());
+        $this->assertSame(ChargeStatus::CAPTURED, $charge->status());
+        $this->assertIsArray($charge->metadata());
+        $this->assertArrayHasKey('order_id', $charge->metadata());
+        $this->assertArrayHasKey('updated', $charge->metadata());
+        $this->assertSame('ORD-12345', $charge->metadata()['order_id']);
+        $this->assertTrue($charge->metadata()['updated']);
+    }
+
+    #[Test]
+    public function it_throws_exception_when_updating_with_invalid_charge_id(): void
+    {
+        $this->mockHandler->append(new Response(404, [], json_encode([
+            'message' => 'Charge not found',
+        ])));
+
+        try {
+            $this->chargeService->update('invalid_charge_id', [
+                'metadata' => ['key' => 'value'],
+            ]);
+            $this->fail('Should have thrown ApiErrorException');
+        } catch (ApiErrorException $e) {
+            $this->assertSame('Charge not found', $e->getMessage());
+            $this->assertSame(404, $e->getStatusCode());
+        }
+    }
+
+    #[Test]
+    public function it_throws_exception_when_updating_with_invalid_data(): void
+    {
+        $this->mockHandler->append(new Response(400, [], json_encode([
+            'message' => 'Invalid update data',
+            'errors' => ['metadata' => ['Invalid metadata format']],
+        ])));
+
+        try {
+            $this->chargeService->update('chg_test_123', [
+                'metadata' => 'invalid_metadata',
+            ]);
+            $this->fail('Should have thrown ApiErrorException');
+        } catch (ApiErrorException $e) {
+            $this->assertSame('Invalid update data', $e->getMessage());
+            $this->assertTrue($e->hasErrors());
+        }
+    }
 }

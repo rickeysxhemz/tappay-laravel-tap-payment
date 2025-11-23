@@ -85,18 +85,4 @@ class ApiErrorException extends Exception
         ];
     }
 
-    /**
-     * Create an exception from an API response
-     *
-     * @param array $response API response data
-     * @param int $statusCode HTTP status code
-     * @return self
-     */
-    public static function fromResponse(array $response, int $statusCode): self
-    {
-        $message = $response['message'] ?? $response['error'] ?? 'Unknown API error';
-        $errors = $response['errors'] ?? [];
-
-        return new self($message, $statusCode, $errors);
-    }
 }

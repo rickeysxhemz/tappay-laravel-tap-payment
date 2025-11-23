@@ -164,10 +164,13 @@ class Client
         $statusCode = $e->getResponse()->getStatusCode();
         $response = $this->parseErrorResponse($e->getResponse());
 
+        $message = $response['message'] ?? $response['error'] ?? 'Unknown API error';
+        $errors = $response['errors'] ?? [];
+
         throw match($statusCode) {
             401 => new AuthenticationException(),
-            400, 422 => InvalidRequestException::fromResponse($response, $statusCode),
-            default => ApiErrorException::fromResponse($response, $statusCode),
+            400, 422 => new InvalidRequestException($message, $statusCode, $errors),
+            default => new ApiErrorException($message, $statusCode, $errors),
         };
     }
 
@@ -183,6 +186,9 @@ class Client
         $statusCode = $e->getResponse()->getStatusCode();
         $response = $this->parseErrorResponse($e->getResponse());
 
-        throw ApiErrorException::fromResponse($response, $statusCode);
+        $message = $response['message'] ?? $response['error'] ?? 'Unknown API error';
+        $errors = $response['errors'] ?? [];
+
+        throw new ApiErrorException($message, $statusCode, $errors);
     }
 }
