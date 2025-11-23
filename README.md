@@ -298,32 +298,532 @@ $customer = Tap::customers()->update('cus_xxxxx', [
 ]);
 ```
 
-### Saved Cards
+### Saved Cards (One-Click Payments)
+
+The package provides complete support for saving customer cards and charging them for future purchases without requiring card details again.
+
+#### How Card Saving Works
+
+1. **First Payment**: Customer enters card details and completes payment with `save_card: true`
+2. **Card Storage**: Tap securely stores the card and returns a card ID (`card_xxxxx`)
+3. **Future Payments**: Create a token from the saved card ID and charge it
+4. **One-Click**: Customer doesn't need to re-enter card details
+
+**Important**: You cannot charge a card ID directly. You must create a token first.
+
+---
+
+#### Database Setup
+
+Add columns to store Tap customer and card IDs:
 
 ```php
-// Save card during first charge
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up()
+    {
+        Schema::table('users', function (Blueprint $table) {
+            $table->string('tap_customer_id')->nullable()->index();
+            $table->string('saved_card_id')->nullable();
+            $table->timestamp('card_saved_at')->nullable();
+        });
+    }
+};
+```
+
+---
+
+#### Option 1: Using Billable Trait (Recommended)
+
+```php
+use App\Models\User;
+use TapPay\Tap\Exceptions\ApiErrorException;
+
+class PaymentController extends Controller
+{
+    /**
+     * Save card during first payment
+     */
+    public function firstPayment()
+    {
+        $user = auth()->user();
+
+        try {
+            $charge = $user->charge(100.00, 'KWD', [
+                'source' => ['id' => 'src_card'],
+                'redirect' => ['url' => route('payment.callback')],
+                'save_card' => true,  // ✅ Save the card
+                'description' => 'First payment - save card',
+            ]);
+
+            session(['tap_charge_id' => $charge->id()]);
+            return redirect($charge->transactionUrl());
+
+        } catch (ApiErrorException $e) {
+            return back()->withErrors(['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Handle callback and save card ID
+     */
+    public function paymentCallback()
+    {
+        $chargeId = session('tap_charge_id');
+
+        try {
+            $charge = Tap::charges()->retrieve($chargeId);
+
+            if ($charge->isSuccessful()) {
+                // Save card ID to user record
+                $cardId = $charge->cardId();
+
+                if ($cardId) {
+                    auth()->user()->update([
+                        'saved_card_id' => $cardId,
+                        'card_saved_at' => now(),
+                    ]);
+
+                    return redirect()->route('success')
+                        ->with('message', 'Payment successful! Card saved for future use.');
+                }
+            }
+
+            return redirect()->route('failed')->withErrors(['error' => 'Payment failed']);
+
+        } catch (ApiErrorException $e) {
+            return back()->withErrors(['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Charge saved card (one-click payment)
+     */
+    public function chargeWithSavedCard()
+    {
+        $user = auth()->user();
+
+        if (!$user->saved_card_id) {
+            return back()->withErrors(['error' => 'No saved card found']);
+        }
+
+        try {
+            // Create token from saved card
+            $token = $user->createCardToken($user->saved_card_id);
+
+            // Charge using token
+            $charge = $user->charge(50.00, 'KWD', [
+                'source' => ['id' => $token->id()],
+                'redirect' => ['url' => route('payment.callback')],
+                'description' => 'Payment with saved card',
+            ]);
+
+            session(['tap_charge_id' => $charge->id()]);
+            return redirect($charge->transactionUrl());
+
+        } catch (InvalidArgumentException $e) {
+            return back()->withErrors(['error' => 'Please add a card first']);
+        } catch (ApiErrorException $e) {
+            return back()->withErrors(['error' => $e->getMessage()]);
+        }
+    }
+}
+```
+
+---
+
+#### Option 2: Using Builder Pattern
+
+```php
+// Save card during first payment
+$charge = $user->newCharge(100.00, 'KWD')
+    ->withCard()
+    ->redirectUrl(route('payment.callback'))
+    ->saveCard()  // ✅ Enable card saving
+    ->description('First payment')
+    ->create();
+
+// After payment, get card ID
+$cardId = $charge->cardId();
+
+// Store card ID
+auth()->user()->update(['saved_card_id' => $cardId]);
+
+// Future payments with saved card
+$token = $user->createCardToken($user->saved_card_id);
+
+$charge = $user->newCharge(50.00, 'KWD')
+    ->withToken($token->id())
+    ->redirectUrl(route('payment.callback'))
+    ->description('Payment with saved card')
+    ->create();
+```
+
+---
+
+#### Option 3: Direct API (Without Billable Trait)
+
+```php
+use TapPay\Tap\Facades\Tap;
+
+// Step 1: Create customer
+$customer = Tap::customers()->create([
+    'first_name' => 'John',
+    'last_name' => 'Doe',
+    'email' => 'john@example.com',
+    'phone' => [
+        'country_code' => '965',
+        'number' => '50000000',
+    ],
+]);
+
+// Step 2: Create charge with save_card
 $charge = Tap::charges()->create([
     'amount' => 100.00,
-    'currency' => 'USD',
+    'currency' => 'KWD',
     'source' => ['id' => 'src_card'],
-    'customer' => ['id' => $customerId],
-    'save_card' => true,
+    'customer' => ['id' => $customer->id()],
+    'save_card' => true,  // ✅ Save card
+    'redirect' => ['url' => 'https://yoursite.com/callback'],
+    'description' => 'First payment',
 ]);
 
-$cardId = $charge->cardId();  // Returns 'card_xxxxx'
+// Redirect to payment page
+return redirect($charge->transactionUrl());
 
-// Use saved card for future charges
+// Step 3: After payment, get card ID
+$charge = Tap::charges()->retrieve($chargeId);
+$cardId = $charge->cardId();  // 'card_xxxxx'
+
+// Step 4: Create token from saved card
 $token = Tap::tokens()->create([
     'card' => $cardId,
-    'customer' => $customerId,
+    'customer' => $customer->id(),
+]);
+
+// Step 5: Charge saved card
+$futureCharge = Tap::charges()->create([
+    'amount' => 50.00,
+    'currency' => 'KWD',
+    'source' => ['id' => $token->id()],  // Use token, not card ID
+    'customer' => ['id' => $customer->id()],
+    'redirect' => ['url' => 'https://yoursite.com/callback'],
+]);
+```
+
+---
+
+#### Complete Payment Flow with Card Management
+
+```php
+class UserCardController extends Controller
+{
+    /**
+     * Display user's saved cards
+     */
+    public function index()
+    {
+        $user = auth()->user();
+
+        return view('cards.index', [
+            'hasSavedCard' => !empty($user->saved_card_id),
+            'cardSavedAt' => $user->card_saved_at,
+        ]);
+    }
+
+    /**
+     * Add new card (without charging)
+     */
+    public function store()
+    {
+        $user = auth()->user();
+
+        try {
+            // Create a minimal charge to save card
+            $charge = $user->charge(0.001, 'KWD', [
+                'source' => ['id' => 'src_card'],
+                'redirect' => ['url' => route('cards.callback')],
+                'save_card' => true,
+                'description' => 'Card verification',
+            ]);
+
+            session(['action' => 'add_card', 'charge_id' => $charge->id()]);
+            return redirect($charge->transactionUrl());
+
+        } catch (ApiErrorException $e) {
+            return back()->withErrors(['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Handle card add callback
+     */
+    public function callback()
+    {
+        $chargeId = session('charge_id');
+        $action = session('action');
+
+        try {
+            $charge = Tap::charges()->retrieve($chargeId);
+
+            if ($charge->isSuccessful() && $action === 'add_card') {
+                $cardId = $charge->cardId();
+
+                if ($cardId) {
+                    auth()->user()->update([
+                        'saved_card_id' => $cardId,
+                        'card_saved_at' => now(),
+                    ]);
+
+                    return redirect()->route('cards.index')
+                        ->with('success', 'Card saved successfully!');
+                }
+            }
+
+            return redirect()->route('cards.index')
+                ->withErrors(['error' => 'Failed to save card']);
+
+        } catch (ApiErrorException $e) {
+            return redirect()->route('cards.index')
+                ->withErrors(['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Remove saved card
+     */
+    public function destroy()
+    {
+        auth()->user()->update([
+            'saved_card_id' => null,
+            'card_saved_at' => null,
+        ]);
+
+        return redirect()->route('cards.index')
+            ->with('success', 'Card removed successfully');
+    }
+}
+```
+
+---
+
+#### Webhook Handler for Card Payments
+
+```php
+// In EventServiceProvider
+use TapPay\Tap\Events\WebhookReceived;
+
+protected $listen = [
+    WebhookReceived::class => [
+        HandleCardPayment::class,
+    ],
+];
+
+// Listener
+class HandleCardPayment
+{
+    public function handle(WebhookReceived $event)
+    {
+        if ($event->isType('charge')) {
+            $chargeId = $event->getId();
+            $status = $event->payload['status'];
+            $customerId = $event->payload['customer']['id'] ?? null;
+
+            // Find user by customer ID
+            $user = User::where('tap_customer_id', $customerId)->first();
+
+            if ($user && $status === 'CAPTURED') {
+                // Payment successful
+                $cardId = $event->payload['card']['id'] ?? null;
+
+                if ($cardId && $event->payload['save_card'] ?? false) {
+                    // Card was saved
+                    $user->update([
+                        'saved_card_id' => $cardId,
+                        'card_saved_at' => now(),
+                    ]);
+
+                    Log::info("Card saved for user {$user->id}", [
+                        'card_id' => $cardId,
+                    ]);
+                }
+
+                // Process order, send confirmation email, etc.
+            }
+        }
+    }
+}
+```
+
+---
+
+#### Security Best Practices
+
+**1. Verify Payment Before Saving Card**
+```php
+// ✅ Good - verify first
+$charge = Tap::charges()->retrieve($chargeId);
+if ($charge->isSuccessful()) {
+    $user->update(['saved_card_id' => $charge->cardId()]);
+}
+
+// ❌ Bad - save without verification
+$user->update(['saved_card_id' => $request->input('card_id')]);
+```
+
+**2. Always Use HTTPS**
+```php
+// In .env
+APP_URL=https://yourdomain.com  // ✅ HTTPS required
+```
+
+**3. Validate Customer Ownership**
+```php
+// ✅ Good - verify user owns the customer
+if ($user->tapCustomerId() !== $customerId) {
+    throw new UnauthorizedException();
+}
+
+// Create token only for user's own cards
+$token = $user->createCardToken($cardId);
+```
+
+**4. Handle Expired Cards**
+```php
+try {
+    $token = $user->createCardToken($user->saved_card_id);
+    $charge = $user->charge(100, 'KWD', [
+        'source' => ['id' => $token->id()],
+    ]);
+} catch (InvalidRequestException $e) {
+    // Card expired or invalid
+    $user->update(['saved_card_id' => null]);
+    return back()->withErrors(['error' => 'Card expired. Please add a new card.']);
+}
+```
+
+---
+
+#### Testing Card Saving
+
+**Test Card Numbers** (Tap Sandbox):
+```
+Successful: 4111 1111 1111 1111
+Declined:   4000 0000 0000 0002
+CVV: 123
+Expiry: Any future date
+```
+
+**Test Flow**:
+```php
+// Feature test
+public function test_user_can_save_card()
+{
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->post(route('payment.first'))
+        ->assertRedirect();
+
+    // Simulate Tap callback
+    $charge = Tap::charges()->create([
+        'amount' => 100,
+        'currency' => 'KWD',
+        'customer' => ['id' => $user->tapCustomerId()],
+        'save_card' => true,
+    ]);
+
+    $user->refresh();
+
+    $this->assertNotNull($user->saved_card_id);
+    $this->assertNotNull($user->card_saved_at);
+}
+```
+
+---
+
+#### Common Issues & Solutions
+
+**Issue 1: "Card ID cannot be charged directly"**
+```php
+// ❌ Wrong - charging card ID directly
+$charge = Tap::charges()->create([
+    'source' => ['id' => 'card_xxxxx'],  // ❌ Won't work
+]);
+
+// ✅ Correct - create token first
+$token = Tap::tokens()->create([
+    'card' => 'card_xxxxx',
+    'customer' => 'cus_xxxxx',
 ]);
 
 $charge = Tap::charges()->create([
-    'amount' => 50.00,
-    'currency' => 'USD',
-    'source' => ['id' => $token->id()],
-    'customer' => ['id' => $customerId],
+    'source' => ['id' => $token->id()],  // ✅ Works
 ]);
+```
+
+**Issue 2: "Customer must be created first"**
+```php
+// ✅ Billable trait handles this automatically
+$user->charge(100, 'KWD');  // Creates customer if needed
+
+// ✅ Manual approach
+if (!$user->tapCustomerId()) {
+    $user->createAsTapCustomer();
+}
+```
+
+**Issue 3: "Token already used"**
+```php
+// Tokens are single-use - create new token each time
+$token = $user->createCardToken($cardId);  // ✅ New token
+$charge = $user->charge(100, 'KWD', [
+    'source' => ['id' => $token->id()],
+]);
+
+// For next payment, create another token
+$token2 = $user->createCardToken($cardId);  // ✅ New token
+```
+
+---
+
+#### UI Example (Blade)
+
+```blade
+{{-- resources/views/cards/index.blade.php --}}
+<div class="card">
+    <h3>Saved Payment Methods</h3>
+
+    @if($hasSavedCard)
+        <div class="saved-card">
+            <i class="fa fa-credit-card"></i>
+            <span>Card saved on {{ $cardSavedAt->format('M d, Y') }}</span>
+
+            <form action="{{ route('cards.destroy') }}" method="POST">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-danger">Remove Card</button>
+            </form>
+        </div>
+
+        <form action="{{ route('payment.saved-card') }}" method="POST">
+            @csrf
+            <button type="submit" class="btn btn-primary">
+                Pay with Saved Card
+            </button>
+        </form>
+    @else
+        <p>No saved cards</p>
+
+        <a href="{{ route('cards.add') }}" class="btn btn-primary">
+            Add Payment Method
+        </a>
+    @endif
+</div>
 ```
 
 ## Error Handling
