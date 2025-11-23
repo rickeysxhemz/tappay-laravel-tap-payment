@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace TapPay\Tap\Services;
 
+use TapPay\Tap\Exceptions\ApiErrorException;
+use TapPay\Tap\Exceptions\AuthenticationException;
+use TapPay\Tap\Exceptions\InvalidRequestException;
 use TapPay\Tap\Resources\Token;
 
 class TokenService extends AbstractService
 {
     /**
      * Get the endpoint for tokens
-     *
-     * @return string
      */
     protected function getEndpoint(): string
     {
@@ -23,6 +24,9 @@ class TokenService extends AbstractService
      *
      * @param array $data Token data
      * @return Token
+     * @throws AuthenticationException If API authentication fails
+     * @throws InvalidRequestException If request parameters are invalid
+     * @throws ApiErrorException If API returns an error or network error occurs
      */
     public function create(array $data): Token
     {
@@ -36,6 +40,9 @@ class TokenService extends AbstractService
      *
      * @param string $tokenId Token ID
      * @return Token
+     * @throws AuthenticationException If API authentication fails
+     * @throws InvalidRequestException If token ID is invalid
+     * @throws ApiErrorException If API returns an error or network error occurs
      */
     public function retrieve(string $tokenId): Token
     {

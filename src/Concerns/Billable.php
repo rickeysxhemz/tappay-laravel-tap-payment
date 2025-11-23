@@ -6,6 +6,9 @@ namespace TapPay\Tap\Concerns;
 
 use InvalidArgumentException;
 use TapPay\Tap\Builders\ChargeBuilder;
+use TapPay\Tap\Exceptions\ApiErrorException;
+use TapPay\Tap\Exceptions\AuthenticationException;
+use TapPay\Tap\Exceptions\InvalidRequestException;
 use TapPay\Tap\Facades\Tap;
 use TapPay\Tap\Resources\Charge;
 use TapPay\Tap\Resources\Customer;
@@ -15,8 +18,6 @@ trait Billable
 {
     /**
      * Get the Tap customer ID for the billable entity
-     *
-     * @return string|null
      */
     public function tapCustomerId(): ?string
     {
@@ -25,9 +26,6 @@ trait Billable
 
     /**
      * Set the Tap customer ID
-     *
-     * @param string $customerId
-     * @return void
      */
     public function setTapCustomerId(string $customerId): void
     {
@@ -37,9 +35,6 @@ trait Billable
 
     /**
      * Get the currency to use for charges
-     *
-     * @param string|null $currency
-     * @return string
      */
     protected function getCurrency(?string $currency = null): string
     {
@@ -49,7 +44,9 @@ trait Billable
     /**
      * Ensure the billable entity has a Tap customer ID
      *
-     * @return void
+     * @throws AuthenticationException If API authentication fails
+     * @throws InvalidRequestException If request parameters are invalid
+     * @throws ApiErrorException If API returns an error or network error occurs
      */
     protected function ensureTapCustomerExists(): void
     {
@@ -65,6 +62,9 @@ trait Billable
      * @param string|null $currency
      * @param array $options
      * @return Charge
+     * @throws AuthenticationException If API authentication fails
+     * @throws InvalidRequestException If request parameters are invalid
+     * @throws ApiErrorException If API returns an error or network error occurs
      */
     public function charge(float $amount, ?string $currency = null, array $options = []): Charge
     {
@@ -85,6 +85,9 @@ trait Billable
      * @param float $amount
      * @param string|null $currency
      * @return ChargeBuilder
+     * @throws AuthenticationException If API authentication fails
+     * @throws InvalidRequestException If request parameters are invalid
+     * @throws ApiErrorException If API returns an error or network error occurs
      */
     public function newCharge(float $amount, ?string $currency = null): ChargeBuilder
     {
@@ -101,6 +104,9 @@ trait Billable
      *
      * @param array $options Additional customer data
      * @return Customer
+     * @throws AuthenticationException If API authentication fails
+     * @throws InvalidRequestException If request parameters are invalid
+     * @throws ApiErrorException If API returns an error or network error occurs
      */
     public function createAsTapCustomer(array $options = []): Customer
     {
@@ -130,6 +136,9 @@ trait Billable
      * Get the Tap customer instance
      *
      * @return Customer|null
+     * @throws AuthenticationException If API authentication fails
+     * @throws InvalidRequestException If customer ID is invalid
+     * @throws ApiErrorException If API returns an error or network error occurs
      */
     public function asTapCustomer(): ?Customer
     {
@@ -143,6 +152,9 @@ trait Billable
      *
      * @param array $data Customer data to update
      * @return Customer
+     * @throws AuthenticationException If API authentication fails
+     * @throws InvalidRequestException If request parameters are invalid
+     * @throws ApiErrorException If API returns an error or network error occurs
      */
     public function updateTapCustomer(array $data): Customer
     {
@@ -157,6 +169,9 @@ trait Billable
      * Delete the Tap customer
      *
      * @return bool True if deleted, false if no customer exists
+     * @throws AuthenticationException If API authentication fails
+     * @throws InvalidRequestException If customer ID is invalid
+     * @throws ApiErrorException If API returns an error or network error occurs
      */
     public function deleteTapCustomer(): bool
     {
@@ -179,7 +194,10 @@ trait Billable
      *
      * @param string $cardId Card ID from Tap
      * @return Token
-     * @throws InvalidArgumentException
+     * @throws InvalidArgumentException If customer doesn't exist in Tap
+     * @throws AuthenticationException If API authentication fails
+     * @throws InvalidRequestException If request parameters are invalid
+     * @throws ApiErrorException If API returns an error or network error occurs
      */
     public function createCardToken(string $cardId): Token
     {

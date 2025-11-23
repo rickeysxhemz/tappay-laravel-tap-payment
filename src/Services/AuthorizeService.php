@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace TapPay\Tap\Services;
 
+use TapPay\Tap\Exceptions\ApiErrorException;
+use TapPay\Tap\Exceptions\AuthenticationException;
+use TapPay\Tap\Exceptions\InvalidRequestException;
 use TapPay\Tap\Resources\Authorize;
 
 class AuthorizeService extends AbstractService
 {
     /**
      * Get the endpoint for authorizations
-     *
-     * @return string
      */
     protected function getEndpoint(): string
     {
@@ -23,6 +24,9 @@ class AuthorizeService extends AbstractService
      *
      * @param array $data Authorization data
      * @return Authorize
+     * @throws AuthenticationException If API authentication fails
+     * @throws InvalidRequestException If request parameters are invalid
+     * @throws ApiErrorException If API returns an error or network error occurs
      */
     public function create(array $data): Authorize
     {
@@ -36,6 +40,9 @@ class AuthorizeService extends AbstractService
      *
      * @param string $authId Authorization ID
      * @return Authorize
+     * @throws AuthenticationException If API authentication fails
+     * @throws InvalidRequestException If authorization ID is invalid
+     * @throws ApiErrorException If API returns an error or network error occurs
      */
     public function retrieve(string $authId): Authorize
     {
@@ -50,6 +57,9 @@ class AuthorizeService extends AbstractService
      * @param string $authId Authorization ID
      * @param array $data Update data
      * @return Authorize
+     * @throws AuthenticationException If API authentication fails
+     * @throws InvalidRequestException If request parameters are invalid
+     * @throws ApiErrorException If API returns an error or network error occurs
      */
     public function update(string $authId, array $data): Authorize
     {
@@ -63,6 +73,9 @@ class AuthorizeService extends AbstractService
      *
      * @param array $params Query parameters
      * @return Authorize[]
+     * @throws AuthenticationException If API authentication fails
+     * @throws InvalidRequestException If query parameters are invalid
+     * @throws ApiErrorException If API returns an error or network error occurs
      */
     public function list(array $params = []): array
     {

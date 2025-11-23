@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace TapPay\Tap\Services;
 
+use TapPay\Tap\Exceptions\ApiErrorException;
+use TapPay\Tap\Exceptions\AuthenticationException;
+use TapPay\Tap\Exceptions\InvalidRequestException;
 use TapPay\Tap\Resources\Customer;
 
 class CustomerService extends AbstractService
 {
     /**
      * Get the endpoint for customers
-     *
-     * @return string
      */
     protected function getEndpoint(): string
     {
@@ -23,6 +24,9 @@ class CustomerService extends AbstractService
      *
      * @param array $data Customer data
      * @return Customer
+     * @throws AuthenticationException If API authentication fails
+     * @throws InvalidRequestException If request parameters are invalid
+     * @throws ApiErrorException If API returns an error or network error occurs
      */
     public function create(array $data): Customer
     {
@@ -36,6 +40,9 @@ class CustomerService extends AbstractService
      *
      * @param string $customerId Customer ID
      * @return Customer
+     * @throws AuthenticationException If API authentication fails
+     * @throws InvalidRequestException If customer ID is invalid
+     * @throws ApiErrorException If API returns an error or network error occurs
      */
     public function retrieve(string $customerId): Customer
     {
@@ -50,6 +57,9 @@ class CustomerService extends AbstractService
      * @param string $customerId Customer ID
      * @param array $data Update data
      * @return Customer
+     * @throws AuthenticationException If API authentication fails
+     * @throws InvalidRequestException If request parameters are invalid
+     * @throws ApiErrorException If API returns an error or network error occurs
      */
     public function update(string $customerId, array $data): Customer
     {
@@ -63,6 +73,9 @@ class CustomerService extends AbstractService
      *
      * @param array $params Query parameters
      * @return Customer[]
+     * @throws AuthenticationException If API authentication fails
+     * @throws InvalidRequestException If query parameters are invalid
+     * @throws ApiErrorException If API returns an error or network error occurs
      */
     public function list(array $params = []): array
     {
@@ -79,6 +92,9 @@ class CustomerService extends AbstractService
      *
      * @param string $customerId Customer ID
      * @return bool
+     * @throws AuthenticationException If API authentication fails
+     * @throws InvalidRequestException If customer ID is invalid
+     * @throws ApiErrorException If API returns an error or network error occurs
      */
     public function delete(string $customerId): bool
     {

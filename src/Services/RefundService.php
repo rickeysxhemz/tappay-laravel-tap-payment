@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace TapPay\Tap\Services;
 
+use TapPay\Tap\Exceptions\ApiErrorException;
+use TapPay\Tap\Exceptions\AuthenticationException;
+use TapPay\Tap\Exceptions\InvalidRequestException;
 use TapPay\Tap\Resources\Refund;
 
 class RefundService extends AbstractService
 {
     /**
      * Get the endpoint for refunds
-     *
-     * @return string
      */
     protected function getEndpoint(): string
     {
@@ -23,6 +24,9 @@ class RefundService extends AbstractService
      *
      * @param array $data Refund data
      * @return Refund
+     * @throws AuthenticationException If API authentication fails
+     * @throws InvalidRequestException If request parameters are invalid
+     * @throws ApiErrorException If API returns an error or network error occurs
      */
     public function create(array $data): Refund
     {
@@ -36,6 +40,9 @@ class RefundService extends AbstractService
      *
      * @param string $refundId Refund ID
      * @return Refund
+     * @throws AuthenticationException If API authentication fails
+     * @throws InvalidRequestException If refund ID is invalid
+     * @throws ApiErrorException If API returns an error or network error occurs
      */
     public function retrieve(string $refundId): Refund
     {
@@ -50,6 +57,9 @@ class RefundService extends AbstractService
      * @param string $refundId Refund ID
      * @param array $data Update data
      * @return Refund
+     * @throws AuthenticationException If API authentication fails
+     * @throws InvalidRequestException If request parameters are invalid
+     * @throws ApiErrorException If API returns an error or network error occurs
      */
     public function update(string $refundId, array $data): Refund
     {
@@ -63,6 +73,9 @@ class RefundService extends AbstractService
      *
      * @param array $params Query parameters
      * @return Refund[]
+     * @throws AuthenticationException If API authentication fails
+     * @throws InvalidRequestException If query parameters are invalid
+     * @throws ApiErrorException If API returns an error or network error occurs
      */
     public function list(array $params = []): array
     {

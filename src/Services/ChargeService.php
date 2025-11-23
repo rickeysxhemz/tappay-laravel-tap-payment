@@ -5,14 +5,15 @@ declare(strict_types=1);
 namespace TapPay\Tap\Services;
 
 use TapPay\Tap\Builders\ChargeBuilder;
+use TapPay\Tap\Exceptions\ApiErrorException;
+use TapPay\Tap\Exceptions\AuthenticationException;
+use TapPay\Tap\Exceptions\InvalidRequestException;
 use TapPay\Tap\Resources\Charge;
 
 class ChargeService extends AbstractService
 {
     /**
      * Get the endpoint for charges
-     *
-     * @return string
      */
     protected function getEndpoint(): string
     {
@@ -21,8 +22,6 @@ class ChargeService extends AbstractService
 
     /**
      * Create a new charge builder
-     *
-     * @return ChargeBuilder
      */
     public function newBuilder(): ChargeBuilder
     {
@@ -34,6 +33,9 @@ class ChargeService extends AbstractService
      *
      * @param array $data Charge data
      * @return Charge
+     * @throws AuthenticationException If API authentication fails
+     * @throws InvalidRequestException If request parameters are invalid
+     * @throws ApiErrorException If API returns an error or network error occurs
      */
     public function create(array $data): Charge
     {
@@ -47,6 +49,9 @@ class ChargeService extends AbstractService
      *
      * @param string $chargeId Charge ID
      * @return Charge
+     * @throws AuthenticationException If API authentication fails
+     * @throws InvalidRequestException If charge ID is invalid
+     * @throws ApiErrorException If API returns an error or network error occurs
      */
     public function retrieve(string $chargeId): Charge
     {
@@ -61,6 +66,9 @@ class ChargeService extends AbstractService
      * @param string $chargeId Charge ID
      * @param array $data Update data
      * @return Charge
+     * @throws AuthenticationException If API authentication fails
+     * @throws InvalidRequestException If request parameters are invalid
+     * @throws ApiErrorException If API returns an error or network error occurs
      */
     public function update(string $chargeId, array $data): Charge
     {
@@ -74,6 +82,9 @@ class ChargeService extends AbstractService
      *
      * @param array $params Query parameters
      * @return Charge[]
+     * @throws AuthenticationException If API authentication fails
+     * @throws InvalidRequestException If query parameters are invalid
+     * @throws ApiErrorException If API returns an error or network error occurs
      */
     public function list(array $params = []): array
     {
