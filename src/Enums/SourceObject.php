@@ -44,57 +44,129 @@ enum SourceObject: string
 
     /**
      * Check if this source requires redirect flow
+     *
+     * @return bool
      */
     public function requiresRedirect(): bool
     {
-        return !in_array($this, [self::TOKEN, self::AUTH]);
+        return match($this) {
+            self::TOKEN, self::AUTH => false,
+            default => true,
+        };
     }
 
     /**
      * Check if this is a regional payment method
+     *
+     * @return bool
      */
     public function isRegionalMethod(): bool
     {
-        return in_array($this, [
+        return match($this) {
             self::SRC_KNET,
             self::SRC_KFAST,
             self::SRC_MADA,
             self::SRC_BENEFIT,
             self::SRC_OMANNET,
             self::SRC_NAPS,
-            self::SRC_FAWRY,
-        ]);
+            self::SRC_FAWRY => true,
+            default => false,
+        };
     }
 
     /**
      * Check if this is a digital wallet
+     *
+     * @return bool
      */
     public function isDigitalWallet(): bool
     {
-        return $this === self::SRC_STC_PAY;
+        return match($this) {
+            self::SRC_STC_PAY => true,
+            default => false,
+        };
     }
 
     /**
      * Check if this is a BNPL method
+     *
+     * @return bool
      */
     public function isBNPL(): bool
     {
-        return $this === self::SRC_TABBY || $this === self::SRC_DEEMA;
+        return match($this) {
+            self::SRC_TABBY, self::SRC_DEEMA => true,
+            default => false,
+        };
     }
 
     /**
      * Check if this is a token source
+     *
+     * @return bool
      */
     public function isToken(): bool
     {
-        return $this === self::TOKEN;
+        return match($this) {
+            self::TOKEN => true,
+            default => false,
+        };
     }
 
     /**
      * Check if this is an authorization source
+     *
+     * @return bool
      */
     public function isAuthorization(): bool
     {
-        return $this === self::AUTH;
+        return match($this) {
+            self::AUTH => true,
+            default => false,
+        };
+    }
+
+    /**
+     * Get the country code for regional payment methods
+     *
+     * @return string|null
+     */
+    public function getCountry(): ?string
+    {
+        return match($this) {
+            self::SRC_KNET, self::SRC_KFAST => 'KW',
+            self::SRC_MADA => 'SA',
+            self::SRC_BENEFIT => 'BH',
+            self::SRC_OMANNET => 'OM',
+            self::SRC_NAPS => 'QA',
+            self::SRC_FAWRY => 'EG',
+            self::SRC_STC_PAY => 'SA',
+            default => null,
+        };
+    }
+
+    /**
+     * Get human-readable label
+     *
+     * @return string
+     */
+    public function label(): string
+    {
+        return match($this) {
+            self::SRC_CARD => 'Card Payment',
+            self::SRC_ALL => 'All Payment Methods',
+            self::SRC_KNET => 'KNET',
+            self::SRC_KFAST => 'KFAST',
+            self::SRC_MADA => 'Mada',
+            self::SRC_BENEFIT => 'Benefit',
+            self::SRC_OMANNET => 'OmanNet',
+            self::SRC_NAPS => 'NAPS',
+            self::SRC_FAWRY => 'Fawry',
+            self::SRC_STC_PAY => 'STC Pay',
+            self::SRC_TABBY => 'Tabby',
+            self::SRC_DEEMA => 'Deema',
+            self::TOKEN => 'Token',
+            self::AUTH => 'Authorization',
+        };
     }
 }

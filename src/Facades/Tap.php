@@ -13,7 +13,6 @@ use Illuminate\Support\Facades\Facade;
  * @method static \TapPay\Tap\Services\AuthorizeService authorizations()
  * @method static \TapPay\Tap\Services\TokenService tokens()
  * @method static \TapPay\Tap\Http\Client getClient()
- * @method static \TapPay\Tap\Tap setClient(\TapPay\Tap\Http\Client $client)
  *
  * @see \TapPay\Tap\Tap
  */

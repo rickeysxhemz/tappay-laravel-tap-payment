@@ -14,25 +14,56 @@ enum RefundStatus: string
 
     /**
      * Check if the refund is successful
+     *
+     * @return bool
      */
     public function isSuccessful(): bool
     {
-        return $this === self::SUCCEEDED;
+        return match($this) {
+            self::SUCCEEDED => true,
+            default => false,
+        };
     }
 
     /**
      * Check if the refund is pending
+     *
+     * @return bool
      */
     public function isPending(): bool
     {
-        return $this === self::INITIATED || $this === self::PENDING;
+        return match($this) {
+            self::INITIATED, self::PENDING => true,
+            default => false,
+        };
     }
 
     /**
      * Check if the refund has failed
+     *
+     * @return bool
      */
     public function hasFailed(): bool
     {
-        return $this === self::FAILED || $this === self::CANCELLED;
+        return match($this) {
+            self::FAILED, self::CANCELLED => true,
+            default => false,
+        };
+    }
+
+    /**
+     * Get human-readable status label
+     *
+     * @return string
+     */
+    public function label(): string
+    {
+        return match($this) {
+            self::INITIATED => 'Initiated',
+            self::PENDING => 'Pending',
+            self::SUCCEEDED => 'Succeeded',
+            self::FAILED => 'Failed',
+            self::CANCELLED => 'Cancelled',
+        };
     }
 }

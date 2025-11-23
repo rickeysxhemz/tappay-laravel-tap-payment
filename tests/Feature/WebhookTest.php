@@ -7,6 +7,9 @@ namespace TapPay\Tap\Tests\Feature;
 use PHPUnit\Framework\Attributes\Test;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
+use TapPay\Tap\Events\WebhookProcessingFailed;
+use TapPay\Tap\Events\WebhookReceived;
+use TapPay\Tap\Events\WebhookValidationFailed;
 use TapPay\Tap\Tests\TestCase;
 use TapPay\Tap\Webhooks\WebhookController;
 use TapPay\Tap\Webhooks\WebhookValidator;
@@ -45,6 +48,8 @@ class WebhookTest extends TestCase
     #[Test]
     public function it_rejects_invalid_signature(): void
     {
+        Event::fake();
+
         $payload = [
             'id' => 'chg_test_123',
             'amount' => 10.50,
@@ -53,15 +58,22 @@ class WebhookTest extends TestCase
             'created' => time(),
         ];
 
+        // Use a 64-character invalid signature to trigger signature mismatch (not length error)
         $request = Request::create('/webhook', 'POST', [], [], [], [
-            'HTTP_X_TAP_SIGNATURE' => 'invalid_signature_here',
+            'HTTP_X_TAP_SIGNATURE' => str_repeat('a', 64),
         ], json_encode($payload));
 
         $this->assertFalse($this->validator->validate($request));
+
+        Event::assertDispatched(WebhookValidationFailed::class, function ($event) {
+            return $event->reason === 'Signature mismatch';
+        });
     }
     #[Test]
     public function it_rejects_webhook_without_signature(): void
     {
+        Event::fake();
+
         $payload = [
             'id' => 'chg_test_123',
             'amount' => 10.50,
@@ -72,6 +84,97 @@ class WebhookTest extends TestCase
         $request = Request::create('/webhook', 'POST', [], [], [], [], json_encode($payload));
 
         $this->assertFalse($this->validator->validate($request));
+
+        Event::assertDispatched(WebhookValidationFailed::class, function ($event) {
+            return $event->reason === 'Missing or invalid signature length';
+        });
+    }
+
+    #[Test]
+    public function it_rejects_webhook_with_invalid_signature_length(): void
+    {
+        Event::fake();
+
+        $payload = [
+            'id' => 'chg_test_123',
+            'amount' => 10.50,
+            'currency' => 'USD',
+            'status' => 'CAPTURED',
+        ];
+
+        // Invalid signature - too short
+        $request = Request::create('/webhook', 'POST', [], [], [], [
+            'HTTP_X_TAP_SIGNATURE' => 'invalid_short_signature',
+        ], json_encode($payload));
+
+        $this->assertFalse($this->validator->validate($request));
+
+        Event::assertDispatched(WebhookValidationFailed::class, function ($event) {
+            return $event->reason === 'Missing or invalid signature length';
+        });
+    }
+
+    #[Test]
+    public function it_rejects_webhook_with_empty_payload(): void
+    {
+        Event::fake();
+
+        $signature = str_repeat('a', 64); // Valid length, wrong signature
+
+        $request = Request::create('/webhook', 'POST', [], [], [], [
+            'HTTP_X_TAP_SIGNATURE' => $signature,
+        ], '');
+
+        $this->assertFalse($this->validator->validate($request));
+
+        Event::assertDispatched(WebhookValidationFailed::class, function ($event) {
+            return $event->reason === 'Empty payload';
+        });
+    }
+
+    #[Test]
+    public function it_rejects_webhook_with_invalid_json(): void
+    {
+        Event::fake();
+
+        $signature = str_repeat('a', 64); // Valid length, wrong signature
+
+        $request = Request::create('/webhook', 'POST', [], [], [], [
+            'HTTP_X_TAP_SIGNATURE' => $signature,
+        ], '{invalid json}');
+
+        $this->assertFalse($this->validator->validate($request));
+
+        Event::assertDispatched(WebhookValidationFailed::class, function ($event) {
+            return $event->reason === 'Invalid JSON';
+        });
+    }
+
+    #[Test]
+    public function it_validates_payload_directly(): void
+    {
+        $payload = [
+            'id' => 'chg_test_123',
+            'amount' => 10.50,
+            'currency' => 'USD',
+            'status' => 'CAPTURED',
+            'created' => time(),
+        ];
+
+        $signature = $this->generateSignature($payload);
+
+        $this->assertTrue($this->validator->validatePayload($payload, $signature));
+    }
+
+    #[Test]
+    public function it_rejects_invalid_payload_with_validatePayload(): void
+    {
+        $payload = [
+            'id' => 'chg_test_123',
+            'amount' => 10.50,
+        ];
+
+        $this->assertFalse($this->validator->validatePayload($payload, 'wrong_signature'));
     }
     #[Test]
     public function it_checks_webhook_tolerance(): void
@@ -114,9 +217,16 @@ class WebhookTest extends TestCase
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals('Webhook received', $response->getContent());
 
-        // Assert events were dispatched
+        // Assert string-based events were dispatched
         Event::assertDispatched('tap.webhook.charge');
         Event::assertDispatched('tap.webhook.received');
+
+        // Assert WebhookReceived event class was dispatched
+        Event::assertDispatched(WebhookReceived::class, function ($event) use ($payload) {
+            return $event->resource === 'charge'
+                && $event->payload === $payload
+                && $event->getId() === 'chg_test_123';
+        });
     }
     #[Test]
     public function it_rejects_webhook_with_invalid_signature(): void
@@ -186,10 +296,87 @@ class WebhookTest extends TestCase
             $controller($request);
         }
 
+        // Assert string-based events
         Event::assertDispatched('tap.webhook.charge');
         Event::assertDispatched('tap.webhook.refund');
         Event::assertDispatched('tap.webhook.customer');
         Event::assertDispatched('tap.webhook.received', 3);
+
+        // Assert WebhookReceived event class was dispatched 3 times
+        Event::assertDispatched(WebhookReceived::class, 3);
+    }
+
+    #[Test]
+    public function it_rejects_unknown_resource_types(): void
+    {
+        Event::fake();
+
+        $payload = [
+            'object' => 'unknown_resource',
+            'id' => 'unk_123',
+            'created' => time(),
+        ];
+
+        $signature = $this->generateSignature($payload);
+
+        $request = Request::create('/webhook', 'POST', [], [], [], [
+            'HTTP_X_TAP_SIGNATURE' => $signature,
+        ], json_encode($payload));
+
+        $controller = new WebhookController($this->validator);
+        $response = $controller($request);
+
+        // Should still return 200 (to prevent retries)
+        $this->assertEquals(200, $response->getStatusCode());
+
+        // Should dispatch general event but not resource-specific
+        Event::assertNotDispatched('tap.webhook.unknown_resource');
+        Event::assertDispatched('tap.webhook.received');
+
+        // Assert WebhookReceived event class was still dispatched
+        Event::assertDispatched(WebhookReceived::class, function ($event) {
+            return $event->resource === 'unknown_resource';
+        });
+    }
+
+    #[Test]
+    public function it_handles_event_dispatch_errors_gracefully(): void
+    {
+        // Set up listener BEFORE faking events
+        Event::listen('tap.webhook.charge', function () {
+            throw new \Exception('Event handler failed');
+        });
+
+        // Only fake WebhookProcessingFailed to allow real exception to be thrown
+        Event::fake([WebhookProcessingFailed::class]);
+
+        $payload = [
+            'object' => 'charge',
+            'id' => 'chg_123',
+            'amount' => 10.50,
+            'currency' => 'USD',
+            'status' => 'CAPTURED',
+            'created' => time(),
+        ];
+
+        $signature = $this->generateSignature($payload);
+
+        $request = Request::create('/webhook', 'POST', [], [], [], [
+            'HTTP_X_TAP_SIGNATURE' => $signature,
+        ], json_encode($payload));
+
+        $controller = new WebhookController($this->validator);
+        $response = $controller($request);
+
+        // Should still return 200 despite error
+        $this->assertEquals(200, $response->getStatusCode());
+
+        // Assert WebhookProcessingFailed event was dispatched
+        Event::assertDispatched(WebhookProcessingFailed::class, function ($event) {
+            return $event->resource === 'charge'
+                && $event->exception->getMessage() === 'Event handler failed'
+                && $event->getId() === 'chg_123';
+        });
     }
 
     /**

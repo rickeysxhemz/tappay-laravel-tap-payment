@@ -4,49 +4,46 @@ declare(strict_types=1);
 
 namespace TapPay\Tap\Enums;
 
-enum ChargeStatus: string
+enum AuthorizeStatus: string
 {
     case INITIATED = 'INITIATED';
-    case IN_PROGRESS = 'IN_PROGRESS';
-    case ABANDONED = 'ABANDONED';
+    case AUTHORIZED = 'AUTHORIZED';
+    case CAPTURED = 'CAPTURED';
     case CANCELLED = 'CANCELLED';
     case FAILED = 'FAILED';
     case DECLINED = 'DECLINED';
     case RESTRICTED = 'RESTRICTED';
-    case CAPTURED = 'CAPTURED';
     case VOID = 'VOID';
-    case TIMEDOUT = 'TIMEDOUT';
     case UNKNOWN = 'UNKNOWN';
-    case AUTHORIZED = 'AUTHORIZED';
 
     /**
-     * Check if the charge is successful
+     * Check if the authorization is successful
      *
      * @return bool
      */
     public function isSuccessful(): bool
     {
         return match($this) {
-            self::CAPTURED, self::AUTHORIZED => true,
+            self::AUTHORIZED => true,
             default => false,
         };
     }
 
     /**
-     * Check if the charge is pending
+     * Check if the authorization is pending
      *
      * @return bool
      */
     public function isPending(): bool
     {
         return match($this) {
-            self::INITIATED, self::IN_PROGRESS => true,
+            self::INITIATED => true,
             default => false,
         };
     }
 
     /**
-     * Check if the charge has failed
+     * Check if the authorization has failed
      *
      * @return bool
      */
@@ -56,9 +53,8 @@ enum ChargeStatus: string
             self::FAILED,
             self::DECLINED,
             self::CANCELLED,
-            self::ABANDONED,
             self::RESTRICTED,
-            self::TIMEDOUT => true,
+            self::VOID => true,
             default => false,
         };
     }
@@ -72,17 +68,14 @@ enum ChargeStatus: string
     {
         return match($this) {
             self::INITIATED => 'Initiated',
-            self::IN_PROGRESS => 'In Progress',
-            self::ABANDONED => 'Abandoned',
+            self::AUTHORIZED => 'Authorized',
+            self::CAPTURED => 'Captured',
             self::CANCELLED => 'Cancelled',
             self::FAILED => 'Failed',
             self::DECLINED => 'Declined',
             self::RESTRICTED => 'Restricted',
-            self::CAPTURED => 'Captured',
             self::VOID => 'Void',
-            self::TIMEDOUT => 'Timed Out',
             self::UNKNOWN => 'Unknown',
-            self::AUTHORIZED => 'Authorized',
         };
     }
 }

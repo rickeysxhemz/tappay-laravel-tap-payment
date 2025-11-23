@@ -4,17 +4,15 @@ declare(strict_types=1);
 
 namespace TapPay\Tap\Resources;
 
-class Authorize
-{
-    protected array $attributes;
+use TapPay\Tap\Enums\AuthorizeStatus;
 
-    public function __construct(array $attributes)
-    {
-        $this->attributes = $attributes;
-    }
+class Authorize extends Resource
+{
 
     /**
      * Get the authorization ID
+     *
+     * @return string
      */
     public function id(): string
     {
@@ -23,6 +21,8 @@ class Authorize
 
     /**
      * Get the authorization amount
+     *
+     * @return float
      */
     public function amount(): float
     {
@@ -31,6 +31,8 @@ class Authorize
 
     /**
      * Get the currency
+     *
+     * @return string
      */
     public function currency(): string
     {
@@ -39,14 +41,19 @@ class Authorize
 
     /**
      * Get the authorization status
+     *
+     * @return AuthorizeStatus
      */
-    public function status(): string
+    public function status(): AuthorizeStatus
     {
-        return $this->attributes['status'] ?? '';
+        $status = $this->attributes['status'] ?? 'UNKNOWN';
+        return AuthorizeStatus::tryFrom($status) ?? AuthorizeStatus::UNKNOWN;
     }
 
     /**
      * Get the transaction URL for redirect
+     *
+     * @return string|null
      */
     public function transactionUrl(): ?string
     {
@@ -55,6 +62,8 @@ class Authorize
 
     /**
      * Get the customer ID
+     *
+     * @return string|null
      */
     public function customerId(): ?string
     {
@@ -63,6 +72,8 @@ class Authorize
 
     /**
      * Get the source ID
+     *
+     * @return string|null
      */
     public function sourceId(): ?string
     {
@@ -71,6 +82,8 @@ class Authorize
 
     /**
      * Get metadata
+     *
+     * @return array
      */
     public function metadata(): array
     {
@@ -79,33 +92,31 @@ class Authorize
 
     /**
      * Check if authorization was successful
+     *
+     * @return bool
      */
     public function isAuthorized(): bool
     {
-        return $this->status() === 'AUTHORIZED';
+        return $this->status()->isSuccessful();
     }
 
     /**
-     * Get all attributes
+     * Check if authorization is pending
+     *
+     * @return bool
      */
-    public function toArray(): array
+    public function isPending(): bool
     {
-        return $this->attributes;
+        return $this->status()->isPending();
     }
 
     /**
-     * Get an attribute by key
+     * Check if authorization has failed
+     *
+     * @return bool
      */
-    public function get(string $key, $default = null)
+    public function hasFailed(): bool
     {
-        return data_get($this->attributes, $key, $default);
-    }
-
-    /**
-     * Magic getter for attributes
-     */
-    public function __get(string $key)
-    {
-        return $this->get($key);
+        return $this->status()->hasFailed();
     }
 }

@@ -4,14 +4,42 @@ declare(strict_types=1);
 
 namespace TapPay\Tap\Tests;
 
+use GuzzleHttp\Client as GuzzleClient;
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\HandlerStack;
 use Orchestra\Testbench\TestCase as Orchestra;
+use TapPay\Tap\Http\Client;
 use TapPay\Tap\TapServiceProvider;
 
 abstract class TestCase extends Orchestra
 {
+    protected MockHandler $mockHandler;
+
     protected function setUp(): void
     {
         parent::setUp();
+    }
+
+    /**
+     * Create a mocked HTTP client for testing
+     *
+     * @return Client
+     */
+    protected function mockHttpClient(): Client
+    {
+        $this->mockHandler = new MockHandler();
+        $handlerStack = HandlerStack::create($this->mockHandler);
+        $guzzleClient = new GuzzleClient(['handler' => $handlerStack]);
+
+        $httpClient = new Client(config('tap.secret_key'));
+
+        // Use reflection to inject mocked Guzzle client
+        $reflection = new \ReflectionClass($httpClient);
+        $property = $reflection->getProperty('client');
+        $property->setAccessible(true);
+        $property->setValue($httpClient, $guzzleClient);
+
+        return $httpClient;
     }
 
     /**

@@ -5,22 +5,16 @@ declare(strict_types=1);
 namespace TapPay\Tap\Tests\Feature;
 
 use PHPUnit\Framework\Attributes\Test;
-use GuzzleHttp\Client as GuzzleClient;
-use GuzzleHttp\Handler\MockHandler;
-use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use TapPay\Tap\Concerns\Billable;
-use TapPay\Tap\Facades\Tap;
 use TapPay\Tap\Http\Client;
 use TapPay\Tap\Tests\TestCase;
 
 class BillableTraitTest extends TestCase
 {
-    protected MockHandler $mockHandler;
-
     protected function setUp(): void
     {
         parent::setUp();
@@ -35,15 +29,7 @@ class BillableTraitTest extends TestCase
         });
 
         // Setup HTTP mocking
-        $this->mockHandler = new MockHandler();
-        $handlerStack = HandlerStack::create($this->mockHandler);
-        $guzzleClient = new GuzzleClient(['handler' => $handlerStack]);
-
-        $httpClient = new Client(config('tap.secret_key'));
-        $reflection = new \ReflectionClass($httpClient);
-        $property = $reflection->getProperty('client');
-        $property->setAccessible(true);
-        $property->setValue($httpClient, $guzzleClient);
+        $httpClient = $this->mockHttpClient();
 
         // Bind mocked client to container
         $this->app->instance(Client::class, $httpClient);
@@ -245,7 +231,7 @@ class BillableTraitTest extends TestCase
             'email' => 'john@example.com',
         ]);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Customer must be created in Tap first');
 
         $user->createCardToken('card_abc');

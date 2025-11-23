@@ -10,6 +10,8 @@ class TokenService extends AbstractService
 {
     /**
      * Get the endpoint for tokens
+     *
+     * @return string
      */
     protected function getEndpoint(): string
     {
@@ -18,6 +20,9 @@ class TokenService extends AbstractService
 
     /**
      * Create a new token for a saved card
+     *
+     * @param array $data Token data
+     * @return Token
      */
     public function create(array $data): Token
     {
@@ -28,10 +33,13 @@ class TokenService extends AbstractService
 
     /**
      * Retrieve a token by ID
+     *
+     * @param string $tokenId Token ID
+     * @return Token
      */
     public function retrieve(string $tokenId): Token
     {
-        $response = $this->client->get($this->getEndpoint() . '/' . $tokenId);
+        $response = $this->client->get(sprintf('%s/%s', $this->getEndpoint(), $tokenId));
 
         return new Token($response);
     }

@@ -10,6 +10,8 @@ class RefundService extends AbstractService
 {
     /**
      * Get the endpoint for refunds
+     *
+     * @return string
      */
     protected function getEndpoint(): string
     {
@@ -18,6 +20,9 @@ class RefundService extends AbstractService
 
     /**
      * Create a new refund
+     *
+     * @param array $data Refund data
+     * @return Refund
      */
     public function create(array $data): Refund
     {
@@ -28,30 +33,40 @@ class RefundService extends AbstractService
 
     /**
      * Retrieve a refund by ID
+     *
+     * @param string $refundId Refund ID
+     * @return Refund
      */
     public function retrieve(string $refundId): Refund
     {
-        $response = $this->client->get($this->getEndpoint() . '/' . $refundId);
+        $response = $this->client->get(sprintf('%s/%s', $this->getEndpoint(), $refundId));
 
         return new Refund($response);
     }
 
     /**
      * Update a refund
+     *
+     * @param string $refundId Refund ID
+     * @param array $data Update data
+     * @return Refund
      */
     public function update(string $refundId, array $data): Refund
     {
-        $response = $this->client->put($this->getEndpoint() . '/' . $refundId, $data);
+        $response = $this->client->put(sprintf('%s/%s', $this->getEndpoint(), $refundId), $data);
 
         return new Refund($response);
     }
 
     /**
      * List all refunds
+     *
+     * @param array $params Query parameters
+     * @return Refund[]
      */
     public function list(array $params = []): array
     {
-        $response = $this->client->post($this->getEndpoint() . '/list', $params);
+        $response = $this->client->post(sprintf('%s/list', $this->getEndpoint()), $params);
 
         return array_map(
             fn($refund) => new Refund($refund),

@@ -41,7 +41,7 @@ return [
     |
     */
 
-    'currency' => env('TAP_CURRENCY', 'USD'),
+    'currency' => env('TAP_CURRENCY', 'SAR'),
 
     /*
     |--------------------------------------------------------------------------

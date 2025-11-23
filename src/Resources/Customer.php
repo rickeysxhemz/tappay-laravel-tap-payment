@@ -4,17 +4,13 @@ declare(strict_types=1);
 
 namespace TapPay\Tap\Resources;
 
-class Customer
+class Customer extends Resource
 {
-    protected array $attributes;
-
-    public function __construct(array $attributes)
-    {
-        $this->attributes = $attributes;
-    }
 
     /**
      * Get the customer ID
+     *
+     * @return string
      */
     public function id(): string
     {
@@ -23,6 +19,8 @@ class Customer
 
     /**
      * Get the customer's first name
+     *
+     * @return string
      */
     public function firstName(): string
     {
@@ -31,6 +29,8 @@ class Customer
 
     /**
      * Get the customer's last name
+     *
+     * @return string|null
      */
     public function lastName(): ?string
     {
@@ -39,6 +39,8 @@ class Customer
 
     /**
      * Get the customer's email
+     *
+     * @return string|null
      */
     public function email(): ?string
     {
@@ -47,6 +49,8 @@ class Customer
 
     /**
      * Get the customer's phone
+     *
+     * @return array|null
      */
     public function phone(): ?array
     {
@@ -55,33 +59,11 @@ class Customer
 
     /**
      * Get the customer's metadata
+     *
+     * @return array
      */
     public function metadata(): array
     {
         return $this->attributes['metadata'] ?? [];
-    }
-
-    /**
-     * Get all attributes
-     */
-    public function toArray(): array
-    {
-        return $this->attributes;
-    }
-
-    /**
-     * Get an attribute by key
-     */
-    public function get(string $key, $default = null)
-    {
-        return data_get($this->attributes, $key, $default);
-    }
-
-    /**
-     * Magic getter for attributes
-     */
-    public function __get(string $key)
-    {
-        return $this->get($key);
     }
 }

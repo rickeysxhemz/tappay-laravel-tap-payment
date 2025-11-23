@@ -5,36 +5,21 @@ declare(strict_types=1);
 namespace TapPay\Tap\Tests\Feature;
 
 use PHPUnit\Framework\Attributes\Test;
-use GuzzleHttp\Client as GuzzleClient;
-use GuzzleHttp\Handler\MockHandler;
-use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 use TapPay\Tap\Builders\ChargeBuilder;
 use TapPay\Tap\Enums\SourceObject;
-use TapPay\Tap\Http\Client;
 use TapPay\Tap\Services\ChargeService;
 use TapPay\Tap\Tests\TestCase;
 
 class ChargeBuilderTest extends TestCase
 {
     protected ChargeService $chargeService;
-    protected MockHandler $mockHandler;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->mockHandler = new MockHandler();
-        $handlerStack = HandlerStack::create($this->mockHandler);
-        $guzzleClient = new GuzzleClient(['handler' => $handlerStack]);
-
-        $httpClient = new Client(config('tap.secret_key'));
-        $reflection = new \ReflectionClass($httpClient);
-        $property = $reflection->getProperty('client');
-        $property->setAccessible(true);
-        $property->setValue($httpClient, $guzzleClient);
-
-        $this->chargeService = new ChargeService($httpClient);
+        $this->chargeService = new ChargeService($this->mockHttpClient());
     }
     #[Test]
     public function it_builds_charge_with_fluent_interface(): void
@@ -181,5 +166,69 @@ class ChargeBuilderTest extends TestCase
         $builder = new ChargeBuilder($this->chargeService);
         $data = $builder->amount(10)->source('src_custom')->toArray();
         $this->assertSame('src_custom', $data['source']['id']);
+    }
+
+    #[Test]
+    public function it_can_check_if_field_exists(): void
+    {
+        $builder = new ChargeBuilder($this->chargeService);
+        $builder->amount(100)->currency('KWD');
+
+        $this->assertTrue($builder->has('amount'));
+        $this->assertTrue($builder->has('currency'));
+        $this->assertFalse($builder->has('description'));
+        $this->assertFalse($builder->has('nonexistent'));
+    }
+
+    #[Test]
+    public function it_can_get_field_value(): void
+    {
+        $builder = new ChargeBuilder($this->chargeService);
+        $builder->amount(100)->currency('KWD')->description('Test');
+
+        $this->assertSame(100.0, $builder->get('amount'));
+        $this->assertSame('KWD', $builder->get('currency'));
+        $this->assertSame('Test', $builder->get('description'));
+        $this->assertNull($builder->get('nonexistent'));
+    }
+
+    #[Test]
+    public function it_can_get_field_with_default_value(): void
+    {
+        $builder = new ChargeBuilder($this->chargeService);
+        $builder->amount(100);
+
+        $this->assertSame(100.0, $builder->get('amount'));
+        $this->assertSame('USD', $builder->get('currency', 'USD'));
+        $this->assertSame('default', $builder->get('nonexistent', 'default'));
+    }
+
+    #[Test]
+    public function it_can_reset_builder(): void
+    {
+        $builder = new ChargeBuilder($this->chargeService);
+        $builder->amount(100)->currency('KWD')->description('Test');
+
+        $this->assertTrue($builder->has('amount'));
+        $this->assertTrue($builder->has('currency'));
+
+        $builder->reset();
+
+        $this->assertFalse($builder->has('amount'));
+        $this->assertFalse($builder->has('currency'));
+        $this->assertFalse($builder->has('description'));
+        $this->assertEmpty($builder->toArray());
+    }
+
+    #[Test]
+    public function it_can_set_reference(): void
+    {
+        $builder = new ChargeBuilder($this->chargeService);
+        $data = $builder
+            ->amount(100)
+            ->reference('TX-12345')
+            ->toArray();
+
+        $this->assertSame('TX-12345', $data['reference']['transaction']);
     }
 }

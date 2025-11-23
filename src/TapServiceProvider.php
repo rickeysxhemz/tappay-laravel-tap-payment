@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TapPay\Tap;
 
 use Illuminate\Support\ServiceProvider;
+use RuntimeException;
 use TapPay\Tap\Http\Client;
 
 class TapServiceProvider extends ServiceProvider
@@ -14,22 +15,32 @@ class TapServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__ . '/../config/tap.php', 'tap');
+        // Merge package config with user config
+        $this->mergeConfigFrom(
+            __DIR__ . '/../config/tap.php',
+            'tap'
+        );
 
         // Register the HTTP Client as a singleton
-        $this->app->singleton(Client::class, function ($app) {
-            return new Client(config('tap.secret_key'));
+        $this->app->singleton(Client::class, function (): Client {
+            $secretKey = config('tap.secret_key');
+
+            if (empty($secretKey)) {
+                throw new RuntimeException(
+                    'Tap secret key is not configured. Please publish and configure the tap.php config file.'
+                );
+            }
+
+            return new Client($secretKey);
         });
 
         // Register the main Tap class as a singleton
-        $this->app->singleton('tap', function ($app) {
+        $this->app->singleton(Tap::class, function (): Tap {
             return new Tap();
         });
 
-        // Bind Tap class for dependency injection
-        $this->app->singleton(Tap::class, function ($app) {
-            return $app->make('tap');
-        });
+        // Alias for easier resolution
+        $this->app->alias(Tap::class, 'tap');
     }
 
     /**
@@ -44,7 +55,7 @@ class TapServiceProvider extends ServiceProvider
             ], 'tap-config');
         }
 
-        // Load routes for webhooks
+        // Load routes (automatically handles route caching)
         $this->loadRoutesFrom(__DIR__ . '/../routes/webhooks.php');
     }
 }

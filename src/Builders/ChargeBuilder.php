@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TapPay\Tap\Builders;
 
+use InvalidArgumentException;
 use TapPay\Tap\Enums\SourceObject;
 use TapPay\Tap\Resources\Charge;
 use TapPay\Tap\Services\ChargeService;
@@ -22,6 +23,9 @@ class ChargeBuilder extends AbstractBuilder
 
     /**
      * Set the payment source
+     *
+     * @param string|SourceObject $source Source ID or SourceObject enum
+     * @return self
      */
     public function source(string|SourceObject $source): self
     {
@@ -32,6 +36,8 @@ class ChargeBuilder extends AbstractBuilder
 
     /**
      * Use card payment (redirect to hosted page)
+     *
+     * @return self
      */
     public function withCard(): self
     {
@@ -40,6 +46,8 @@ class ChargeBuilder extends AbstractBuilder
 
     /**
      * Use all available payment methods
+     *
+     * @return self
      */
     public function withAllMethods(): self
     {
@@ -48,6 +56,8 @@ class ChargeBuilder extends AbstractBuilder
 
     /**
      * Use KNET (Kuwait)
+     *
+     * @return self
      */
     public function withKNET(): self
     {
@@ -56,6 +66,8 @@ class ChargeBuilder extends AbstractBuilder
 
     /**
      * Use MADA (Saudi Arabia)
+     *
+     * @return self
      */
     public function withMADA(): self
     {
@@ -64,6 +76,8 @@ class ChargeBuilder extends AbstractBuilder
 
     /**
      * Use Benefit (Bahrain)
+     *
+     * @return self
      */
     public function withBenefit(): self
     {
@@ -72,6 +86,8 @@ class ChargeBuilder extends AbstractBuilder
 
     /**
      * Use OmanNet (Oman)
+     *
+     * @return self
      */
     public function withOmanNet(): self
     {
@@ -80,6 +96,8 @@ class ChargeBuilder extends AbstractBuilder
 
     /**
      * Use NAPS (Qatar)
+     *
+     * @return self
      */
     public function withNAPS(): self
     {
@@ -88,24 +106,39 @@ class ChargeBuilder extends AbstractBuilder
 
     /**
      * Use a token (for saved cards or Apple Pay/Google Pay)
+     *
+     * @param string $tokenId Token ID (must start with 'tok_')
+     * @return self
+     * @throws InvalidArgumentException
      */
     public function withToken(string $tokenId): self
     {
-        $this->data['source'] = ['id' => $tokenId];
-        return $this;
+        if (!str_starts_with($tokenId, 'tok_')) {
+            throw new InvalidArgumentException('Token ID must start with "tok_"');
+        }
+        return $this->source($tokenId);
     }
 
     /**
      * Capture a previous authorization
+     *
+     * @param string $authId Authorization ID (must start with 'auth_')
+     * @return self
+     * @throws InvalidArgumentException
      */
     public function captureAuthorization(string $authId): self
     {
-        $this->data['source'] = ['id' => $authId];
-        return $this;
+        if (!str_starts_with($authId, 'auth_')) {
+            throw new InvalidArgumentException('Authorization ID must start with "auth_"');
+        }
+        return $this->source($authId);
     }
 
     /**
      * Save the card for future use
+     *
+     * @param bool $save Whether to save the card
+     * @return self
      */
     public function saveCard(bool $save = true): self
     {
@@ -115,6 +148,9 @@ class ChargeBuilder extends AbstractBuilder
 
     /**
      * Set the statement descriptor
+     *
+     * @param string $descriptor Text shown on customer's statement
+     * @return self
      */
     public function statementDescriptor(string $descriptor): self
     {
@@ -124,6 +160,9 @@ class ChargeBuilder extends AbstractBuilder
 
     /**
      * Set receipt settings
+     *
+     * @param array $receipt Receipt configuration array
+     * @return self
      */
     public function receipt(array $receipt): self
     {
@@ -133,27 +172,35 @@ class ChargeBuilder extends AbstractBuilder
 
     /**
      * Enable email receipt
+     *
+     * @param bool $email Whether to send email receipt
+     * @return self
      */
     public function emailReceipt(bool $email = true): self
     {
-        $this->data['receipt'] = ['email' => $email];
+        $this->data['receipt'] ??= [];
+        $this->data['receipt']['email'] = $email;
         return $this;
     }
 
     /**
      * Enable SMS receipt
+     *
+     * @param bool $sms Whether to send SMS receipt
+     * @return self
      */
     public function smsReceipt(bool $sms = true): self
     {
-        if (!isset($this->data['receipt'])) {
-            $this->data['receipt'] = [];
-        }
+        $this->data['receipt'] ??= [];
         $this->data['receipt']['sms'] = $sms;
         return $this;
     }
 
     /**
      * Set auto capture (for authorizations)
+     *
+     * @param array $auto Auto capture configuration
+     * @return self
      */
     public function auto(array $auto): self
     {
@@ -163,6 +210,8 @@ class ChargeBuilder extends AbstractBuilder
 
     /**
      * Build and create the charge
+     *
+     * @return Charge The created charge resource
      */
     public function create(): Charge
     {

@@ -6,17 +6,13 @@ namespace TapPay\Tap\Resources;
 
 use TapPay\Tap\Enums\RefundStatus;
 
-class Refund
+class Refund extends Resource
 {
-    protected array $attributes;
-
-    public function __construct(array $attributes)
-    {
-        $this->attributes = $attributes;
-    }
 
     /**
      * Get the refund ID
+     *
+     * @return string
      */
     public function id(): string
     {
@@ -25,6 +21,8 @@ class Refund
 
     /**
      * Get the refund amount
+     *
+     * @return float
      */
     public function amount(): float
     {
@@ -33,6 +31,8 @@ class Refund
 
     /**
      * Get the currency
+     *
+     * @return string
      */
     public function currency(): string
     {
@@ -41,6 +41,8 @@ class Refund
 
     /**
      * Get the refund status
+     *
+     * @return RefundStatus
      */
     public function status(): RefundStatus
     {
@@ -50,6 +52,8 @@ class Refund
 
     /**
      * Get the charge ID being refunded
+     *
+     * @return string
      */
     public function chargeId(): string
     {
@@ -58,6 +62,8 @@ class Refund
 
     /**
      * Get the refund reason
+     *
+     * @return string|null
      */
     public function reason(): ?string
     {
@@ -66,6 +72,8 @@ class Refund
 
     /**
      * Get metadata
+     *
+     * @return array
      */
     public function metadata(): array
     {
@@ -74,6 +82,8 @@ class Refund
 
     /**
      * Check if refund was successful
+     *
+     * @return bool
      */
     public function isSuccessful(): bool
     {
@@ -82,6 +92,8 @@ class Refund
 
     /**
      * Check if refund is pending
+     *
+     * @return bool
      */
     public function isPending(): bool
     {
@@ -90,33 +102,11 @@ class Refund
 
     /**
      * Check if refund has failed
+     *
+     * @return bool
      */
     public function hasFailed(): bool
     {
         return $this->status()->hasFailed();
-    }
-
-    /**
-     * Get all attributes
-     */
-    public function toArray(): array
-    {
-        return $this->attributes;
-    }
-
-    /**
-     * Get an attribute by key
-     */
-    public function get(string $key, $default = null)
-    {
-        return data_get($this->attributes, $key, $default);
-    }
-
-    /**
-     * Magic getter for attributes
-     */
-    public function __get(string $key)
-    {
-        return $this->get($key);
     }
 }

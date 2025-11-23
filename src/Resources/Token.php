@@ -4,17 +4,13 @@ declare(strict_types=1);
 
 namespace TapPay\Tap\Resources;
 
-class Token
+class Token extends Resource
 {
-    protected array $attributes;
-
-    public function __construct(array $attributes)
-    {
-        $this->attributes = $attributes;
-    }
 
     /**
      * Get the token ID
+     *
+     * @return string
      */
     public function id(): string
     {
@@ -23,6 +19,8 @@ class Token
 
     /**
      * Get the card ID associated with this token
+     *
+     * @return string|null
      */
     public function cardId(): ?string
     {
@@ -31,6 +29,8 @@ class Token
 
     /**
      * Get the customer ID
+     *
+     * @return string|null
      */
     public function customerId(): ?string
     {
@@ -39,33 +39,11 @@ class Token
 
     /**
      * Get the created timestamp
+     *
+     * @return int|null
      */
     public function created(): ?int
     {
         return $this->attributes['created'] ?? null;
-    }
-
-    /**
-     * Get all attributes
-     */
-    public function toArray(): array
-    {
-        return $this->attributes;
-    }
-
-    /**
-     * Get an attribute by key
-     */
-    public function get(string $key, $default = null)
-    {
-        return data_get($this->attributes, $key, $default);
-    }
-
-    /**
-     * Magic getter for attributes
-     */
-    public function __get(string $key)
-    {
-        return $this->get($key);
     }
 }

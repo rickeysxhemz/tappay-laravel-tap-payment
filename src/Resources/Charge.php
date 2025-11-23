@@ -6,17 +6,13 @@ namespace TapPay\Tap\Resources;
 
 use TapPay\Tap\Enums\ChargeStatus;
 
-class Charge
+class Charge extends Resource
 {
-    protected array $attributes;
-
-    public function __construct(array $attributes)
-    {
-        $this->attributes = $attributes;
-    }
 
     /**
      * Get the charge ID
+     *
+     * @return string
      */
     public function id(): string
     {
@@ -25,6 +21,8 @@ class Charge
 
     /**
      * Get the charge amount
+     *
+     * @return float
      */
     public function amount(): float
     {
@@ -33,6 +31,8 @@ class Charge
 
     /**
      * Get the currency
+     *
+     * @return string
      */
     public function currency(): string
     {
@@ -41,6 +41,8 @@ class Charge
 
     /**
      * Get the charge status
+     *
+     * @return ChargeStatus
      */
     public function status(): ChargeStatus
     {
@@ -50,6 +52,8 @@ class Charge
 
     /**
      * Get the transaction URL for redirect
+     *
+     * @return string|null
      */
     public function transactionUrl(): ?string
     {
@@ -58,6 +62,8 @@ class Charge
 
     /**
      * Get the customer ID
+     *
+     * @return string|null
      */
     public function customerId(): ?string
     {
@@ -66,6 +72,8 @@ class Charge
 
     /**
      * Get the source ID
+     *
+     * @return string|null
      */
     public function sourceId(): ?string
     {
@@ -74,6 +82,8 @@ class Charge
 
     /**
      * Get the description
+     *
+     * @return string|null
      */
     public function description(): ?string
     {
@@ -82,6 +92,8 @@ class Charge
 
     /**
      * Get metadata
+     *
+     * @return array
      */
     public function metadata(): array
     {
@@ -90,6 +102,8 @@ class Charge
 
     /**
      * Get saved card ID if card was saved
+     *
+     * @return string|null
      */
     public function cardId(): ?string
     {
@@ -98,6 +112,8 @@ class Charge
 
     /**
      * Check if charge was successful
+     *
+     * @return bool
      */
     public function isSuccessful(): bool
     {
@@ -106,6 +122,8 @@ class Charge
 
     /**
      * Check if charge is pending
+     *
+     * @return bool
      */
     public function isPending(): bool
     {
@@ -114,33 +132,11 @@ class Charge
 
     /**
      * Check if charge has failed
+     *
+     * @return bool
      */
     public function hasFailed(): bool
     {
         return $this->status()->hasFailed();
-    }
-
-    /**
-     * Get all attributes
-     */
-    public function toArray(): array
-    {
-        return $this->attributes;
-    }
-
-    /**
-     * Get an attribute by key
-     */
-    public function get(string $key, $default = null)
-    {
-        return data_get($this->attributes, $key, $default);
-    }
-
-    /**
-     * Magic getter for attributes
-     */
-    public function __get(string $key)
-    {
-        return $this->get($key);
     }
 }
