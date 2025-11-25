@@ -79,8 +79,7 @@ class WebhookValidator
         }
 
         $hashString = $this->buildHashString($data);
-        $algorithm = config('tap.webhook_hash_algorithm', 'sha256');
-        $computedSignature = hash_hmac($algorithm, $hashString, $this->secret);
+        $computedSignature = hash_hmac('sha256', $hashString, $this->secret);
 
         $isValid = hash_equals($computedSignature, $signature);
 
@@ -116,8 +115,7 @@ class WebhookValidator
         }
 
         $hashString = $this->buildHashString($payload);
-        $algorithm = config('tap.webhook_hash_algorithm', 'sha256');
-        $computedSignature = hash_hmac($algorithm, $hashString, $this->secret);
+        $computedSignature = hash_hmac('sha256', $hashString, $this->secret);
 
         return hash_equals($computedSignature, $signature);
     }
@@ -131,9 +129,7 @@ class WebhookValidator
      */
     protected function buildHashString(array $data): string
     {
-        $fieldKeys = config('tap.webhook_signature_fields', [
-            'id', 'amount', 'currency', 'status', 'created'
-        ]);
+        $fieldKeys = ['id', 'amount', 'currency', 'status', 'created'];
 
         $fields = [];
         foreach ($fieldKeys as $key) {
@@ -149,14 +145,19 @@ class WebhookValidator
      * Check if the webhook is within tolerance time (prevents replay attacks)
      *
      * @param array $data The webhook payload
-     * @return bool True if within tolerance, false if expired
+     * @return bool True if within tolerance, false if expired or missing timestamp
      */
     public function isWithinTolerance(array $data): bool
     {
         $tolerance = config('tap.webhook_tolerance', 300); // 5 minutes default
 
         if (!isset($data['created'])) {
-            return true; // If no timestamp, skip tolerance check
+            // Reject webhooks without timestamp to prevent replay attacks
+            WebhookValidationFailed::dispatch(
+                'Missing created timestamp',
+                request()->ip() ?? 'unknown'
+            );
+            return false;
         }
 
         $created = (int) $data['created'];

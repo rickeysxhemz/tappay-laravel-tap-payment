@@ -6,24 +6,36 @@ namespace TapPay\Tap\Builders;
 
 use InvalidArgumentException;
 use TapPay\Tap\Resources\Resource;
+use TapPay\Tap\Support\Money;
 
 abstract class AbstractBuilder
 {
     protected array $data = [];
 
+    protected Money $money;
+
+    protected ?int $rawAmount = null;
+
+    public function __construct()
+    {
+        $this->money = app(Money::class);
+    }
+
     /**
      * Set the amount
      *
-     * @param float $amount Amount in currency units (minimum 0.001)
+     * @param int $amount Amount in smallest currency unit (e.g., 1050 for 10.50 USD, 1050 for 1.050 KWD)
      * @return self
      * @throws InvalidArgumentException
      */
-    public function amount(float $amount): self
+    public function amount(int $amount): self
     {
-        if ($amount < 0.001) {
-            throw new InvalidArgumentException('Amount must be at least 0.001');
+        if ($amount < 0) {
+            throw new InvalidArgumentException('Amount cannot be negative');
         }
-        $this->data['amount'] = $amount;
+
+        $this->rawAmount = $amount;
+
         return $this;
     }
 
@@ -35,7 +47,7 @@ abstract class AbstractBuilder
      */
     public function currency(string $currency): self
     {
-        $this->data['currency'] = $currency;
+        $this->data['currency'] = $this->money->normalizeCurrency($currency);
         return $this;
     }
 
@@ -146,6 +158,10 @@ abstract class AbstractBuilder
      */
     public function has(string $key): bool
     {
+        if ($key === 'amount') {
+            return $this->rawAmount !== null;
+        }
+
         return isset($this->data[$key]);
     }
 
@@ -158,6 +174,14 @@ abstract class AbstractBuilder
      */
     public function get(string $key, mixed $default = null): mixed
     {
+        if ($key === 'amount') {
+            if ($this->rawAmount === null) {
+                return $default;
+            }
+            $currency = $this->data['currency'] ?? config('tap.currency', 'SAR');
+            return $this->money->toDecimal($this->rawAmount, $currency);
+        }
+
         return $this->data[$key] ?? $default;
     }
 
@@ -169,6 +193,7 @@ abstract class AbstractBuilder
     public function reset(): self
     {
         $this->data = [];
+        $this->rawAmount = null;
         return $this;
     }
 
@@ -176,10 +201,26 @@ abstract class AbstractBuilder
      * Get the built data array as an immutable copy
      *
      * @return array A copy of the builder data
+     * @throws InvalidArgumentException
      */
     public function toArray(): array
     {
-        return [...$this->data];
+        $result = [...$this->data];
+
+        if ($this->rawAmount !== null) {
+            $currency = $result['currency'] ?? config('tap.currency', 'SAR');
+            $minimum = $this->money->getMinimumAmount($currency);
+
+            if ($this->rawAmount < $minimum) {
+                throw new InvalidArgumentException(
+                    "Amount must be at least {$minimum} for {$currency}"
+                );
+            }
+
+            $result['amount'] = $this->money->toDecimal($this->rawAmount, $currency);
+        }
+
+        return $result;
     }
 
     /**

@@ -1,0 +1,21 @@
+{
+  "id": "ref_TS02A2220231616Xm0B1234567",
+  "object": "refund",
+  "live_mode": false,
+  "api_version": "V2",
+  "method": "CREATE",
+  "status": "PENDING",
+  "amount": 10.5,
+  "currency": "SAR",
+  "charge_id": "chg_TS02A2220231616Xm0B1234567",
+  "merchant_id": "1124340",
+  "description": "Test refund",
+  "reason": "requested_by_customer",
+  "metadata": {
+    "udf1": "test1"
+  },
+  "reference": {
+    "merchant": "ref_0001"
+  },
+  "created": 1616439916
+}

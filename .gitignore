@@ -3,10 +3,12 @@
 .env
 .env.backup
 .env.production
+.env.testing
 .phpunit.result.cache
 .phpunit.cache
 composer.lock
-phpunit.xml.dist
+phpunit.xml
+coverage/
 .DS_Store
 Thumbs.db
 *.log

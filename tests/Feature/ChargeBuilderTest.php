@@ -27,7 +27,7 @@ class ChargeBuilderTest extends TestCase
         $builder = new ChargeBuilder($this->chargeService);
 
         $data = $builder
-            ->amount(100.50)
+            ->amount(10050)
             ->currency('KWD')
             ->description('Test payment')
             ->customerId('cus_test_123')
@@ -38,7 +38,8 @@ class ChargeBuilderTest extends TestCase
             ->metadata(['order_id' => '12345'])
             ->toArray();
 
-        $this->assertSame(100.50, $data['amount']);
+        // KWD has 3 decimal places: 10050 / 1000 = 10.05
+        $this->assertSame(10.05, $data['amount']);
         $this->assertSame('KWD', $data['currency']);
         $this->assertSame('Test payment', $data['description']);
         $this->assertSame('cus_test_123', $data['customer']['id']);
@@ -54,17 +55,17 @@ class ChargeBuilderTest extends TestCase
         $builder = new ChargeBuilder($this->chargeService);
 
         // Test KNET
-        $data = $builder->amount(10)->withKNET()->toArray();
+        $data = $builder->amount(1000)->withKNET()->toArray();
         $this->assertSame('src_kw.knet', $data['source']['id']);
 
         // Test MADA
         $builder = new ChargeBuilder($this->chargeService);
-        $data = $builder->amount(10)->withMADA()->toArray();
+        $data = $builder->amount(1000)->withMADA()->toArray();
         $this->assertSame('src_sa.mada', $data['source']['id']);
 
         // Test Token
         $builder = new ChargeBuilder($this->chargeService);
-        $data = $builder->amount(10)->withToken('tok_abc123')->toArray();
+        $data = $builder->amount(1000)->withToken('tok_abc123')->toArray();
         $this->assertSame('tok_abc123', $data['source']['id']);
     }
     #[Test]
@@ -73,7 +74,7 @@ class ChargeBuilderTest extends TestCase
         $builder = new ChargeBuilder($this->chargeService);
 
         $data = $builder
-            ->amount(10)
+            ->amount(1000)
             ->addMetadata('order_id', '123')
             ->addMetadata('user_id', '456')
             ->addMetadata('invoice', 'INV-001')
@@ -91,7 +92,7 @@ class ChargeBuilderTest extends TestCase
         $builder = new ChargeBuilder($this->chargeService);
 
         $data = $builder
-            ->amount(10)
+            ->amount(1000)
             ->emailReceipt(true)
             ->smsReceipt(true)
             ->toArray();
@@ -105,7 +106,7 @@ class ChargeBuilderTest extends TestCase
         $builder = new ChargeBuilder($this->chargeService);
 
         $data = $builder
-            ->amount(50)
+            ->amount(5000)
             ->captureAuthorization('auth_xyz789')
             ->toArray();
 
@@ -122,7 +123,7 @@ class ChargeBuilderTest extends TestCase
         ])));
 
         $charge = (new ChargeBuilder($this->chargeService))
-            ->amount(25)
+            ->amount(2500)
             ->withCard()
             ->description('Builder test')
             ->create();
@@ -136,7 +137,7 @@ class ChargeBuilderTest extends TestCase
         config(['tap.currency' => 'KWD']);
 
         $builder = new ChargeBuilder($this->chargeService);
-        $data = $builder->amount(10)->toArray();
+        $data = $builder->amount(1000)->toArray();
 
         $this->assertSame('KWD', $data['currency']);
     }
@@ -147,7 +148,7 @@ class ChargeBuilderTest extends TestCase
 
         $builder = new ChargeBuilder($this->chargeService);
         $data = $builder
-            ->amount(10)
+            ->amount(1000)
             ->currency('SAR')
             ->toArray();
 
@@ -159,12 +160,12 @@ class ChargeBuilderTest extends TestCase
         $builder = new ChargeBuilder($this->chargeService);
 
         // Test with enum
-        $data = $builder->amount(10)->source(SourceObject::SRC_BENEFIT)->toArray();
+        $data = $builder->amount(1000)->source(SourceObject::SRC_BENEFIT)->toArray();
         $this->assertSame('src_bh.benefit', $data['source']['id']);
 
         // Test with string
         $builder = new ChargeBuilder($this->chargeService);
-        $data = $builder->amount(10)->source('src_custom')->toArray();
+        $data = $builder->amount(1000)->source('src_custom')->toArray();
         $this->assertSame('src_custom', $data['source']['id']);
     }
 
@@ -172,7 +173,7 @@ class ChargeBuilderTest extends TestCase
     public function it_can_check_if_field_exists(): void
     {
         $builder = new ChargeBuilder($this->chargeService);
-        $builder->amount(100)->currency('KWD');
+        $builder->amount(10000)->currency('KWD');
 
         $this->assertTrue($builder->has('amount'));
         $this->assertTrue($builder->has('currency'));
@@ -184,9 +185,10 @@ class ChargeBuilderTest extends TestCase
     public function it_can_get_field_value(): void
     {
         $builder = new ChargeBuilder($this->chargeService);
-        $builder->amount(100)->currency('KWD')->description('Test');
+        // KWD has 3 decimal places: 10000 / 1000 = 10.0
+        $builder->amount(10000)->currency('KWD')->description('Test');
 
-        $this->assertSame(100.0, $builder->get('amount'));
+        $this->assertSame(10.0, $builder->get('amount'));
         $this->assertSame('KWD', $builder->get('currency'));
         $this->assertSame('Test', $builder->get('description'));
         $this->assertNull($builder->get('nonexistent'));
@@ -196,10 +198,10 @@ class ChargeBuilderTest extends TestCase
     public function it_can_get_field_with_default_value(): void
     {
         $builder = new ChargeBuilder($this->chargeService);
-        $builder->amount(100);
+        $builder->amount(10000);
 
         $this->assertSame(100.0, $builder->get('amount'));
-        $this->assertSame('USD', $builder->get('currency', 'USD'));
+        $this->assertSame('SAR', $builder->get('currency')); // Builder has SAR from config
         $this->assertSame('default', $builder->get('nonexistent', 'default'));
     }
 
@@ -207,7 +209,7 @@ class ChargeBuilderTest extends TestCase
     public function it_can_reset_builder(): void
     {
         $builder = new ChargeBuilder($this->chargeService);
-        $builder->amount(100)->currency('KWD')->description('Test');
+        $builder->amount(10000)->currency('KWD')->description('Test');
 
         $this->assertTrue($builder->has('amount'));
         $this->assertTrue($builder->has('currency'));
@@ -225,7 +227,7 @@ class ChargeBuilderTest extends TestCase
     {
         $builder = new ChargeBuilder($this->chargeService);
         $data = $builder
-            ->amount(100)
+            ->amount(10000)
             ->reference('TX-12345')
             ->toArray();
 
@@ -236,7 +238,7 @@ class ChargeBuilderTest extends TestCase
     public function it_can_use_all_payment_methods(): void
     {
         $builder = new ChargeBuilder($this->chargeService);
-        $data = $builder->amount(10)->withAllMethods()->toArray();
+        $data = $builder->amount(1000)->withAllMethods()->toArray();
 
         $this->assertSame('src_all', $data['source']['id']);
     }
@@ -245,7 +247,7 @@ class ChargeBuilderTest extends TestCase
     public function it_can_use_benefit_payment(): void
     {
         $builder = new ChargeBuilder($this->chargeService);
-        $data = $builder->amount(10)->withBenefit()->toArray();
+        $data = $builder->amount(1000)->withBenefit()->toArray();
 
         $this->assertSame('src_bh.benefit', $data['source']['id']);
     }
@@ -254,7 +256,7 @@ class ChargeBuilderTest extends TestCase
     public function it_can_use_omannet_payment(): void
     {
         $builder = new ChargeBuilder($this->chargeService);
-        $data = $builder->amount(10)->withOmanNet()->toArray();
+        $data = $builder->amount(1000)->withOmanNet()->toArray();
 
         $this->assertSame('src_om.omannet', $data['source']['id']);
     }
@@ -263,7 +265,7 @@ class ChargeBuilderTest extends TestCase
     public function it_can_use_naps_payment(): void
     {
         $builder = new ChargeBuilder($this->chargeService);
-        $data = $builder->amount(10)->withNAPS()->toArray();
+        $data = $builder->amount(1000)->withNAPS()->toArray();
 
         $this->assertSame('src_qa.naps', $data['source']['id']);
     }
@@ -292,7 +294,7 @@ class ChargeBuilderTest extends TestCase
     public function it_can_disable_save_card(): void
     {
         $builder = new ChargeBuilder($this->chargeService);
-        $data = $builder->amount(10)->saveCard(false)->toArray();
+        $data = $builder->amount(1000)->saveCard(false)->toArray();
 
         $this->assertFalse($data['save_card']);
     }
@@ -302,7 +304,7 @@ class ChargeBuilderTest extends TestCase
     {
         $builder = new ChargeBuilder($this->chargeService);
         $data = $builder
-            ->amount(10)
+            ->amount(1000)
             ->statementDescriptor('ACME Corp Payment')
             ->toArray();
 
@@ -314,7 +316,7 @@ class ChargeBuilderTest extends TestCase
     {
         $builder = new ChargeBuilder($this->chargeService);
         $data = $builder
-            ->amount(10)
+            ->amount(1000)
             ->receipt([
                 'email' => true,
                 'sms' => true,
@@ -332,7 +334,7 @@ class ChargeBuilderTest extends TestCase
     {
         $builder = new ChargeBuilder($this->chargeService);
         $data = $builder
-            ->amount(10)
+            ->amount(1000)
             ->auto([
                 'type' => 'VOID',
                 'time' => 100,
@@ -347,19 +349,19 @@ class ChargeBuilderTest extends TestCase
     public function it_throws_exception_for_amount_below_minimum(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Amount must be at least 0.001');
+        $this->expectExceptionMessage('Amount must be at least 10 for SAR');
 
         $builder = new ChargeBuilder($this->chargeService);
-        $builder->amount(0.0005);
+        $builder->amount(5)->toArray();
     }
 
     #[Test]
     public function it_accepts_minimum_valid_amount(): void
     {
         $builder = new ChargeBuilder($this->chargeService);
-        $data = $builder->amount(0.001)->toArray();
+        $data = $builder->amount(10)->toArray();
 
-        $this->assertSame(0.001, $data['amount']);
+        $this->assertSame(0.1, $data['amount']);
     }
 
     #[Test]
@@ -367,7 +369,7 @@ class ChargeBuilderTest extends TestCase
     {
         $builder = new ChargeBuilder($this->chargeService);
         $data = $builder
-            ->amount(10)
+            ->amount(1000)
             ->customer([
                 'id' => 'cus_test_123',
                 'first_name' => 'John',
@@ -387,7 +389,7 @@ class ChargeBuilderTest extends TestCase
     {
         $builder = new ChargeBuilder($this->chargeService);
         $data = $builder
-            ->amount(10)
+            ->amount(1000)
             ->customer(['first_name' => 'John'])
             ->customerId('cus_override')
             ->toArray();
@@ -400,7 +402,8 @@ class ChargeBuilderTest extends TestCase
     public function it_returns_immutable_copy_on_to_array(): void
     {
         $builder = new ChargeBuilder($this->chargeService);
-        $builder->amount(100)->currency('KWD');
+        // KWD has 3 decimal places: 10000 / 1000 = 10.0
+        $builder->amount(10000)->currency('KWD');
 
         $array1 = $builder->toArray();
 
@@ -411,7 +414,7 @@ class ChargeBuilderTest extends TestCase
         $array2 = $builder->toArray();
 
         // Builder should still have original values
-        $this->assertSame(100.0, $array2['amount']);
+        $this->assertSame(10.0, $array2['amount']);
         $this->assertSame('KWD', $array2['currency']);
     }
 
@@ -420,7 +423,7 @@ class ChargeBuilderTest extends TestCase
     {
         $builder = new ChargeBuilder($this->chargeService);
         $data = $builder
-            ->amount(10)
+            ->amount(1000)
             ->emailReceipt(false)
             ->toArray();
 
@@ -432,7 +435,7 @@ class ChargeBuilderTest extends TestCase
     {
         $builder = new ChargeBuilder($this->chargeService);
         $data = $builder
-            ->amount(10)
+            ->amount(1000)
             ->smsReceipt(false)
             ->toArray();
 
@@ -444,7 +447,7 @@ class ChargeBuilderTest extends TestCase
     {
         $builder = new ChargeBuilder($this->chargeService);
         $data = $builder
-            ->amount(150.75)
+            ->amount(15075)
             ->currency('SAR')
             ->description('Premium subscription')
             ->customer([

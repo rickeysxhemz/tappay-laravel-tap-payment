@@ -21,6 +21,8 @@
     "require-dev": {
         "mockery/mockery": "^1.6",
         "orchestra/testbench": "^10.7",
+        "pestphp/pest": "^3.0",
+        "pestphp/pest-plugin-laravel": "^3.0",
         "phpunit/phpunit": "^11.0"
     },
     "autoload": {
@@ -43,8 +45,19 @@
             }
         }
     },
+    "scripts": {
+        "test": "pest",
+        "test:unit": "pest --group=unit",
+        "test:feature": "pest --group=feature",
+        "test:integration": "pest --group=integration",
+        "test:coverage": "pest --coverage --min=80",
+        "test:parallel": "pest --parallel"
+    },
     "config": {
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
     },
     "minimum-stability": "dev",
     "prefer-stable": true

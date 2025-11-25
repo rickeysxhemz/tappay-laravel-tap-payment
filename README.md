@@ -177,7 +177,14 @@ $refund = Tap::refunds()->create([
 
 ### Webhooks
 
-Webhooks are automatically registered at `/tap/webhook`. The package uses an event-driven architecture for maximum flexibility.
+Webhooks are automatically registered at `/tap/webhook` **without requiring CSRF token exemption** (just like Laravel Cashier). The package uses an event-driven architecture for maximum flexibility.
+
+#### Webhook Security
+
+- ✅ Automatic signature validation using HMAC-SHA256
+- ✅ Replay attack prevention with timestamp tolerance (5 minutes default)
+- ✅ No CSRF exemption required (route registered outside web middleware)
+- ✅ Event-driven architecture for flexible handling
 
 #### Available Webhook Events
 
@@ -919,9 +926,68 @@ public function register()
 
 ## Testing
 
+This package follows industry-standard testing practices with comprehensive test coverage.
+
+### Quick Start
+
 ```bash
+# Run all tests
 composer test
+
+# Run only fast unit tests
+composer test:unit
+
+# Run feature tests with mocked APIs
+composer test:feature
+
+# Run integration tests (requires real API keys)
+composer test:integration
+
+# Run tests with coverage report
+composer test:coverage
+
+# Run tests in parallel (faster)
+composer test:parallel
 ```
+
+### Test Structure
+
+```
+tests/
+├── Unit/        # Fast, isolated unit tests
+├── Feature/     # Integration tests with mocked API
+├── Fixtures/    # Test data and API response fixtures
+├── Pest.php     # Pest configuration and helpers
+└── TestCase.php # Base test case with Orchestra Testbench
+```
+
+### Testing Strategies
+
+**1. Unit Tests (Fast)**
+- Test individual components in isolation
+- No external dependencies or API calls
+- Ideal for TDD and rapid development
+
+**2. Feature Tests (Mocked)**
+- Test service integration with mocked HTTP responses
+- Fast and reliable
+- Default for CI/CD pipelines
+
+**3. Integration Tests (Real API)**
+- Test against actual Tap API
+- Requires test API keys in `phpunit.xml`
+- Run manually or in scheduled CI jobs
+
+### Configuration
+
+To enable real API testing, edit `phpunit.xml`:
+
+```xml
+<env name="TAP_REAL_API_TESTING" value="true"/>
+<env name="TAP_SECRET_KEY" value="sk_test_YOUR_KEY"/>
+```
+
+For detailed testing documentation, see [TESTING.md](TESTING.md).
 
 ## API Documentation
 

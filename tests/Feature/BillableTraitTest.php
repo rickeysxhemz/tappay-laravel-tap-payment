@@ -96,7 +96,7 @@ class BillableTraitTest extends TestCase
             'email' => 'john@example.com',
         ]);
 
-        $charge = $user->charge(50.00, 'USD', [
+        $charge = $user->charge(5000, 'USD', [
             'source' => ['id' => 'src_card'],
         ]);
 
@@ -253,11 +253,12 @@ class BillableTraitTest extends TestCase
             'email' => 'john@example.com',
         ]);
 
-        $builder = $user->newCharge(100.00, 'KWD');
+        $builder = $user->newCharge(10000, 'KWD');
 
         $data = $builder->toArray();
 
-        $this->assertSame(100.00, $data['amount']);
+        // KWD has 3 decimal places: 10000 / 1000 = 10.0
+        $this->assertSame(10.0, $data['amount']);
         $this->assertSame('KWD', $data['currency']);
         $this->assertNotNull($user->fresh()->tap_customer_id);
     }
@@ -311,7 +312,7 @@ class BillableTraitTest extends TestCase
             'email' => 'john@example.com',
         ]);
 
-        $charge = $user->charge(25.00);
+        $charge = $user->charge(2500);
 
         $this->assertSame('chg_default_currency', $charge->id());
         $this->assertSame('USD', $charge->currency());
@@ -340,7 +341,7 @@ class BillableTraitTest extends TestCase
             'email' => 'john@example.com',
         ]);
 
-        $charge = $user->charge(25.00, 'KWD');
+        $charge = $user->charge(2500, 'KWD');
 
         $this->assertSame('chg_custom_currency', $charge->id());
         $this->assertSame('KWD', $charge->currency());
@@ -365,7 +366,7 @@ class BillableTraitTest extends TestCase
             'customer' => ['id' => 'cus_existing_123'],
         ])));
 
-        $charge = $user->charge(30.00);
+        $charge = $user->charge(3000);
 
         $this->assertSame('chg_no_duplicate', $charge->id());
         // Verify customer ID hasn't changed
@@ -400,7 +401,7 @@ class BillableTraitTest extends TestCase
             'email' => 'john@example.com',
         ]);
 
-        $charge = $user->charge(100.00, 'USD', [
+        $charge = $user->charge(10000, 'USD', [
             'description' => 'Premium subscription',
             'metadata' => [
                 'plan' => 'premium',
@@ -496,11 +497,11 @@ class BillableTraitTest extends TestCase
             'email' => 'john@example.com',
         ]);
 
-        $builder = $user->newCharge(50.00, 'USD');
+        $builder = $user->newCharge(5000, 'USD');
         $data = $builder->source('src_card')->toArray();
 
         $this->assertSame('src_card', $data['source']['id']);
-        $this->assertSame(50.00, $data['amount']);
+        $this->assertSame(50.0, $data['amount']);
     }
 
     #[Test]

@@ -54,7 +54,17 @@ return [
     */
 
     'webhook_secret' => env('TAP_WEBHOOK_SECRET'),
-    'webhook_tolerance' => env('TAP_WEBHOOK_TOLERANCE', 300), // 5 minutes
+    'webhook_tolerance' => env('TAP_WEBHOOK_TOLERANCE', 300),
+
+    'webhook_allowed_resources' => [
+        'charge', 'refund', 'customer', 'authorize', 'token',
+    ],
+
+    'webhook_messages' => [
+        'invalid_signature' => 'Invalid signature',
+        'expired' => 'Webhook expired',
+        'success' => 'Webhook received',
+    ],
 
     /*
     |--------------------------------------------------------------------------

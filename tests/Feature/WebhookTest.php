@@ -186,10 +186,20 @@ class WebhookTest extends TestCase
         // Old timestamp - outside tolerance
         $oldPayload = ['created' => time() - 400]; // 6+ minutes ago
         $this->assertFalse($this->validator->isWithinTolerance($oldPayload));
+    }
 
-        // No timestamp - should pass
+    #[Test]
+    public function it_rejects_webhook_without_timestamp(): void
+    {
+        Event::fake();
+
+        // No timestamp - should be rejected to prevent replay attacks
         $noTimestampPayload = ['id' => 'test'];
-        $this->assertTrue($this->validator->isWithinTolerance($noTimestampPayload));
+        $this->assertFalse($this->validator->isWithinTolerance($noTimestampPayload));
+
+        Event::assertDispatched(WebhookValidationFailed::class, function ($event) {
+            return $event->reason === 'Missing created timestamp';
+        });
     }
     #[Test]
     public function it_handles_webhook_request_successfully(): void

@@ -4,12 +4,22 @@ This document outlines the testing strategy and implementation for the TapPay La
 
 ## Overview
 
-The package uses PHPUnit 11 with Orchestra Testbench for testing. All external API calls are mocked using Guzzle's MockHandler to ensure fast, reliable, and isolated tests.
+The package uses PHPUnit 11 with Pest 3 and Orchestra Testbench for testing. All external API calls are mocked using Guzzle's MockHandler to ensure fast, reliable, and isolated tests.
+
+## Architecture Notes
+
+The package follows Laravel community best practices and is **100% Laravel Octane-safe**:
+
+- **Service Caching**: Services are cached per Tap instance to prevent memory bloat
+- **Stateless Design**: All services are stateless with no request-specific data storage
+- **Webhook Routes**: Registered directly in service provider without web middleware (no CSRF exemption needed)
+- **Config Optimization**: API-specific constants are hardcoded to minimize config lookups
 
 ## Requirements
 
 - PHP 8.2+
 - PHPUnit 11.0+
+- Pest 3.0+ (with Laravel plugin)
 - Orchestra Testbench 10.7+
 - Mockery 1.6+
 

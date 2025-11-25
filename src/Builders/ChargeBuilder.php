@@ -6,6 +6,9 @@ namespace TapPay\Tap\Builders;
 
 use InvalidArgumentException;
 use TapPay\Tap\Enums\SourceObject;
+use TapPay\Tap\Exceptions\ApiErrorException;
+use TapPay\Tap\Exceptions\AuthenticationException;
+use TapPay\Tap\Exceptions\InvalidRequestException;
 use TapPay\Tap\Resources\Charge;
 use TapPay\Tap\Services\ChargeService;
 
@@ -15,10 +18,10 @@ class ChargeBuilder extends AbstractBuilder
 
     public function __construct(ChargeService $service)
     {
-        $this->service = $service;
+        parent::__construct();
 
-        // Set default currency from config
-        $this->data['currency'] = config('tap.currency', 'USD');
+        $this->service = $service;
+        $this->data['currency'] = config('tap.currency', 'SAR');
     }
 
     /**
@@ -212,6 +215,9 @@ class ChargeBuilder extends AbstractBuilder
      * Build and create the charge
      *
      * @return Charge The created charge resource
+     * @throws AuthenticationException If API authentication fails
+     * @throws InvalidRequestException If request parameters are invalid
+     * @throws ApiErrorException If API returns an error or network error occurs
      */
     public function create(): Charge
     {

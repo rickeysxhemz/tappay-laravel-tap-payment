@@ -1,0 +1,73 @@
+{
+  "id": "chg_TS02A2220231616Xm0B1234567",
+  "object": "charge",
+  "live_mode": false,
+  "api_version": "V2",
+  "method": "CREATE",
+  "status": "INITIATED",
+  "amount": 10.5,
+  "currency": "SAR",
+  "threeDSecure": false,
+  "card_threeDSecure": false,
+  "save_card": false,
+  "merchant_id": "1124340",
+  "product": "gosell",
+  "statement_descriptor": "Sample",
+  "description": "Test charge",
+  "metadata": {
+    "udf1": "test1",
+    "udf2": "test2"
+  },
+  "transaction": {
+    "timezone": "UTC+03:00",
+    "created": "1616439916000",
+    "url": "https://sandbox.checkout.tap.company/redirect/chg_TS02A2220231616Xm0B1234567",
+    "expiry": {
+      "period": 30,
+      "type": "MINUTE"
+    },
+    "asynchronous": false,
+    "amount": 10.5,
+    "currency": "SAR"
+  },
+  "response": {
+    "code": "100",
+    "message": "Initiated"
+  },
+  "receipt": {
+    "email": true,
+    "sms": true
+  },
+  "customer": {
+    "id": "cus_TS02A2220231616Xm0B1234567",
+    "first_name": "John",
+    "last_name": "Doe",
+    "email": "john.doe@example.com",
+    "phone": {
+      "country_code": "965",
+      "number": "50000000"
+    }
+  },
+  "source": {
+    "object": "source",
+    "id": "src_card"
+  },
+  "redirect": {
+    "status": "PENDING",
+    "url": "https://yoursite.com/redirect"
+  },
+  "post": {
+    "status": "PENDING",
+    "url": "https://yoursite.com/webhook"
+  },
+  "activities": [],
+  "auto": {
+    "type": "VOID",
+    "time": 100
+  },
+  "authentication": false,
+  "reference": {
+    "transaction": "txn_0001",
+    "order": "ord_0001"
+  }
+}

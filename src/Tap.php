@@ -6,9 +6,12 @@ namespace TapPay\Tap;
 
 use TapPay\Tap\Http\Client;
 use TapPay\Tap\Services\AuthorizeService;
+use TapPay\Tap\Services\CardService;
 use TapPay\Tap\Services\ChargeService;
 use TapPay\Tap\Services\CustomerService;
+use TapPay\Tap\Services\InvoiceService;
 use TapPay\Tap\Services\RefundService;
+use TapPay\Tap\Services\SubscriptionService;
 use TapPay\Tap\Services\TokenService;
 
 /**
@@ -21,14 +24,18 @@ class Tap
     protected Client $client;
 
     /**
+     * @var array<string, object>
+     */
+    protected array $services = [];
+
+    /**
      * Create a new Tap instance
      *
-     * @param string|null $secretKey Optional secret key. Falls back to config('tap.secret_key')
+     * @param Client|null $client Optional HTTP client. Falls back to container-resolved singleton.
      */
-    public function __construct(?string $secretKey = null)
+    public function __construct(?Client $client = null)
     {
-        $secretKey = $secretKey ?? config('tap.secret_key');
-        $this->client = new Client($secretKey);
+        $this->client = $client ?? app(Client::class);
     }
 
     /**
@@ -36,7 +43,7 @@ class Tap
      */
     public function charges(): ChargeService
     {
-        return new ChargeService($this->client);
+        return $this->services['charges'] ??= new ChargeService($this->client);
     }
 
     /**
@@ -44,7 +51,7 @@ class Tap
      */
     public function customers(): CustomerService
     {
-        return new CustomerService($this->client);
+        return $this->services['customers'] ??= new CustomerService($this->client);
     }
 
     /**
@@ -52,7 +59,7 @@ class Tap
      */
     public function refunds(): RefundService
     {
-        return new RefundService($this->client);
+        return $this->services['refunds'] ??= new RefundService($this->client);
     }
 
     /**
@@ -60,7 +67,7 @@ class Tap
      */
     public function authorizations(): AuthorizeService
     {
-        return new AuthorizeService($this->client);
+        return $this->services['authorizations'] ??= new AuthorizeService($this->client);
     }
 
     /**
@@ -68,7 +75,31 @@ class Tap
      */
     public function tokens(): TokenService
     {
-        return new TokenService($this->client);
+        return $this->services['tokens'] ??= new TokenService($this->client);
+    }
+
+    /**
+     * Get the CardService instance
+     */
+    public function cards(): CardService
+    {
+        return $this->services['cards'] ??= new CardService($this->client);
+    }
+
+    /**
+     * Get the InvoiceService instance
+     */
+    public function invoices(): InvoiceService
+    {
+        return $this->services['invoices'] ??= new InvoiceService($this->client);
+    }
+
+    /**
+     * Get the SubscriptionService instance
+     */
+    public function subscriptions(): SubscriptionService
+    {
+        return $this->services['subscriptions'] ??= new SubscriptionService($this->client);
     }
 
     /**

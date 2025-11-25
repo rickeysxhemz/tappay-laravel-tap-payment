@@ -29,8 +29,9 @@
         <env name="DB_CONNECTION" value="testing"/>
 
         <!-- Tap Payments Test Configuration -->
-        <env name="TAP_SECRET_KEY" value="sk_test_XKokBfNWv6FIYuTMg5sLPjhJ"/>
-        <env name="TAP_PUBLISHABLE_KEY" value="pk_test_EtHFV4BuPQokJT6jiROls87Y"/>
+        <!-- Copy this file to phpunit.xml and add your test API keys -->
+        <env name="TAP_SECRET_KEY" value="sk_test_YOUR_SECRET_KEY_HERE"/>
+        <env name="TAP_PUBLISHABLE_KEY" value="pk_test_YOUR_PUBLISHABLE_KEY_HERE"/>
         <env name="TAP_CURRENCY" value="SAR"/>
         <env name="TAP_WEBHOOK_SECRET" value="test_webhook_secret"/>
 
