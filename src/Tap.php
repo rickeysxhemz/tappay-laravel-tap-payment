@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TapPay\Tap;
 
+use TapPay\Tap\Contracts\MoneyContract;
 use TapPay\Tap\Http\Client;
 use TapPay\Tap\Services\AuthorizeService;
 use TapPay\Tap\Services\CardService;
@@ -23,6 +24,8 @@ class Tap
 {
     protected Client $client;
 
+    protected MoneyContract $money;
+
     /**
      * @var array<string, object>
      */
@@ -32,10 +35,12 @@ class Tap
      * Create a new Tap instance
      *
      * @param Client|null $client Optional HTTP client. Falls back to container-resolved singleton.
+     * @param MoneyContract|null $money Optional Money instance. Falls back to container-resolved singleton.
      */
-    public function __construct(?Client $client = null)
+    public function __construct(?Client $client = null, ?MoneyContract $money = null)
     {
         $this->client = $client ?? app(Client::class);
+        $this->money = $money ?? app(MoneyContract::class);
     }
 
     /**
@@ -43,7 +48,7 @@ class Tap
      */
     public function charges(): ChargeService
     {
-        return $this->services['charges'] ??= new ChargeService($this->client);
+        return $this->services['charges'] ??= new ChargeService($this->client, $this->money);
     }
 
     /**

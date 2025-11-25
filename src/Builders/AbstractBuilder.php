@@ -5,21 +5,16 @@ declare(strict_types=1);
 namespace TapPay\Tap\Builders;
 
 use InvalidArgumentException;
+use TapPay\Tap\Contracts\MoneyContract;
 use TapPay\Tap\Resources\Resource;
-use TapPay\Tap\Support\Money;
 
 abstract class AbstractBuilder
 {
     protected array $data = [];
 
-    protected Money $money;
-
     protected ?int $rawAmount = null;
 
-    public function __construct()
-    {
-        $this->money = app(Money::class);
-    }
+    public function __construct(protected MoneyContract $money) {}
 
     /**
      * Set the amount

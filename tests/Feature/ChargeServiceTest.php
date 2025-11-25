@@ -6,6 +6,7 @@ namespace TapPay\Tap\Tests\Feature;
 
 use PHPUnit\Framework\Attributes\Test;
 use GuzzleHttp\Psr7\Response;
+use TapPay\Tap\Contracts\MoneyContract;
 use TapPay\Tap\Enums\ChargeStatus;
 use TapPay\Tap\Exceptions\ApiErrorException;
 use TapPay\Tap\Exceptions\AuthenticationException;
@@ -20,7 +21,10 @@ class ChargeServiceTest extends TestCase
     {
         parent::setUp();
 
-        $this->chargeService = new ChargeService($this->mockHttpClient());
+        $this->chargeService = new ChargeService(
+            $this->mockHttpClient(),
+            app(MoneyContract::class)
+        );
     }
     #[Test]
     public function it_can_create_a_charge_successfully(): void

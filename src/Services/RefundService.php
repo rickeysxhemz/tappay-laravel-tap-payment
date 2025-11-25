@@ -9,6 +9,9 @@ use TapPay\Tap\Exceptions\AuthenticationException;
 use TapPay\Tap\Exceptions\InvalidRequestException;
 use TapPay\Tap\Resources\Refund;
 
+use function array_map;
+use function sprintf;
+
 class RefundService extends AbstractService
 {
     /**

@@ -85,7 +85,7 @@ trait Chargeable
     {
         $this->ensureTapCustomerExists();
 
-        return (new ChargeBuilder(Tap::charges()))
+        return (new ChargeBuilder(Tap::charges(), $this->money()))
             ->amount($amount)
             ->currency($this->getCurrency($currency))
             ->customerId($this->tapCustomerId());

@@ -5,13 +5,25 @@ declare(strict_types=1);
 namespace TapPay\Tap\Services;
 
 use TapPay\Tap\Builders\ChargeBuilder;
+use TapPay\Tap\Contracts\MoneyContract;
 use TapPay\Tap\Exceptions\ApiErrorException;
 use TapPay\Tap\Exceptions\AuthenticationException;
 use TapPay\Tap\Exceptions\InvalidRequestException;
+use TapPay\Tap\Http\Client;
 use TapPay\Tap\Resources\Charge;
+
+use function array_map;
+use function sprintf;
 
 class ChargeService extends AbstractService
 {
+    public function __construct(
+        Client $client,
+        protected MoneyContract $money
+    ) {
+        parent::__construct($client);
+    }
+
     /**
      * Get the endpoint for charges
      */
@@ -25,7 +37,7 @@ class ChargeService extends AbstractService
      */
     public function newBuilder(): ChargeBuilder
     {
-        return new ChargeBuilder($this);
+        return new ChargeBuilder($this, $this->money);
     }
 
     /**

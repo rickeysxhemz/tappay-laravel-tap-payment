@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TapPay\Tap\Builders;
 
 use InvalidArgumentException;
+use TapPay\Tap\Contracts\MoneyContract;
 use TapPay\Tap\Enums\SourceObject;
 use TapPay\Tap\Exceptions\ApiErrorException;
 use TapPay\Tap\Exceptions\AuthenticationException;
@@ -12,15 +13,15 @@ use TapPay\Tap\Exceptions\InvalidRequestException;
 use TapPay\Tap\Resources\Charge;
 use TapPay\Tap\Services\ChargeService;
 
+use function str_starts_with;
+
 class ChargeBuilder extends AbstractBuilder
 {
-    protected ChargeService $service;
-
-    public function __construct(ChargeService $service)
-    {
-        parent::__construct();
-
-        $this->service = $service;
+    public function __construct(
+        protected ChargeService $service,
+        MoneyContract $money
+    ) {
+        parent::__construct($money);
         $this->data['currency'] = config('tap.currency', 'SAR');
     }
 

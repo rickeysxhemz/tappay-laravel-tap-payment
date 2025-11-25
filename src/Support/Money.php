@@ -7,6 +7,8 @@ namespace TapPay\Tap\Support;
 use TapPay\Tap\Contracts\MoneyContract;
 use TapPay\Tap\Exceptions\InvalidCurrencyException;
 
+use function round;
+
 final class Money implements MoneyContract
 {
     /** @var array<string, int> */

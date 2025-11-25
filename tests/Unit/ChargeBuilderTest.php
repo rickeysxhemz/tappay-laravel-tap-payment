@@ -3,12 +3,14 @@
 declare(strict_types=1);
 
 use TapPay\Tap\Builders\ChargeBuilder;
+use TapPay\Tap\Contracts\MoneyContract;
 use TapPay\Tap\Enums\SourceObject;
 use TapPay\Tap\Services\ChargeService;
 
 beforeEach(function () {
     $this->service = Mockery::mock(ChargeService::class);
-    $this->builder = new ChargeBuilder($this->service);
+    $this->money = app(MoneyContract::class);
+    $this->builder = new ChargeBuilder($this->service, $this->money);
 });
 
 afterEach(function () {
