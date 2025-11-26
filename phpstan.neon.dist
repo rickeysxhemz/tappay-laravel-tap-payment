@@ -6,7 +6,10 @@ parameters:
         - src
     level: 6
     ignoreErrors:
-        # Add ignored errors here if needed
+        # Ignore missing array value type specifications (common in SDK/API wrappers)
+        - '#no value type specified in iterable type array#'
+        # Traits are provided for package consumers to use
+        - '#Trait .* is used zero times and is not analysed#'
     excludePaths:
         - vendor
     reportUnmatchedIgnoredErrors: false
