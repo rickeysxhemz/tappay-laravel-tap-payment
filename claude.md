@@ -6,9 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a Laravel package for integrating with the Tap Payments v2 API. The package provides a fluent, Laravel-style SDK for processing payments, managing customers, handling refunds, and validating webhooks.
 
-**Package Name**: `tapPay/laravel-tap-Payment`
-**Namespace**: `tapPay\Tap`
-**Target**: Laravel 12+ with PHP 8.2+
+**Package Name**: `tappay/laravel-tap-payment`
+**Namespace**: `TapPay\Tap`
+**Target**: Laravel 11+ / 12+ with PHP 8.2+
 
 ## Architecture
 

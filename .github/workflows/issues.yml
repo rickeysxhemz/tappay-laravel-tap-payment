@@ -1,0 +1,114 @@
+name: Issues
+
+on:
+  issues:
+    types: [opened, labeled]
+
+permissions:
+  issues: write
+
+jobs:
+  # Auto-label issues based on title/content
+  auto-label:
+    runs-on: ubuntu-latest
+    if: github.event.action == 'opened'
+    steps:
+      - name: Label bug reports
+        if: contains(toLower(github.event.issue.title), 'bug')
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.addLabels({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ['bug']
+            })
+
+      - name: Label feature requests
+        if: contains(toLower(github.event.issue.title), 'feature') || contains(toLower(github.event.issue.title), 'enhancement')
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.addLabels({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ['enhancement']
+            })
+
+      - name: Label questions
+        if: contains(github.event.issue.title, '?') || contains(toLower(github.event.issue.title), 'question')
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.addLabels({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ['question']
+            })
+
+  # Respond to help-wanted label
+  help-wanted:
+    runs-on: ubuntu-latest
+    if: github.event.action == 'labeled' && github.event.label.name == 'help wanted'
+    steps:
+      - name: Add comment for help wanted
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '👋 This issue has been marked as **help wanted**. Community contributions are welcome!\n\nIf you\'d like to work on this, please:\n1. Comment below to let us know\n2. Fork the repository\n3. Create a pull request with your changes\n\nThank you for your interest in contributing!'
+            })
+
+  # Auto-close issues with wontfix label
+  wontfix:
+    runs-on: ubuntu-latest
+    if: github.event.action == 'labeled' && github.event.label.name == 'wontfix'
+    steps:
+      - name: Comment and close issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: 'This issue has been marked as **wontfix** and will not be addressed.\n\nClosing this issue.'
+            })
+
+            await github.rest.issues.update({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'closed',
+              state_reason: 'not_planned'
+            })
+
+  # Auto-close duplicate issues
+  duplicate:
+    runs-on: ubuntu-latest
+    if: github.event.action == 'labeled' && github.event.label.name == 'duplicate'
+    steps:
+      - name: Close and comment on duplicate
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: 'This issue has been marked as a **duplicate**. Please search existing issues before creating a new one.\n\nClosing this issue.'
+            })
+
+            await github.rest.issues.update({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'closed',
+              state_reason: 'not_planned'
+            })

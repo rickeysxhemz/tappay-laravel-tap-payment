@@ -2,30 +2,34 @@ name: Tests
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main]
   schedule:
-    - cron: '0 0 * * *'  # Daily at midnight
+    - cron: '0 0 * * 0'  # Weekly on Sunday at midnight (for integration tests)
+
+permissions:
+  contents: read
 
 jobs:
   test:
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
 
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        php: [8.2, 8.3]
+        php: [8.2, 8.3, 8.4]
         laravel: [11.*, 12.*]
         stability: [prefer-lowest, prefer-stable]
         include:
           - laravel: 11.*
-            testbench: ^10.0
+            testbench: ^9.0
           - laravel: 12.*
             testbench: ^10.0
 
-    name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }} - ${{ matrix.os }}
+    name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }}
 
     steps:
       - name: Checkout code
@@ -35,43 +39,48 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath
           coverage: pcov
 
-      - name: Setup problem matchers
-        run: |
-          echo "::add-matcher::${{ runner.tool_cache }}/php.json"
-          echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-php${{ matrix.php }}-composer-${{ hashFiles('**/composer.json') }}
+          restore-keys: ${{ runner.os }}-php${{ matrix.php }}-composer-
 
       - name: Install dependencies
         run: |
           composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
           composer update --${{ matrix.stability }} --prefer-dist --no-interaction
 
-      - name: List Installed Dependencies
-        run: composer show -D
-
-      - name: Execute tests (Unit and Feature)
-        run: vendor/bin/pest --group=unit,feature --colors=always
+      - name: Execute tests
+        if: "!(matrix.php == '8.3' && matrix.laravel == '12.*' && matrix.stability == 'prefer-stable')"
+        run: vendor/bin/pest --colors=always
 
       - name: Execute tests with coverage
         if: matrix.php == '8.3' && matrix.laravel == '12.*' && matrix.stability == 'prefer-stable'
-        run: vendor/bin/pest --coverage --min=70 --coverage-clover coverage.xml
+        run: vendor/bin/pest --coverage --min=70 --colors=always --coverage-clover coverage.xml
 
-      - name: Upload coverage reports to Codecov
+      - name: Upload coverage to Codecov
         if: matrix.php == '8.3' && matrix.laravel == '12.*' && matrix.stability == 'prefer-stable'
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
-          file: ./coverage.xml
+          files: ./coverage.xml
           flags: unittests
-          name: codecov-umbrella
           fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
-  integration-tests:
+  integration:
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule' || contains(github.event.head_commit.message, '[integration]')
-
-    name: Integration Tests (Real API)
+    name: Integration Tests
+    timeout-minutes: 20
 
     steps:
       - name: Checkout code
@@ -81,8 +90,19 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: 8.3
-          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath
           coverage: none
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-php8.3-composer-${{ hashFiles('**/composer.json') }}
+          restore-keys: ${{ runner.os }}-php8.3-composer-
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-interaction
@@ -93,51 +113,3 @@ jobs:
           TAP_SECRET_KEY: ${{ secrets.TAP_TEST_SECRET_KEY }}
           TAP_PUBLISHABLE_KEY: ${{ secrets.TAP_TEST_PUBLISHABLE_KEY }}
         run: vendor/bin/pest --group=integration --colors=always
-
-  code-style:
-    runs-on: ubuntu-latest
-
-    name: Code Style Check
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: 8.3
-          extensions: dom, curl, libxml, mbstring, zip
-          coverage: none
-          tools: php-cs-fixer
-
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-interaction
-
-      - name: Run PHP CS Fixer
-        run: vendor/bin/php-cs-fixer fix --dry-run --diff --config=.php-cs-fixer.php
-        continue-on-error: true
-
-  static-analysis:
-    runs-on: ubuntu-latest
-
-    name: Static Analysis
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: 8.3
-          extensions: dom, curl, libxml, mbstring, zip
-          coverage: none
-          tools: phpstan
-
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-interaction
-
-      - name: Run PHPStan
-        run: vendor/bin/phpstan analyse --memory-limit=2G
-        continue-on-error: true

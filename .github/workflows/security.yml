@@ -1,0 +1,244 @@
+name: Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * 1'  # Weekly on Monday at 6 AM UTC
+
+permissions:
+  contents: read
+  security-events: write
+  issues: write
+
+jobs:
+  # Check for known security vulnerabilities in dependencies
+  composer-audit:
+    runs-on: ubuntu-latest
+    name: Composer Audit
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.3
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction
+
+      - name: Check for vulnerabilities
+        id: audit
+        run: |
+          # Run audit and capture output
+          set +e
+          OUTPUT=$(composer audit --format=plain 2>&1)
+          EXIT_CODE=$?
+          set -e
+
+          echo "$OUTPUT"
+
+          # Check exit code (composer audit returns non-zero if vulnerabilities found)
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "✓ No vulnerabilities found"
+          else
+            echo "::error::Security vulnerabilities found in dependencies"
+            exit 1
+          fi
+
+      - name: Create issue on vulnerability found
+        if: failure() && github.event_name == 'schedule'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Check if issue already exists
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              per_page: 100
+            });
+
+            const existingIssue = issues.find(issue =>
+              issue.title.includes('Security vulnerabilities detected')
+            );
+
+            if (!existingIssue) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: '🔒 Security vulnerabilities detected in dependencies',
+                body: `The scheduled security scan found vulnerabilities in project dependencies.\n\n**Run:** [View logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n**Action required:**\n1. Run \`composer audit\` locally to see details\n2. Update affected packages with \`composer update\`\n3. If no update available, consider alternatives or document the risk`,
+                labels: ['bug']
+              });
+            }
+
+  # Secret scanning
+  secrets-scan:
+    runs-on: ubuntu-latest
+    name: Secrets Scan
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for complete scan
+
+      - name: TruffleHog scan
+        id: trufflehog
+        uses: trufflesecurity/trufflehog@v3.88.31
+        with:
+          extra_args: --only-verified
+
+      - name: Create issue on secrets found
+        if: failure() && github.event_name == 'schedule'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Check if issue already exists
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              per_page: 100
+            });
+
+            const existingIssue = issues.find(issue =>
+              issue.title.includes('Secrets detected')
+            );
+
+            if (!existingIssue) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: '🚨 Secrets detected in repository',
+                body: `The scheduled security scan found exposed secrets in the repository.\n\n**Run:** [View logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n**URGENT action required:**\n1. Review the scan results\n2. Rotate ALL exposed credentials immediately\n3. Remove secrets from git history using \`git filter-branch\` or BFG Repo Cleaner\n4. Never commit secrets - use environment variables`,
+                labels: ['bug']
+              });
+            }
+
+  # Upload results to GitHub Security tab (on schedule only to avoid PR noise)
+  upload-sarif:
+    runs-on: ubuntu-latest
+    name: Upload Security Results
+    needs: [composer-audit]
+    if: always() && github.event_name == 'schedule'
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.3
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction
+
+      - name: Generate and upload SARIF
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { execSync } = require('child_process');
+            const fs = require('fs');
+
+            // Run composer audit and get JSON output
+            let auditResult;
+            try {
+              auditResult = execSync('composer audit --format=json 2>&1', { encoding: 'utf-8' });
+            } catch (e) {
+              auditResult = e.stdout || '{}';
+            }
+
+            let auditData;
+            try {
+              auditData = JSON.parse(auditResult);
+            } catch (e) {
+              auditData = { advisories: {} };
+            }
+
+            // Build SARIF results from advisories
+            const results = [];
+            const rules = [];
+            const seenRules = new Set();
+
+            if (auditData.advisories) {
+              for (const [packageName, advisories] of Object.entries(auditData.advisories)) {
+                for (const advisory of advisories) {
+                  // Generate stable rule ID (won't change between runs)
+                  const ruleId = advisory.cve ||
+                                 advisory.advisoryId ||
+                                 `PKG-${packageName.replace(/[^a-zA-Z0-9]/g, '-')}-${Buffer.from(advisory.title || '').toString('base64').substring(0, 8)}`;
+
+                  // Avoid duplicate rules
+                  if (!seenRules.has(ruleId)) {
+                    seenRules.add(ruleId);
+
+                    rules.push({
+                      id: ruleId,
+                      name: advisory.title || 'Security Advisory',
+                      shortDescription: { text: advisory.title || 'Vulnerability found' },
+                      fullDescription: { text: `${packageName}: ${advisory.title || 'Security vulnerability in dependency'}` },
+                      helpUri: advisory.link || `https://packagist.org/packages/${packageName}`,
+                      defaultConfiguration: {
+                        level: advisory.severity === 'critical' ? 'error' :
+                               advisory.severity === 'high' ? 'error' :
+                               advisory.severity === 'medium' ? 'warning' : 'note'
+                      }
+                    });
+                  }
+
+                  results.push({
+                    ruleId: ruleId,
+                    message: { text: `${packageName}: ${advisory.title || 'Security vulnerability'}` },
+                    level: advisory.severity === 'critical' ? 'error' :
+                           advisory.severity === 'high' ? 'error' :
+                           advisory.severity === 'medium' ? 'warning' : 'note',
+                    locations: [{
+                      physicalLocation: {
+                        artifactLocation: { uri: 'composer.lock' },
+                        region: { startLine: 1 }
+                      }
+                    }]
+                  });
+                }
+              }
+            }
+
+            // Create SARIF structure
+            const sarif = {
+              "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+              "version": "2.1.0",
+              "runs": [{
+                "tool": {
+                  "driver": {
+                    "name": "Composer Audit",
+                    "informationUri": "https://getcomposer.org/doc/03-cli.md#audit",
+                    "version": "2.0",
+                    "rules": rules
+                  }
+                },
+                "results": results
+              }]
+            };
+
+            // Write SARIF file
+            fs.writeFileSync('composer-audit.sarif', JSON.stringify(sarif, null, 2));
+            console.log(`Generated SARIF with ${results.length} findings and ${rules.length} unique rules`);
+
+      - name: Upload SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: composer-audit.sarif
+          category: composer-audit
+        continue-on-error: true

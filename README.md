@@ -1,6 +1,17 @@
 # Laravel Tap Payments SDK
 
+[![Tests](https://github.com/tappay/laravel-tap-payment/actions/workflows/tests.yml/badge.svg)](https://github.com/tappay/laravel-tap-payment/actions/workflows/tests.yml)
+[![Static Analysis](https://github.com/tappay/laravel-tap-payment/actions/workflows/static-analysis.yml/badge.svg)](https://github.com/tappay/laravel-tap-payment/actions/workflows/static-analysis.yml)
+[![codecov](https://codecov.io/gh/tappay/laravel-tap-payment/branch/main/graph/badge.svg)](https://codecov.io/gh/tappay/laravel-tap-payment)
+[![Latest Stable Version](https://poser.pugx.org/tappay/laravel-tap-payment/v)](https://packagist.org/packages/tappay/laravel-tap-payment)
+[![License](https://poser.pugx.org/tappay/laravel-tap-payment/license)](https://packagist.org/packages/tappay/laravel-tap-payment)
+
 A modern, fluent Laravel package for integrating with the Tap Payments v2 API. Supports all MENA payment methods including KNET, MADA, Benefit, and more.
+
+## Requirements
+
+- PHP 8.2 or higher
+- Laravel 11.x or 12.x
 
 ## Features
 
@@ -18,7 +29,7 @@ A modern, fluent Laravel package for integrating with the Tap Payments v2 API. S
 Install via Composer:
 
 ```bash
-composer require tapPay/laravel-tap-Payment
+composer require tappay/laravel-tap-payment
 ```
 
 Publish the configuration file:
@@ -993,10 +1004,28 @@ For detailed testing documentation, see [TESTING.md](TESTING.md).
 
 Full Tap Payments API documentation: [developers.tap.company](https://developers.tap.company)
 
+## Changelog
+
+Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
+
+## Contributing
+
+Contributions are welcome! Please see [CONTRIBUTING](.github/CONTRIBUTING.md) for details.
+
+Before submitting a PR, please ensure:
+- All tests pass (`vendor/bin/pest`)
+- Static analysis passes (`vendor/bin/phpstan analyse`)
+- Code style is correct (`vendor/bin/php-cs-fixer fix`)
+
+## Security
+
+If you discover a security vulnerability, please send an email to security@example.com instead of using the issue tracker. All security vulnerabilities will be promptly addressed. See [SECURITY](SECURITY.md) for more details.
+
 ## License
 
-MIT License
+The MIT License (MIT). Please see [License File](LICENSE) for more information.
 
 ## Credits
 
-- Waqas Majeed
+- [Waqas Majeed](https://github.com/waqasmajeed)
+- [All Contributors](../../contributors)

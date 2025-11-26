@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Tap Payments Documentation
+    url: https://developers.tap.company/
+    about: Official Tap Payments API documentation
+  - name: Discussions
+    url: https://github.com/rickeysxhemz/tappay-laravel-tap-payment/discussions
+    about: Ask questions and discuss features

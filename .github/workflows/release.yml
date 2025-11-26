@@ -1,0 +1,359 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # Run tests before releasing
+  test:
+    runs-on: ubuntu-latest
+    name: Pre-Release Tests
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.3
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Run tests
+        run: vendor/bin/pest --colors=always
+
+      - name: Run static analysis
+        run: vendor/bin/phpstan analyse --memory-limit=2G
+
+  # Create the release
+  release:
+    runs-on: ubuntu-latest
+    name: Create Release
+    needs: test
+    # environment: production  # Uncomment when repo is public to enable required reviewers
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate tag format
+        run: |
+          TAG="${{ github.ref_name }}"
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
+            echo "::error::Tag $TAG does not follow semver format (vX.Y.Z or vX.Y.Z-suffix)"
+            exit 1
+          fi
+          echo "✓ Tag $TAG is valid semver format"
+
+      - name: Verify version consistency
+        run: |
+          TAG_VERSION="${{ github.ref_name }}"
+          TAG_VERSION="${TAG_VERSION#v}"  # Remove 'v' prefix
+
+          # Check if composer.json has a version field
+          if grep -q '"version"' composer.json; then
+            COMPOSER_VERSION=$(grep -Po '"version":\s*"\K[^"]+' composer.json)
+            if [ "$COMPOSER_VERSION" != "$TAG_VERSION" ]; then
+              echo "::error::Tag version ($TAG_VERSION) doesn't match composer.json version ($COMPOSER_VERSION)"
+              exit 1
+            fi
+            echo "✓ Version consistency verified: $TAG_VERSION"
+          else
+            echo "ℹ No version field in composer.json (using tag version)"
+          fi
+
+      - name: Get previous tag
+        id: previous_tag
+        run: |
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          echo "tag=$PREVIOUS_TAG" >> $GITHUB_OUTPUT
+
+      - name: Generate release notes
+        id: release_notes
+        uses: actions/github-script@v7
+        env:
+          PREVIOUS_TAG: ${{ steps.previous_tag.outputs.tag }}
+        with:
+          script: |
+            const previousTag = process.env.PREVIOUS_TAG || '';
+            const currentTag = context.ref.replace('refs/tags/', '');
+
+            let notes = '';
+
+            if (previousTag) {
+              let comparison;
+              try {
+                const response = await github.rest.repos.compareCommits({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  base: previousTag,
+                  head: currentTag
+                });
+                comparison = response.data;
+              } catch (e) {
+                console.log('Could not compare commits:', e.message);
+                return `See commit history for changes.\n\n**Full Changelog**: https://github.com/${context.repo.owner}/${context.repo.repo}/compare/${previousTag}...${currentTag}`;
+              }
+
+              const commits = comparison.commits;
+              const features = [];
+              const fixes = [];
+              const docs = [];
+              const refactor = [];
+              const perf = [];
+              const tests = [];
+              const others = [];
+
+              for (const commit of commits) {
+                const message = commit.commit.message.split('\n')[0];
+                const sha = commit.sha.substring(0, 7);
+                const entry = `- ${message} (${sha})`;
+
+                if (message.startsWith('feat')) {
+                  features.push(entry);
+                } else if (message.startsWith('fix')) {
+                  fixes.push(entry);
+                } else if (message.startsWith('docs')) {
+                  docs.push(entry);
+                } else if (message.startsWith('refactor')) {
+                  refactor.push(entry);
+                } else if (message.startsWith('perf')) {
+                  perf.push(entry);
+                } else if (message.startsWith('test')) {
+                  tests.push(entry);
+                } else if (!message.startsWith('chore') && !message.startsWith('ci') && !message.startsWith('style') && !message.startsWith('build')) {
+                  others.push(entry);
+                }
+              }
+
+              if (features.length > 0) {
+                notes += '### Features\n\n' + features.join('\n') + '\n\n';
+              }
+              if (fixes.length > 0) {
+                notes += '### Bug Fixes\n\n' + fixes.join('\n') + '\n\n';
+              }
+              if (perf.length > 0) {
+                notes += '### Performance\n\n' + perf.join('\n') + '\n\n';
+              }
+              if (refactor.length > 0) {
+                notes += '### Refactoring\n\n' + refactor.join('\n') + '\n\n';
+              }
+              if (docs.length > 0) {
+                notes += '### Documentation\n\n' + docs.join('\n') + '\n\n';
+              }
+              if (tests.length > 0) {
+                notes += '### Tests\n\n' + tests.join('\n') + '\n\n';
+              }
+              if (others.length > 0) {
+                notes += '### Other Changes\n\n' + others.join('\n') + '\n\n';
+              }
+
+              // Fallback for maintenance releases (all chore/ci/style/build commits)
+              const hasContent = features.length + fixes.length + docs.length + refactor.length + perf.length + tests.length + others.length > 0;
+              if (!hasContent) {
+                notes = 'Maintenance release with internal improvements.\n\n';
+              }
+
+              notes += `**Full Changelog**: https://github.com/${context.repo.owner}/${context.repo.repo}/compare/${previousTag}...${currentTag}`;
+            } else {
+              notes = 'Initial release';
+            }
+
+            return notes;
+          result-encoding: string
+
+      - name: Create source archive
+        run: |
+          git archive --format=zip --prefix=laravel-tap-payment-${{ github.ref_name }}/ HEAD > laravel-tap-payment-${{ github.ref_name }}.zip
+          sha256sum laravel-tap-payment-${{ github.ref_name }}.zip > checksums-sha256.txt
+          echo "✓ Created source archive and checksums"
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          body: ${{ steps.release_notes.outputs.result }}
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          generate_release_notes: false
+          files: |
+            laravel-tap-payment-${{ github.ref_name }}.zip
+            checksums-sha256.txt
+
+      - name: Notify on release failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🚨 Release ${{ github.ref_name }} failed`,
+              body: `The release workflow failed during the release job.\n\n**Tag:** ${{ github.ref_name }}\n**Run:** [View logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\nPlease investigate and retry.`,
+              labels: ['bug']
+            });
+
+  # Verify the package can be installed
+  verify:
+    runs-on: ubuntu-latest
+    name: Verify Installation
+    needs: release
+
+    steps:
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.3
+          extensions: dom, curl, libxml, mbstring, zip
+
+      - name: Create minimal test project
+        run: |
+          mkdir test-app && cd test-app
+          cat > composer.json << 'EOF'
+          {
+            "name": "test/release-verification",
+            "type": "project",
+            "require": {
+              "php": "^8.2",
+              "laravel/framework": "^11.0 || ^12.0"
+            },
+            "minimum-stability": "stable",
+            "prefer-stable": true
+          }
+          EOF
+          composer install --no-interaction
+
+      - name: Install package (with retry)
+        id: install
+        working-directory: test-app
+        run: |
+          MAX_ATTEMPTS=5
+          WAIT_TIME=60
+
+          for i in $(seq 1 $MAX_ATTEMPTS); do
+            echo "Attempt $i of $MAX_ATTEMPTS..."
+            if composer require tappay/laravel-tap-payment:${{ github.ref_name }} --no-interaction; then
+              echo "✓ Package installed successfully"
+              echo "installed=true" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+
+            if [ $i -lt $MAX_ATTEMPTS ]; then
+              echo "Package not yet available, waiting ${WAIT_TIME}s before retry..."
+              sleep $WAIT_TIME
+            fi
+          done
+
+          echo "installed=false" >> $GITHUB_OUTPUT
+          echo "::warning::Package not available on Packagist after $MAX_ATTEMPTS attempts"
+
+      - name: Smoke test
+        if: steps.install.outputs.installed == 'true'
+        working-directory: test-app
+        run: |
+          echo "Running smoke tests..."
+
+          # Test 1: Verify package is in vendor
+          if [ ! -d "vendor/tappay/laravel-tap-payment" ]; then
+            echo "::error::Package directory not found in vendor"
+            exit 1
+          fi
+          echo "✓ Package directory exists"
+
+          # Test 2: Verify autoload works
+          php -r "
+            require 'vendor/autoload.php';
+
+            // Check main class exists
+            if (!class_exists('\TapPay\Tap\Tap')) {
+              echo '::error::Main Tap class not found';
+              exit(1);
+            }
+            echo '✓ Main class loads correctly' . PHP_EOL;
+
+            // Check service provider exists
+            if (!class_exists('\TapPay\Tap\TapServiceProvider')) {
+              echo '::error::TapServiceProvider class not found';
+              exit(1);
+            }
+            echo '✓ Service provider loads correctly' . PHP_EOL;
+          "
+
+          echo "✓ All smoke tests passed"
+
+      - name: Notify on verification failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `⚠️ Release ${{ github.ref_name }} verification failed`,
+              body: `The release was created but verification failed.\n\n**Tag:** ${{ github.ref_name }}\n**Run:** [View logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n**Action needed:** Check if the package installs correctly and consider deleting the release if broken.`,
+              labels: ['bug']
+            });
+
+  # Rollback on critical failure
+  rollback:
+    runs-on: ubuntu-latest
+    name: Rollback on Failure
+    needs: [release, verify]
+    if: failure() && needs.release.result == 'success'
+
+    steps:
+      - name: Delete broken release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const tag = context.ref.replace('refs/tags/', '');
+
+            console.log(`Attempting to rollback release ${tag}...`);
+
+            try {
+              // Find the release by tag
+              const { data: release } = await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag: tag
+              });
+
+              // Convert to draft instead of deleting (safer rollback)
+              await github.rest.repos.updateRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                release_id: release.id,
+                draft: true,
+                body: release.body + '\n\n---\n\n⚠️ **This release was automatically converted to draft due to verification failure.**'
+              });
+
+              console.log(`Release ${tag} converted to draft`);
+
+              // Create issue for manual review
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `🔄 Release ${tag} rolled back to draft`,
+                body: `The release ${tag} was automatically converted to draft because verification failed.\n\n**Run:** [View logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n**Next steps:**\n1. Investigate the failure\n2. Fix any issues\n3. Either publish the draft release or delete it and create a new tag`,
+                labels: ['bug']
+              });
+            } catch (e) {
+              console.log('Rollback failed:', e.message);
+              core.setFailed(`Failed to rollback release: ${e.message}`);
+            }

@@ -12,15 +12,17 @@
     "require": {
         "php": "^8.2",
         "guzzlehttp/guzzle": "^7.10",
-        "illuminate/contracts": "^12.0",
-        "illuminate/database": "^12.0",
-        "illuminate/http": "^12.0",
-        "illuminate/routing": "^12.0",
-        "illuminate/support": "^12.0"
+        "illuminate/contracts": "^11.0 || ^12.0",
+        "illuminate/database": "^11.0 || ^12.0",
+        "illuminate/http": "^11.0 || ^12.0",
+        "illuminate/routing": "^11.0 || ^12.0",
+        "illuminate/support": "^11.0 || ^12.0"
     },
     "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.64",
+        "larastan/larastan": "^3.0",
         "mockery/mockery": "^1.6",
-        "orchestra/testbench": "^10.7",
+        "orchestra/testbench": "^9.0 || ^10.0",
         "pestphp/pest": "^3.0",
         "pestphp/pest-plugin-laravel": "^3.0",
         "phpunit/phpunit": "^11.0"
@@ -51,7 +53,10 @@
         "test:feature": "pest --group=feature",
         "test:integration": "pest --group=integration",
         "test:coverage": "pest --coverage --min=80",
-        "test:parallel": "pest --parallel"
+        "test:parallel": "pest --parallel",
+        "analyse": "phpstan analyse --memory-limit=2G",
+        "format": "php-cs-fixer fix",
+        "format:check": "php-cs-fixer fix --dry-run --diff"
     },
     "config": {
         "sort-packages": true,
