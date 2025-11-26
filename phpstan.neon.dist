@@ -9,5 +9,4 @@ parameters:
         # Add ignored errors here if needed
     excludePaths:
         - vendor
-    checkMissingIterableValueType: false
     reportUnmatchedIgnoredErrors: false

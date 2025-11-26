@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TapPay\Tap\Tests\Unit;
 
-use PHPUnit\Framework\Attributes\Test;
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\ConnectException;
@@ -14,6 +13,7 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use InvalidArgumentException;
+use PHPUnit\Framework\Attributes\Test;
 use TapPay\Tap\Exceptions\ApiErrorException;
 use TapPay\Tap\Exceptions\AuthenticationException;
 use TapPay\Tap\Exceptions\InvalidRequestException;

@@ -84,7 +84,7 @@ class ChargeStatusTest extends TestCase
         $expected = [
             'INITIATED', 'CAPTURED', 'AUTHORIZED', 'FAILED', 'DECLINED',
             'CANCELLED', 'ABANDONED', 'RESTRICTED', 'VOID', 'TIMEDOUT',
-            'IN_PROGRESS', 'UNKNOWN'
+            'IN_PROGRESS', 'UNKNOWN',
         ];
 
         foreach ($expected as $status) {
@@ -124,7 +124,7 @@ class ChargeStatusTest extends TestCase
         // Failed statuses
         $failed = [
             ChargeStatus::FAILED, ChargeStatus::DECLINED, ChargeStatus::CANCELLED,
-            ChargeStatus::ABANDONED, ChargeStatus::RESTRICTED, ChargeStatus::TIMEDOUT
+            ChargeStatus::ABANDONED, ChargeStatus::RESTRICTED, ChargeStatus::TIMEDOUT,
         ];
         foreach ($failed as $status) {
             $this->assertTrue($status->hasFailed(), "{$status->value} should be failed");

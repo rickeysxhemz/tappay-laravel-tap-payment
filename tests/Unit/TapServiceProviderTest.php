@@ -107,6 +107,7 @@ class TapServiceProviderTest extends TestCase
         foreach ($routes as $route) {
             if (str_contains($route->uri(), 'tap/webhook')) {
                 $hasWebhookRoute = true;
+
                 break;
             }
         }
