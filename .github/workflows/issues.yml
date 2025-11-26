@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: Label bug reports
         if: contains(toLower(github.event.issue.title), 'bug')
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             github.rest.issues.addLabels({
@@ -27,7 +27,7 @@ jobs:
 
       - name: Label feature requests
         if: contains(toLower(github.event.issue.title), 'feature') || contains(toLower(github.event.issue.title), 'enhancement')
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             github.rest.issues.addLabels({
@@ -39,7 +39,7 @@ jobs:
 
       - name: Label questions
         if: contains(github.event.issue.title, '?') || contains(toLower(github.event.issue.title), 'question')
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             github.rest.issues.addLabels({
@@ -55,7 +55,7 @@ jobs:
     if: github.event.action == 'labeled' && github.event.label.name == 'help wanted'
     steps:
       - name: Add comment for help wanted
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             github.rest.issues.createComment({
@@ -71,7 +71,7 @@ jobs:
     if: github.event.action == 'labeled' && github.event.label.name == 'wontfix'
     steps:
       - name: Comment and close issue
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             await github.rest.issues.createComment({
@@ -95,7 +95,7 @@ jobs:
     if: github.event.action == 'labeled' && github.event.label.name == 'duplicate'
     steps:
       - name: Close and comment on duplicate
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             await github.rest.issues.createComment({
