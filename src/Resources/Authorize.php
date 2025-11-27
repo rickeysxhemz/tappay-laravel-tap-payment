@@ -8,7 +8,6 @@ use TapPay\Tap\Enums\AuthorizeStatus;
 
 class Authorize extends Resource
 {
-
     /**
      * Get the authorization ID
      *
@@ -57,7 +56,7 @@ class Authorize extends Resource
      */
     public function transactionUrl(): ?string
     {
-        return $this->attributes['transaction']['url'] ?? null;
+        return $this->get('transaction.url');
     }
 
     /**
@@ -67,7 +66,7 @@ class Authorize extends Resource
      */
     public function customerId(): ?string
     {
-        return $this->attributes['customer']['id'] ?? null;
+        return $this->get('customer.id');
     }
 
     /**
@@ -77,7 +76,7 @@ class Authorize extends Resource
      */
     public function sourceId(): ?string
     {
-        return $this->attributes['source']['id'] ?? null;
+        return $this->get('source.id');
     }
 
     /**
@@ -118,5 +117,17 @@ class Authorize extends Resource
     public function hasFailed(): bool
     {
         return $this->status()->hasFailed();
+    }
+
+    /**
+     * Check if authorization ID has valid format
+     *
+     * @return bool
+     */
+    public function hasValidId(): bool
+    {
+        $id = $this->id();
+
+        return $id !== '' && str_starts_with($id, 'auth_');
     }
 }

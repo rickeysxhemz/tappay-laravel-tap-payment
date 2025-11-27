@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace TapPay\Tap\Webhooks;
+namespace TapPay\Tap\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -10,14 +10,10 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Event;
 use TapPay\Tap\Events\WebhookProcessingFailed;
 use TapPay\Tap\Events\WebhookReceived;
+use TapPay\Tap\Webhooks\WebhookValidator;
 
 class WebhookController extends Controller
 {
-    /**
-     * Create a new webhook controller instance
-     *
-     * @param WebhookValidator $validator Webhook signature validator
-     */
     public function __construct(
         protected WebhookValidator $validator
     ) {}
@@ -30,11 +26,20 @@ class WebhookController extends Controller
      */
     public function __invoke(Request $request): Response
     {
-        // Decode payload once
-        $payload = json_decode($request->getContent(), true);
+        // Decode payload once with explicit error checking
+        $content = $request->getContent();
+        $payload = json_decode($content, true);
+
+        // Check for JSON decode errors
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($payload)) {
+            return response(
+                config('tap.webhook_messages.invalid_payload', 'Invalid JSON payload'),
+                400
+            );
+        }
 
         // Validate webhook signature using already-decoded payload
-        if (!$this->validator->validatePayload($payload ?? [], $request->header('x-tap-signature') ?? '')) {
+        if (!$this->validator->validatePayload($payload, $request->header('x-tap-signature') ?? '')) {
             return response(
                 config('tap.webhook_messages.invalid_signature', 'Invalid signature'),
                 400

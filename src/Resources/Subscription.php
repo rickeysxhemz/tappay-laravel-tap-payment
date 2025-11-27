@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TapPay\Tap\Resources;
 
+use DateTime;
 use TapPay\Tap\Enums\SubscriptionInterval;
 use TapPay\Tap\Enums\SubscriptionStatus;
 
@@ -32,26 +33,26 @@ class Subscription extends Resource
 
     public function customerId(): ?string
     {
-        return $this->attributes['customer']['id'] ?? $this->attributes['customer_id'] ?? null;
+        return $this->get('customer.id') ?? $this->attributes['customer_id'] ?? null;
     }
 
     public function interval(): ?SubscriptionInterval
     {
-        $interval = strtoupper($this->attributes['term']['interval'] ?? '');
-        return SubscriptionInterval::tryFrom($interval);
+        $interval = strtoupper($this->get('term.interval', ''));
+        return $interval ? SubscriptionInterval::tryFrom($interval) : null;
     }
 
     public function period(): int
     {
-        return (int) ($this->attributes['term']['period'] ?? 1);
+        return (int) $this->get('term.period', 1);
     }
 
     public function trialDays(): int
     {
-        return (int) ($this->attributes['trial']['days'] ?? 0);
+        return (int) $this->get('trial.days', 0);
     }
 
-    public function startDate(): ?\DateTime
+    public function startDate(): ?DateTime
     {
         $start = $this->attributes['start_date'] ?? $this->attributes['created'] ?? null;
 
@@ -59,10 +60,10 @@ class Subscription extends Resource
             return null;
         }
 
-        return is_numeric($start) ? (new \DateTime())->setTimestamp($start) : new \DateTime($start);
+        return $this->parseDateTime($start);
     }
 
-    public function currentPeriodStart(): ?\DateTime
+    public function currentPeriodStart(): ?DateTime
     {
         $start = $this->attributes['current_period_start'] ?? null;
 
@@ -70,10 +71,10 @@ class Subscription extends Resource
             return null;
         }
 
-        return is_numeric($start) ? (new \DateTime())->setTimestamp($start) : new \DateTime($start);
+        return $this->parseDateTime($start);
     }
 
-    public function currentPeriodEnd(): ?\DateTime
+    public function currentPeriodEnd(): ?DateTime
     {
         $end = $this->attributes['current_period_end'] ?? null;
 
@@ -81,10 +82,10 @@ class Subscription extends Resource
             return null;
         }
 
-        return is_numeric($end) ? (new \DateTime())->setTimestamp($end) : new \DateTime($end);
+        return $this->parseDateTime($end);
     }
 
-    public function cancelledAt(): ?\DateTime
+    public function cancelledAt(): ?DateTime
     {
         $cancelled = $this->attributes['cancelled_at'] ?? null;
 
@@ -92,7 +93,22 @@ class Subscription extends Resource
             return null;
         }
 
-        return is_numeric($cancelled) ? (new \DateTime())->setTimestamp($cancelled) : new \DateTime($cancelled);
+        return $this->parseDateTime($cancelled);
+    }
+
+    /**
+     * Parse a timestamp or date string into a DateTime object
+     */
+    protected function parseDateTime(int|string $value): ?DateTime
+    {
+        try {
+            if (is_numeric($value)) {
+                return (new DateTime())->setTimestamp((int) $value);
+            }
+            return new DateTime($value);
+        } catch (\Exception) {
+            return null;
+        }
     }
 
     public function metadata(): array
@@ -128,5 +144,17 @@ class Subscription extends Resource
     public function requiresAttention(): bool
     {
         return $this->status()->requiresAttention();
+    }
+
+    /**
+     * Check if subscription ID has valid format
+     *
+     * @return bool
+     */
+    public function hasValidId(): bool
+    {
+        $id = $this->id();
+
+        return $id !== '' && str_starts_with($id, 'sub_');
     }
 }

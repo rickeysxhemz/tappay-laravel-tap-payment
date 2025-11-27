@@ -4,33 +4,37 @@ declare(strict_types=1);
 
 namespace TapPay\Tap\Contracts;
 
+use TapPay\Tap\Builders\ChargeBuilder;
 use TapPay\Tap\Resources\Charge;
 use TapPay\Tap\Resources\Customer;
+use TapPay\Tap\Resources\Token;
 
+/**
+ * @see \TapPay\Tap\Concerns\Billable
+ */
 interface Billable
 {
-    /**
-     * Get the Tap customer ID
-     */
     public function tapCustomerId(): ?string;
 
-    /**
-     * Set the Tap customer ID
-     */
-    public function setTapCustomerId(string $customerId): void;
+    public function setTapCustomerId(?string $customerId): void;
 
-    /**
-     * Create a charge for this billable entity
-     */
-    public function charge(float $amount, ?string $currency = null, array $options = []): Charge;
-
-    /**
-     * Create a Tap customer for this billable entity
-     */
     public function createAsTapCustomer(array $options = []): Customer;
 
-    /**
-     * Get the Tap customer
-     */
     public function asTapCustomer(): ?Customer;
+
+    public function updateTapCustomer(array $data): Customer;
+
+    public function deleteTapCustomer(): bool;
+
+    /**
+     * @param int $amount Amount in smallest currency unit
+     */
+    public function charge(int $amount, ?string $currency = null, array $options = []): Charge;
+
+    /**
+     * @param int $amount Amount in smallest currency unit
+     */
+    public function newCharge(int $amount, ?string $currency = null): ChargeBuilder;
+
+    public function createCardToken(string $cardId): Token;
 }

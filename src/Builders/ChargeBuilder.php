@@ -216,12 +216,14 @@ class ChargeBuilder extends AbstractBuilder
      * Build and create the charge
      *
      * @return Charge The created charge resource
+     * @throws InvalidArgumentException If required fields are missing
      * @throws AuthenticationException If API authentication fails
      * @throws InvalidRequestException If request parameters are invalid
      * @throws ApiErrorException If API returns an error or network error occurs
      */
     public function create(): Charge
     {
+        $this->validateRequired(['amount', 'source']);
         return $this->service->create($this->toArray());
     }
 }

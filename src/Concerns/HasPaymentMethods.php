@@ -11,6 +11,13 @@ use TapPay\Tap\Exceptions\InvalidRequestException;
 use TapPay\Tap\Facades\Tap;
 use TapPay\Tap\Resources\Token;
 
+/**
+ * Trait for managing payment methods (cards, tokens) via Tap Payments.
+ *
+ * This trait requires the HasTapCustomer trait to be used on the same class.
+ *
+ * @see HasTapCustomer
+ */
 trait HasPaymentMethods
 {
     abstract public function tapCustomerId(): ?string;

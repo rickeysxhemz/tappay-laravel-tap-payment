@@ -8,7 +8,6 @@ use TapPay\Tap\Enums\ChargeStatus;
 
 class Charge extends Resource
 {
-
     /**
      * Get the charge ID
      *
@@ -57,7 +56,7 @@ class Charge extends Resource
      */
     public function transactionUrl(): ?string
     {
-        return $this->attributes['transaction']['url'] ?? null;
+        return $this->get('transaction.url');
     }
 
     /**
@@ -67,7 +66,7 @@ class Charge extends Resource
      */
     public function customerId(): ?string
     {
-        return $this->attributes['customer']['id'] ?? null;
+        return $this->get('customer.id');
     }
 
     /**
@@ -77,7 +76,7 @@ class Charge extends Resource
      */
     public function sourceId(): ?string
     {
-        return $this->attributes['source']['id'] ?? null;
+        return $this->get('source.id');
     }
 
     /**
@@ -107,7 +106,7 @@ class Charge extends Resource
      */
     public function cardId(): ?string
     {
-        return $this->attributes['card']['id'] ?? null;
+        return $this->get('card.id');
     }
 
     /**
@@ -138,5 +137,17 @@ class Charge extends Resource
     public function hasFailed(): bool
     {
         return $this->status()->hasFailed();
+    }
+
+    /**
+     * Check if charge ID has valid format
+     *
+     * @return bool
+     */
+    public function hasValidId(): bool
+    {
+        $id = $this->id();
+
+        return $id !== '' && str_starts_with($id, 'chg_');
     }
 }

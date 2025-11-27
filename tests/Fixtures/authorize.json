@@ -1,0 +1,56 @@
+{
+  "id": "auth_TS02A2220231616Xm0B1234567",
+  "object": "authorize",
+  "live_mode": false,
+  "api_version": "V2",
+  "status": "INITIATED",
+  "amount": 50.0,
+  "currency": "SAR",
+  "threeDSecure": false,
+  "save_card": false,
+  "merchant_id": "1124340",
+  "product": "gosell",
+  "description": "Test authorization",
+  "metadata": {
+    "order_id": "ORD-12345",
+    "customer_reference": "CUST-001"
+  },
+  "transaction": {
+    "timezone": "UTC+03:00",
+    "created": "1616439916000",
+    "url": "https://sandbox.checkout.tap.company/redirect/auth_TS02A2220231616Xm0B1234567",
+    "expiry": {
+      "period": 30,
+      "type": "MINUTE"
+    },
+    "asynchronous": false,
+    "amount": 50.0,
+    "currency": "SAR"
+  },
+  "response": {
+    "code": "100",
+    "message": "Initiated"
+  },
+  "customer": {
+    "id": "cus_TS02A2220231616Xm0B1234567",
+    "first_name": "John",
+    "last_name": "Doe",
+    "email": "john.doe@example.com",
+    "phone": {
+      "country_code": "966",
+      "number": "500000000"
+    }
+  },
+  "source": {
+    "object": "source",
+    "id": "src_card"
+  },
+  "redirect": {
+    "status": "PENDING",
+    "url": "https://yoursite.com/redirect"
+  },
+  "post": {
+    "status": "PENDING",
+    "url": "https://yoursite.com/webhook"
+  }
+}

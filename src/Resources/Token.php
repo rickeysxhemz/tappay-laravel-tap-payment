@@ -6,7 +6,6 @@ namespace TapPay\Tap\Resources;
 
 class Token extends Resource
 {
-
     /**
      * Get the token ID
      *
@@ -45,5 +44,17 @@ class Token extends Resource
     public function created(): ?int
     {
         return $this->attributes['created'] ?? null;
+    }
+
+    /**
+     * Check if token ID has valid format
+     *
+     * @return bool
+     */
+    public function hasValidId(): bool
+    {
+        $id = $this->id();
+
+        return $id !== '' && str_starts_with($id, 'tok_');
     }
 }

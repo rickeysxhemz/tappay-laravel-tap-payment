@@ -67,7 +67,9 @@ class CardService extends AbstractService
     {
         $response = $this->client->delete(sprintf('%s/%s/%s', $this->getEndpoint(), $customerId, $cardId));
 
-        return ($response['deleted'] ?? false) === true;
+        // Handle various response formats for deletion confirmation
+        return ($response['deleted'] ?? $response['status'] ?? false) === true
+            || (isset($response['id']) && $response['id'] === $cardId);
     }
 
     /**

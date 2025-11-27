@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\Facade;
  * @method static \TapPay\Tap\Services\RefundService refunds()
  * @method static \TapPay\Tap\Services\AuthorizeService authorizations()
  * @method static \TapPay\Tap\Services\TokenService tokens()
+ * @method static \TapPay\Tap\Services\CardService cards()
+ * @method static \TapPay\Tap\Services\InvoiceService invoices()
+ * @method static \TapPay\Tap\Services\SubscriptionService subscriptions()
  * @method static \TapPay\Tap\Http\Client getClient()
  *
  * @see \TapPay\Tap\Tap

@@ -8,7 +8,6 @@ use TapPay\Tap\Enums\RefundStatus;
 
 class Refund extends Resource
 {
-
     /**
      * Get the refund ID
      *
@@ -108,5 +107,17 @@ class Refund extends Resource
     public function hasFailed(): bool
     {
         return $this->status()->hasFailed();
+    }
+
+    /**
+     * Check if refund ID has valid format
+     *
+     * @return bool
+     */
+    public function hasValidId(): bool
+    {
+        $id = $this->id();
+
+        return $id !== '' && str_starts_with($id, 'ref_');
     }
 }

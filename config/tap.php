@@ -33,6 +33,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Route Path
+    |--------------------------------------------------------------------------
+    |
+    | This is the URI path where Tap routes will be registered.
+    | Change this if 'tap' conflicts with your application routes.
+    |
+    */
+
+    'path' => env('TAP_PATH', 'tap'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Default Currency
     |--------------------------------------------------------------------------
     |
@@ -62,8 +74,24 @@ return [
 
     'webhook_messages' => [
         'invalid_signature' => 'Invalid signature',
+        'invalid_payload' => 'Invalid JSON payload',
         'expired' => 'Webhook expired',
         'success' => 'Webhook received',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Redirect Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure default redirect URLs for the payment callback controller.
+    | These are used when no redirect parameter is provided in the request.
+    |
+    */
+
+    'redirect' => [
+        'success' => env('TAP_REDIRECT_SUCCESS', '/'),
+        'failure' => env('TAP_REDIRECT_FAILURE', '/'),
     ],
 
     /*

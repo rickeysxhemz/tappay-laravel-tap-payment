@@ -1,0 +1,13 @@
+{
+  "id": "card_TS02A2220231616Xm0B1234567",
+  "object": "card",
+  "customer": "cus_TS02A2220231616Xm0B1234567",
+  "brand": "VISA",
+  "funding": "credit",
+  "first_six": "411111",
+  "last_four": "1111",
+  "exp_month": 12,
+  "exp_year": 2028,
+  "name": "John Doe",
+  "fingerprint": "fp_1234567890abcdef"
+}

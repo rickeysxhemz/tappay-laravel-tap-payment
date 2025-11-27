@@ -181,8 +181,8 @@ class EnumTest extends TestCase
         $this->assertFalse($source->isRegionalMethod());
         $this->assertFalse($source->isDigitalWallet());
         $this->assertFalse($source->isBNPL());
-        $this->assertFalse($source->isToken());
-        $this->assertFalse($source->isAuthorization());
+        $this->assertFalse(SourceObject::isToken($source->value));
+        $this->assertFalse(SourceObject::isAuthorization($source->value));
         $this->assertNull($source->getCountry());
         $this->assertSame('Card Payment', $source->label());
     }
@@ -317,30 +317,33 @@ class EnumTest extends TestCase
     #[Test]
     public function source_token_does_not_require_redirect(): void
     {
-        $source = SourceObject::TOKEN;
+        // Token source IDs start with 'tok_' and are checked via static method
+        $tokenId = 'tok_abc123';
 
-        $this->assertFalse($source->requiresRedirect());
-        $this->assertFalse($source->isRegionalMethod());
-        $this->assertFalse($source->isDigitalWallet());
-        $this->assertFalse($source->isBNPL());
-        $this->assertTrue($source->isToken());
-        $this->assertFalse($source->isAuthorization());
-        $this->assertNull($source->getCountry());
-        $this->assertSame('Token', $source->label());
+        $this->assertTrue(SourceObject::isToken($tokenId));
+        $this->assertFalse(SourceObject::isAuthorization($tokenId));
+        $this->assertFalse(SourceObject::sourceRequiresRedirect($tokenId));
     }
 
     #[Test]
     public function source_auth_does_not_require_redirect(): void
     {
-        $source = SourceObject::AUTH;
+        // Authorization source IDs start with 'auth_' and are checked via static method
+        $authId = 'auth_xyz789';
 
-        $this->assertFalse($source->requiresRedirect());
-        $this->assertFalse($source->isRegionalMethod());
-        $this->assertFalse($source->isDigitalWallet());
-        $this->assertFalse($source->isBNPL());
-        $this->assertFalse($source->isToken());
-        $this->assertTrue($source->isAuthorization());
-        $this->assertNull($source->getCountry());
-        $this->assertSame('Authorization', $source->label());
+        $this->assertFalse(SourceObject::isToken($authId));
+        $this->assertTrue(SourceObject::isAuthorization($authId));
+        $this->assertFalse(SourceObject::sourceRequiresRedirect($authId));
+    }
+
+    #[Test]
+    public function regular_source_requires_redirect(): void
+    {
+        // Regular source IDs (not tokens or authorizations) require redirect
+        $sourceId = 'src_card';
+
+        $this->assertFalse(SourceObject::isToken($sourceId));
+        $this->assertFalse(SourceObject::isAuthorization($sourceId));
+        $this->assertTrue(SourceObject::sourceRequiresRedirect($sourceId));
     }
 }

@@ -92,16 +92,15 @@ $charge = Tap::charges()
 
 ### Billable Trait (Recommended)
 
-Add the trait to your User model:
+Add the trait and interface to your User model:
 
 ```php
-use tapPay\Tap\Concerns\Billable;
+use TapPay\Tap\Concerns\Billable;
+use TapPay\Tap\Contracts\Billable as BillableContract;
 
-class User extends Authenticatable
+class User extends Authenticatable implements BillableContract
 {
     use Billable;
-
-    // Your model code...
 }
 ```
 
@@ -188,13 +187,61 @@ $refund = Tap::refunds()->create([
 
 ### Webhooks
 
-Webhooks are automatically registered at `/tap/webhook` **without requiring CSRF token exemption** (just like Laravel Cashier). The package uses an event-driven architecture for maximum flexibility.
+The package automatically registers webhook routes at `/tap/webhook`. Just like Laravel Cashier, these routes are registered **outside the `web` middleware group**, so CSRF verification is not applied and no manual exclusion is needed.
+
+#### Route Configuration
+
+By default, routes are registered at the `/tap` path:
+
+- `GET /tap/callback` - Payment redirect callback
+- `POST /tap/webhook` - Webhook endpoint
+
+**Customize the path:**
+
+```env
+TAP_PATH=payment
+```
+
+This will register routes at `/payment/callback` and `/payment/webhook`.
+
+**Disable package routes:**
+
+If you need full control over routing, disable automatic route registration in your `AppServiceProvider`:
+
+```php
+use TapPay\Tap\Tap;
+
+public function register(): void
+{
+    Tap::ignoreRoutes();
+}
+```
+
+Then define routes manually. **Important:** When defining webhook routes manually, you must exclude them from CSRF verification.
+
+**Laravel 11+ (bootstrap/app.php):**
+
+```php
+->withMiddleware(function (Middleware $middleware) {
+    $middleware->validateCsrfTokens(except: [
+        'tap/*',  // Or your custom webhook path
+    ]);
+})
+```
+
+**Laravel 10 and earlier (App\Http\Middleware\VerifyCsrfToken.php):**
+
+```php
+protected $except = [
+    'tap/*',  // Or your custom webhook path
+];
+```
 
 #### Webhook Security
 
 - ✅ Automatic signature validation using HMAC-SHA256
 - ✅ Replay attack prevention with timestamp tolerance (5 minutes default)
-- ✅ No CSRF exemption required (route registered outside web middleware)
+- ✅ No CSRF exemption required when using package routes (registered outside web middleware)
 - ✅ Event-driven architecture for flexible handling
 
 #### Available Webhook Events
@@ -1019,7 +1066,7 @@ Before submitting a PR, please ensure:
 
 ## Security
 
-If you discover a security vulnerability, please send an email to security@example.com instead of using the issue tracker. All security vulnerabilities will be promptly addressed. See [SECURITY](SECURITY.md) for more details.
+If you discover a security vulnerability, please send an email to waqasmajeed.25@gmail.com instead of using the issue tracker. All security vulnerabilities will be promptly addressed. See [SECURITY](SECURITY.md) for more details.
 
 ## License
 

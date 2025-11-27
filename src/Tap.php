@@ -22,6 +22,11 @@ use TapPay\Tap\Services\TokenService;
  */
 class Tap
 {
+    /**
+     * Indicates if Tap routes will be registered.
+     */
+    public static bool $registersRoutes = true;
+
     protected Client $client;
 
     protected MoneyContract $money;
@@ -30,6 +35,14 @@ class Tap
      * @var array<string, object>
      */
     protected array $services = [];
+
+    /**
+     * Configure Tap to not register its routes.
+     */
+    public static function ignoreRoutes(): void
+    {
+        static::$registersRoutes = false;
+    }
 
     /**
      * Create a new Tap instance

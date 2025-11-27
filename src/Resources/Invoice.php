@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TapPay\Tap\Resources;
 
+use DateTime;
 use TapPay\Tap\Enums\InvoiceStatus;
 
 class Invoice extends Resource
@@ -36,7 +37,7 @@ class Invoice extends Resource
 
     public function customerId(): ?string
     {
-        return $this->attributes['customer']['id'] ?? $this->attributes['customer_id'] ?? null;
+        return $this->get('customer.id') ?? $this->attributes['customer_id'] ?? null;
     }
 
     public function url(): ?string
@@ -44,7 +45,7 @@ class Invoice extends Resource
         return $this->attributes['url'] ?? $this->attributes['invoice_url'] ?? null;
     }
 
-    public function expiresAt(): ?\DateTime
+    public function expiresAt(): ?DateTime
     {
         $expiry = $this->attributes['expiry'] ?? $this->attributes['expires_at'] ?? null;
 
@@ -52,10 +53,14 @@ class Invoice extends Resource
             return null;
         }
 
-        return new \DateTime($expiry);
+        try {
+            return new DateTime($expiry);
+        } catch (\Exception) {
+            return null;
+        }
     }
 
-    public function paidAt(): ?\DateTime
+    public function paidAt(): ?DateTime
     {
         $paid = $this->attributes['paid_at'] ?? null;
 
@@ -63,12 +68,16 @@ class Invoice extends Resource
             return null;
         }
 
-        return new \DateTime($paid);
+        try {
+            return new DateTime($paid);
+        } catch (\Exception) {
+            return null;
+        }
     }
 
     public function chargeId(): ?string
     {
-        return $this->attributes['charge_id'] ?? $this->attributes['charge']['id'] ?? null;
+        return $this->attributes['charge_id'] ?? $this->get('charge.id');
     }
 
     public function metadata(): array
@@ -94,5 +103,17 @@ class Invoice extends Resource
     public function isExpired(): bool
     {
         return $this->status() === InvoiceStatus::EXPIRED;
+    }
+
+    /**
+     * Check if invoice ID has valid format
+     *
+     * @return bool
+     */
+    public function hasValidId(): bool
+    {
+        $id = $this->id();
+
+        return $id !== '' && str_starts_with($id, 'inv_');
     }
 }

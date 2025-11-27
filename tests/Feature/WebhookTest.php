@@ -11,7 +11,7 @@ use TapPay\Tap\Events\WebhookProcessingFailed;
 use TapPay\Tap\Events\WebhookReceived;
 use TapPay\Tap\Events\WebhookValidationFailed;
 use TapPay\Tap\Tests\TestCase;
-use TapPay\Tap\Webhooks\WebhookController;
+use TapPay\Tap\Http\Controllers\WebhookController;
 use TapPay\Tap\Webhooks\WebhookValidator;
 
 class WebhookTest extends TestCase

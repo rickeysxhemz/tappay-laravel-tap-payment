@@ -193,6 +193,29 @@ abstract class AbstractBuilder
     }
 
     /**
+     * Validate required fields before building
+     *
+     * @param array $requiredFields Fields required for this builder
+     * @throws InvalidArgumentException
+     */
+    protected function validateRequired(array $requiredFields = []): void
+    {
+        $missing = [];
+
+        foreach ($requiredFields as $field) {
+            if (!$this->has($field)) {
+                $missing[] = $field;
+            }
+        }
+
+        if (!empty($missing)) {
+            throw new InvalidArgumentException(
+                'Missing required fields: ' . implode(', ', $missing)
+            );
+        }
+    }
+
+    /**
      * Get the built data array as an immutable copy
      *
      * @return array A copy of the builder data

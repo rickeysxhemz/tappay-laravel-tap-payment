@@ -10,7 +10,6 @@ use RuntimeException;
 use TapPay\Tap\Contracts\MoneyContract;
 use TapPay\Tap\Http\Client;
 use TapPay\Tap\Support\Money;
-use TapPay\Tap\Webhooks\WebhookController;
 
 final class TapServiceProvider extends ServiceProvider
 {
@@ -23,7 +22,7 @@ final class TapServiceProvider extends ServiceProvider
 
             if (empty($secretKey)) {
                 throw new RuntimeException(
-                    'Tap secret key is not configured. Please publish and configure the tap.php config file.'
+                    'Tap secret key is not configured. Set the TAP_SECRET_KEY environment variable or publish and configure the tap.php config file using: php artisan vendor:publish --tag=tap-config'
                 );
             }
 
@@ -44,12 +43,28 @@ final class TapServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        $this->registerPublishing();
+        $this->registerRoutes();
+    }
+
+    protected function registerPublishing(): void
+    {
         if ($this->app->runningInConsole()) {
             $this->publishes([
                 __DIR__ . '/../config/tap.php' => config_path('tap.php'),
             ], 'tap-config');
         }
+    }
 
-        Route::post('tap/webhook', WebhookController::class)->name('tap.webhook');
+    protected function registerRoutes(): void
+    {
+        if (Tap::$registersRoutes) {
+            Route::group([
+                'prefix' => config('tap.path', 'tap'),
+                'as' => 'tap.',
+            ], function (): void {
+                $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
+            });
+        }
     }
 }

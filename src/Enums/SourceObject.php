@@ -36,12 +36,6 @@ enum SourceObject: string
     case SRC_TABBY = 'src_tabby';
     case SRC_DEEMA = 'src_deema';
 
-    // Token-based (for saved cards, Apple Pay, Google Pay, Samsung Pay)
-    case TOKEN = 'tok_';
-
-    // Authorization-based (for capture flow)
-    case AUTH = 'auth_';
-
     /**
      * Check if this source requires redirect flow
      *
@@ -49,10 +43,42 @@ enum SourceObject: string
      */
     public function requiresRedirect(): bool
     {
-        return match($this) {
-            self::TOKEN, self::AUTH => false,
-            default => true,
-        };
+        // All standard source objects require redirect
+        return true;
+    }
+
+    /**
+     * Check if a source ID is a token
+     *
+     * @param string $sourceId
+     * @return bool
+     */
+    public static function isToken(string $sourceId): bool
+    {
+        return str_starts_with($sourceId, 'tok_');
+    }
+
+    /**
+     * Check if a source ID is an authorization
+     *
+     * @param string $sourceId
+     * @return bool
+     */
+    public static function isAuthorization(string $sourceId): bool
+    {
+        return str_starts_with($sourceId, 'auth_');
+    }
+
+    /**
+     * Check if a source ID requires redirect (vs direct processing)
+     *
+     * @param string $sourceId
+     * @return bool
+     */
+    public static function sourceRequiresRedirect(string $sourceId): bool
+    {
+        // Tokens and authorizations are processed directly without redirect
+        return !self::isToken($sourceId) && !self::isAuthorization($sourceId);
     }
 
     /**
@@ -101,32 +127,6 @@ enum SourceObject: string
     }
 
     /**
-     * Check if this is a token source
-     *
-     * @return bool
-     */
-    public function isToken(): bool
-    {
-        return match($this) {
-            self::TOKEN => true,
-            default => false,
-        };
-    }
-
-    /**
-     * Check if this is an authorization source
-     *
-     * @return bool
-     */
-    public function isAuthorization(): bool
-    {
-        return match($this) {
-            self::AUTH => true,
-            default => false,
-        };
-    }
-
-    /**
      * Get the country code for regional payment methods
      *
      * @return string|null
@@ -165,8 +165,6 @@ enum SourceObject: string
             self::SRC_STC_PAY => 'STC Pay',
             self::SRC_TABBY => 'Tabby',
             self::SRC_DEEMA => 'Deema',
-            self::TOKEN => 'Token',
-            self::AUTH => 'Authorization',
         };
     }
 }
