@@ -5,62 +5,33 @@ declare(strict_types=1);
 namespace TapPay\Tap\Resources;
 
 use TapPay\Tap\Enums\ChargeStatus;
+use TapPay\Tap\Exceptions\InvalidStatusException;
+use TapPay\Tap\Resources\Concerns\HasPaymentDetails;
 
 class Charge extends Resource
 {
+    use HasPaymentDetails;
+
     protected function getIdPrefix(): string
     {
         return 'chg_';
     }
 
     /**
-     * Get the charge amount
-     */
-    public function amount(): float
-    {
-        return (float) ($this->attributes['amount'] ?? 0);
-    }
-
-    /**
-     * Get the currency
-     */
-    public function currency(): string
-    {
-        return $this->attributes['currency'] ?? '';
-    }
-
-    /**
      * Get the charge status
+     *
+     * @throws InvalidStatusException
      */
     public function status(): ChargeStatus
     {
-        $status = strtoupper($this->attributes['status'] ?? 'UNKNOWN');
+        $status = $this->attributes['status'] ?? null;
 
-        return ChargeStatus::tryFrom($status) ?? ChargeStatus::UNKNOWN;
-    }
+        if ($status === null) {
+            return ChargeStatus::UNKNOWN;
+        }
 
-    /**
-     * Get the transaction URL for redirect
-     */
-    public function transactionUrl(): ?string
-    {
-        return $this->get('transaction.url');
-    }
-
-    /**
-     * Get the customer ID
-     */
-    public function customerId(): ?string
-    {
-        return $this->get('customer.id');
-    }
-
-    /**
-     * Get the source ID
-     */
-    public function sourceId(): ?string
-    {
-        return $this->get('source.id');
+        return ChargeStatus::tryFrom(strtoupper($status))
+            ?? InvalidStatusException::unknown($status, 'charge');
     }
 
     /**
@@ -77,29 +48,5 @@ class Charge extends Resource
     public function cardId(): ?string
     {
         return $this->get('card.id');
-    }
-
-    /**
-     * Check if charge was successful
-     */
-    public function isSuccessful(): bool
-    {
-        return $this->status()->isSuccessful();
-    }
-
-    /**
-     * Check if charge is pending
-     */
-    public function isPending(): bool
-    {
-        return $this->status()->isPending();
-    }
-
-    /**
-     * Check if charge has failed
-     */
-    public function hasFailed(): bool
-    {
-        return $this->status()->hasFailed();
     }
 }

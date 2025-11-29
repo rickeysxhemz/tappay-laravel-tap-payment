@@ -63,4 +63,21 @@ class TokenService extends AbstractService
 
         return new Token($response);
     }
+
+    /**
+     * List all tokens
+     *
+     * @param  array  $params  Query parameters
+     * @return Token[]
+     *
+     * @throws AuthenticationException If API authentication fails
+     * @throws InvalidRequestException If query parameters are invalid
+     * @throws ApiErrorException If API returns an error or network error occurs
+     */
+    public function list(array $params = []): array
+    {
+        $response = $this->client->post(sprintf('%s/list', $this->getEndpoint()), $params);
+
+        return $this->mapToResources($response);
+    }
 }

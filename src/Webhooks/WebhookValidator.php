@@ -68,7 +68,12 @@ class WebhookValidator
             );
         }
 
-        $hashString = $this->buildHashString($data);
+        try {
+            $hashString = $this->buildHashString($data);
+        } catch (\InvalidArgumentException $e) {
+            return WebhookValidationResult::failed($e->getMessage());
+        }
+
         $computedSignature = hash_hmac('sha256', $hashString, $this->secret);
 
         if (! hash_equals($computedSignature, $signature)) {
@@ -104,7 +109,12 @@ class WebhookValidator
             return WebhookValidationResult::failed('Empty payload');
         }
 
-        $hashString = $this->buildHashString($payload);
+        try {
+            $hashString = $this->buildHashString($payload);
+        } catch (\InvalidArgumentException $e) {
+            return WebhookValidationResult::failed($e->getMessage());
+        }
+
         $computedSignature = hash_hmac('sha256', $hashString, $this->secret);
 
         if (! hash_equals($computedSignature, $signature)) {
@@ -120,19 +130,28 @@ class WebhookValidator
      *
      * @param  array  $data  The webhook payload
      * @return string The concatenated hash string
+     *
+     * @throws \InvalidArgumentException If required fields are missing
      */
     protected function buildHashString(array $data): string
     {
         $fieldKeys = ['id', 'amount', 'currency', 'status', 'created'];
 
-        $fields = [];
+        // Validate all required fields exist
+        $missingFields = [];
         foreach ($fieldKeys as $key) {
-            if (isset($data[$key])) {
-                $fields[] = $data[$key];
+            if (! isset($data[$key])) {
+                $missingFields[] = $key;
             }
         }
 
-        return implode('', $fields);
+        if (! empty($missingFields)) {
+            throw new \InvalidArgumentException(
+                'Missing required webhook fields: ' . implode(', ', $missingFields)
+            );
+        }
+
+        return implode('', array_map(fn ($key) => (string) $data[$key], $fieldKeys));
     }
 
     /**
@@ -144,6 +163,7 @@ class WebhookValidator
     public function checkTolerance(array $data): WebhookValidationResult
     {
         $tolerance = config('tap.webhook.tolerance', 300); // 5 minutes default
+        $clockSkew = 30; // Allow 30 seconds for clock differences
 
         if (! isset($data['created'])) {
             return WebhookValidationResult::failed('Missing created timestamp');
@@ -151,8 +171,18 @@ class WebhookValidator
 
         $created = (int) $data['created'];
         $now = time();
+        $diff = $now - $created;
 
-        if (abs($now - $created) > $tolerance) {
+        // Reject future timestamps (with small allowance for clock skew)
+        if ($diff < -$clockSkew) {
+            return WebhookValidationResult::failed(
+                'Webhook timestamp is in the future',
+                ['created' => $created, 'now' => $now, 'diff' => $diff]
+            );
+        }
+
+        // Reject expired webhooks
+        if ($diff > $tolerance) {
             return WebhookValidationResult::failed(
                 'Webhook expired',
                 ['created' => $created, 'now' => $now, 'tolerance' => $tolerance]

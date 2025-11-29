@@ -303,7 +303,7 @@ describe('Money Value Object', function () {
 
     it('throws exception for unsupported currency', function () {
         Money::fromSmallestUnit(100, 'XYZ');
-    })->throws(InvalidArgumentException::class, 'Unsupported currency');
+    })->throws(\TapPay\Tap\Exceptions\InvalidCurrencyException::class);
 
     it('normalizes currency to uppercase', function () {
         $money = Money::fromSmallestUnit(100, 'sar');

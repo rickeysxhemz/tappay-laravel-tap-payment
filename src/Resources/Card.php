@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace TapPay\Tap\Resources;
 
-use DateTime;
-use DateTimeZone;
+use Carbon\Carbon;
+use TapPay\Tap\Exceptions\InvalidCardException;
 
 class Card extends Resource
 {
@@ -112,27 +112,16 @@ class Card extends Resource
         $year = $this->expiryYear();
         $month = $this->expiryMonth();
 
-        if ($year <= 0 || $month < 1 || $month > 12) {
-            return true;
-        }
-
         // Handle 2-digit year format
-        if ($year < 100) {
+        if ($year > 0 && $year < 100) {
             $year += 2000;
         }
 
-        $timezone = new DateTimeZone('Asia/Riyadh');
-        $now = new DateTime('now', $timezone);
-        $expiry = DateTime::createFromFormat('Y-m', sprintf('%d-%02d', $year, $month), $timezone);
-
-        if ($expiry === false) {
-            return true;
+        if ($year < 2000 || $year > 2099 || $month < 1 || $month > 12) {
+            InvalidCardException::invalidExpiry($year, $month);
         }
 
-        // Set to end of month for accurate comparison
-        $expiry->modify('last day of this month 23:59:59');
-
-        return $expiry < $now;
+        return Carbon::create($year, $month)->endOfMonth()->isPast();
     }
 
     /**

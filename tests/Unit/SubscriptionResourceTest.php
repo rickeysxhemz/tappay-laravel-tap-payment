@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
+use Carbon\Carbon;
 use TapPay\Tap\Enums\SubscriptionInterval;
 use TapPay\Tap\Enums\SubscriptionStatus;
 use TapPay\Tap\Resources\Subscription;
+use TapPay\Tap\ValueObjects\Money;
 
 test('can create subscription resource from array', function () {
     $data = loadFixture('subscription.json');
@@ -24,7 +26,9 @@ test('can get subscription amount', function () {
     $data = loadFixture('subscription.json');
     $subscription = new Subscription($data);
 
-    expect($subscription->amount())->toBe(99.99);
+    expect($subscription->amount())->toBeInstanceOf(Money::class)
+        ->and($subscription->amount()->toDecimal())->toBe(99.99)
+        ->and($subscription->amount()->currency)->toBe('SAR');
 })->group('unit');
 
 test('can get subscription currency', function () {
@@ -75,21 +79,21 @@ test('can get start date', function () {
     $data = loadFixture('subscription.json');
     $subscription = new Subscription($data);
 
-    expect($subscription->startDate())->toBeInstanceOf(DateTime::class);
+    expect($subscription->startDate())->toBeInstanceOf(Carbon::class);
 })->group('unit');
 
 test('can get current period start', function () {
     $data = loadFixture('subscription.json');
     $subscription = new Subscription($data);
 
-    expect($subscription->currentPeriodStart())->toBeInstanceOf(DateTime::class);
+    expect($subscription->currentPeriodStart())->toBeInstanceOf(Carbon::class);
 })->group('unit');
 
 test('can get current period end', function () {
     $data = loadFixture('subscription.json');
     $subscription = new Subscription($data);
 
-    expect($subscription->currentPeriodEnd())->toBeInstanceOf(DateTime::class);
+    expect($subscription->currentPeriodEnd())->toBeInstanceOf(Carbon::class);
 })->group('unit');
 
 test('can get subscription metadata', function () {
@@ -157,10 +161,10 @@ test('hasValidId returns false for ID without sub prefix', function () {
 })->group('unit');
 
 // Date parsing tests
-test('cancelledAt returns DateTime when cancelled', function () {
+test('cancelledAt returns Carbon when cancelled', function () {
     $subscription = new Subscription(['cancelled_at' => '2025-06-15T10:30:00Z']);
 
-    expect($subscription->cancelledAt())->toBeInstanceOf(DateTime::class);
+    expect($subscription->cancelledAt())->toBeInstanceOf(Carbon::class);
 })->group('unit');
 
 test('cancelledAt returns null when not cancelled', function () {
@@ -172,7 +176,7 @@ test('cancelledAt returns null when not cancelled', function () {
 test('startDate handles timestamp format', function () {
     $subscription = new Subscription(['start_date' => 1616439916]);
 
-    expect($subscription->startDate())->toBeInstanceOf(DateTime::class);
+    expect($subscription->startDate())->toBeInstanceOf(Carbon::class);
 })->group('unit');
 
 // Default values tests
@@ -182,16 +186,17 @@ test('returns empty string for missing id', function () {
     expect($subscription->id())->toBe('');
 })->group('unit');
 
-test('returns zero for missing amount', function () {
-    $subscription = new Subscription([]);
+test('throws exception for missing amount', function () {
+    $subscription = new Subscription(['currency' => 'SAR']);
 
-    expect($subscription->amount())->toBe(0.0);
+    expect(fn () => $subscription->amount())->toThrow(TapPay\Tap\Exceptions\InvalidAmountException::class);
 })->group('unit');
 
-test('returns empty string for missing currency', function () {
-    $subscription = new Subscription([]);
+test('uses default currency from config when not provided', function () {
+    config(['tap.currency' => 'KWD']);
+    $subscription = new Subscription(['amount' => 99.99]);
 
-    expect($subscription->currency())->toBe('');
+    expect($subscription->currency())->toBe('KWD');
 })->group('unit');
 
 test('returns CANCELLED for missing status', function () {

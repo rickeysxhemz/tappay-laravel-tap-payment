@@ -9,44 +9,53 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
+use function in_array;
+use function is_string;
+use function parse_url;
+use function preg_match;
+use function str_starts_with;
+use function strtolower;
+
 class VerifyRedirectUrl
 {
     /**
-     * Allowed URL schemes for redirects
-     */
-    private const ALLOWED_SCHEMES = ['http', 'https', ''];
-
-    /**
-     * Handle an incoming request.
-     *
      * @throws AccessDeniedHttpException
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if ($redirect = $request->query('redirect')) {
-            if (! $this->isValidRedirectUrl($redirect, $request->getHost())) {
-                throw new AccessDeniedHttpException('Invalid redirect URL.');
-            }
+        $redirect = $request->query('redirect');
+
+        if (
+            is_string($redirect)
+            && $redirect !== ''
+            && ! $this->isValidRedirectUrl($redirect, $request->getHost())
+        ) {
+            throw new AccessDeniedHttpException('Invalid redirect URL.');
         }
 
         return $next($request);
     }
 
-    /**
-     * Validate that the redirect URL is safe.
-     */
     protected function isValidRedirectUrl(string $redirect, string $currentHost): bool
     {
-        $url = parse_url($redirect);
+        $currentHostLower = strtolower($currentHost);
 
-        // Block dangerous schemes (javascript:, data:, vbscript:, etc.)
-        if (isset($url['scheme']) && ! in_array(strtolower($url['scheme']), self::ALLOWED_SCHEMES, true)) {
-            return false;
+        if (str_starts_with($redirect, '//')) {
+            $url = parse_url('https:' . $redirect);
+
+            return $url !== false
+                && isset($url['host'])
+                && strtolower($url['host']) === $currentHostLower;
         }
 
-        // If host is specified, it must match current host
-        if (isset($url['host']) && strtolower($url['host']) !== strtolower($currentHost)) {
-            return false;
+        if (preg_match('/^[a-zA-Z][a-zA-Z0-9+.-]*:/i', $redirect)) {
+            $url = parse_url($redirect);
+
+            return $url !== false
+                && isset($url['scheme'])
+                && in_array(strtolower($url['scheme']), ['http', 'https'], true)
+                && ! empty($url['host'])
+                && strtolower($url['host']) === $currentHostLower;
         }
 
         return true;

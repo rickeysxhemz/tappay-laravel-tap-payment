@@ -4,25 +4,20 @@ declare(strict_types=1);
 
 namespace TapPay\Tap\Resources;
 
-use DateTime;
+use Carbon\Carbon;
 use TapPay\Tap\Enums\SubscriptionInterval;
 use TapPay\Tap\Enums\SubscriptionStatus;
+use TapPay\Tap\Resources\Concerns\HasCustomer;
+use TapPay\Tap\Resources\Concerns\HasMoney;
 
 class Subscription extends Resource
 {
+    use HasCustomer;
+    use HasMoney;
+
     protected function getIdPrefix(): string
     {
         return 'sub_';
-    }
-
-    public function amount(): float
-    {
-        return (float) ($this->attributes['amount'] ?? 0);
-    }
-
-    public function currency(): string
-    {
-        return $this->attributes['currency'] ?? '';
     }
 
     public function status(): SubscriptionStatus
@@ -30,11 +25,6 @@ class Subscription extends Resource
         $status = strtoupper($this->attributes['status'] ?? 'CANCELLED');
 
         return SubscriptionStatus::tryFrom($status) ?? SubscriptionStatus::CANCELLED;
-    }
-
-    public function customerId(): ?string
-    {
-        return $this->get('customer.id') ?? $this->attributes['customer_id'] ?? null;
     }
 
     public function interval(): ?SubscriptionInterval
@@ -54,48 +44,32 @@ class Subscription extends Resource
         return (int) $this->get('trial.days', 0);
     }
 
-    public function startDate(): ?DateTime
+    public function startDate(): ?Carbon
     {
         $start = $this->attributes['start_date'] ?? $this->attributes['created'] ?? null;
 
-        if (! $start) {
-            return null;
-        }
-
-        return $this->parseDateTime($start);
+        return $start ? $this->parseDateTime($start) : null;
     }
 
-    public function currentPeriodStart(): ?DateTime
+    public function currentPeriodStart(): ?Carbon
     {
         $start = $this->attributes['current_period_start'] ?? null;
 
-        if (! $start) {
-            return null;
-        }
-
-        return $this->parseDateTime($start);
+        return $start ? $this->parseDateTime($start) : null;
     }
 
-    public function currentPeriodEnd(): ?DateTime
+    public function currentPeriodEnd(): ?Carbon
     {
         $end = $this->attributes['current_period_end'] ?? null;
 
-        if (! $end) {
-            return null;
-        }
-
-        return $this->parseDateTime($end);
+        return $end ? $this->parseDateTime($end) : null;
     }
 
-    public function cancelledAt(): ?DateTime
+    public function cancelledAt(): ?Carbon
     {
         $cancelled = $this->attributes['cancelled_at'] ?? null;
 
-        if (! $cancelled) {
-            return null;
-        }
-
-        return $this->parseDateTime($cancelled);
+        return $cancelled ? $this->parseDateTime($cancelled) : null;
     }
 
     public function isActive(): bool

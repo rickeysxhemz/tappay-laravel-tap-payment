@@ -110,4 +110,18 @@ class InvoiceService extends AbstractService
 
         return $this->mapToResources($response);
     }
+
+    /**
+     * Delete/cancel an invoice
+     *
+     * @param  string  $invoiceId  Invoice ID
+     *
+     * @throws AuthenticationException
+     * @throws InvalidRequestException
+     * @throws ApiErrorException
+     */
+    public function delete(string $invoiceId): void
+    {
+        $this->client->delete(sprintf('%s/%s', $this->getEndpoint(), $invoiceId));
+    }
 }

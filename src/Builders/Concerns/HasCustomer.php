@@ -31,6 +31,16 @@ trait HasCustomer
 
     public function customerFirstName(string $firstName): static
     {
+        $firstName = trim($firstName);
+
+        if (empty($firstName)) {
+            throw new InvalidArgumentException('First name cannot be empty');
+        }
+
+        if (strlen($firstName) > 100) {
+            throw new InvalidArgumentException('First name cannot exceed 100 characters');
+        }
+
         $existing = $this->data['customer'] ?? [];
         $this->data['customer'] = array_merge($existing, ['first_name' => $firstName]);
 
@@ -39,6 +49,16 @@ trait HasCustomer
 
     public function customerLastName(string $lastName): static
     {
+        $lastName = trim($lastName);
+
+        if (empty($lastName)) {
+            throw new InvalidArgumentException('Last name cannot be empty');
+        }
+
+        if (strlen($lastName) > 100) {
+            throw new InvalidArgumentException('Last name cannot exceed 100 characters');
+        }
+
         $existing = $this->data['customer'] ?? [];
         $this->data['customer'] = array_merge($existing, ['last_name' => $lastName]);
 

@@ -41,7 +41,7 @@ abstract class AbstractService
     /**
      * Map response items to resource instances
      *
-     * @param  array  $response  API response
+     * @param  array<string, mixed>  $response
      * @return array<TResource>
      */
     protected function mapToResources(array $response): array
@@ -49,9 +49,17 @@ abstract class AbstractService
         $resourceClass = $this->getResourceClass();
         $items = $response[$this->getListKey()] ?? $response['data'] ?? [];
 
-        return array_map(
-            fn (array $item) => new $resourceClass($item),
-            $items
-        );
+        if (! is_array($items)) {
+            return [];
+        }
+
+        $resources = [];
+        foreach ($items as $item) {
+            if (is_array($item)) {
+                $resources[] = new $resourceClass($item);
+            }
+        }
+
+        return $resources;
     }
 }

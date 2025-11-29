@@ -146,7 +146,7 @@ class ChargeBuilderTest extends TestCase
             ->create();
 
         $this->assertSame('chg_test_builder', $charge->id());
-        $this->assertSame(25.00, $charge->amount());
+        $this->assertSame(25.00, $charge->amount()->toDecimal());
     }
 
     #[Test]

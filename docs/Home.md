@@ -11,6 +11,7 @@ Welcome to the Laravel Tap Payments documentation. This package provides a fluen
 5. [Saved Cards](5-saved-cards.md)
 6. [Billable Trait](6-billable.md)
 7. [Testing](7-testing.md)
+8. [Marketplace & Payment Splits](8-marketplace.md)
 
 ## Quick Links
 
@@ -25,6 +26,7 @@ Welcome to the Laravel Tap Payments documentation. This package provides a fluen
 - Secure webhook validation with event-driven architecture
 - Billable trait for Eloquent models (Laravel Cashier pattern)
 - Saved card support for one-click payments
+- Marketplace support with payment splits and sub-merchant management
 - Full type safety with PHP 8.2+
 - Laravel Octane compatible
 

@@ -55,7 +55,7 @@ class ChargeServiceTest extends TestCase
         ]);
 
         $this->assertSame('chg_test_123456', $charge->id());
-        $this->assertSame(10.50, $charge->amount());
+        $this->assertSame(10.50, $charge->amount()->toDecimal());
         $this->assertSame('USD', $charge->currency());
         $this->assertSame(ChargeStatus::INITIATED, $charge->status());
         $this->assertInstanceOf(ChargeStatus::class, $charge->status());

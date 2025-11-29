@@ -10,7 +10,10 @@ use TapPay\Tap\Services\AuthorizeService;
 use TapPay\Tap\Services\CardService;
 use TapPay\Tap\Services\ChargeService;
 use TapPay\Tap\Services\CustomerService;
+use TapPay\Tap\Services\DestinationService;
 use TapPay\Tap\Services\InvoiceService;
+use TapPay\Tap\Services\MerchantService;
+use TapPay\Tap\Services\PayoutService;
 use TapPay\Tap\Services\RefundService;
 use TapPay\Tap\Services\SubscriptionService;
 use TapPay\Tap\Services\TokenService;
@@ -74,5 +77,29 @@ class Tap
     public function subscriptions(): SubscriptionService
     {
         return new SubscriptionService($this->client);
+    }
+
+    /**
+     * Marketplace: Sub-merchant management
+     */
+    public function merchants(): MerchantService
+    {
+        return new MerchantService($this->client);
+    }
+
+    /**
+     * Marketplace: Payment split destinations
+     */
+    public function destinations(): DestinationService
+    {
+        return new DestinationService($this->client);
+    }
+
+    /**
+     * Marketplace: Merchant settlement/payout tracking
+     */
+    public function payouts(): PayoutService
+    {
+        return new PayoutService($this->client);
     }
 }

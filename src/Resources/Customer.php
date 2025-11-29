@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace TapPay\Tap\Resources;
 
+use TapPay\Tap\Resources\Concerns\HasContactInfo;
+
 class Customer extends Resource
 {
+    use HasContactInfo;
+
     protected function getIdPrefix(): string
     {
         return 'cus_';
@@ -25,22 +29,6 @@ class Customer extends Resource
     public function lastName(): ?string
     {
         return $this->attributes['last_name'] ?? null;
-    }
-
-    /**
-     * Get the customer's email
-     */
-    public function email(): ?string
-    {
-        return $this->attributes['email'] ?? null;
-    }
-
-    /**
-     * Get the customer's phone
-     */
-    public function phone(): ?array
-    {
-        return $this->attributes['phone'] ?? null;
     }
 
     /**

@@ -5,38 +5,35 @@ declare(strict_types=1);
 namespace TapPay\Tap\Resources;
 
 use TapPay\Tap\Enums\RefundStatus;
+use TapPay\Tap\Exceptions\InvalidStatusException;
+use TapPay\Tap\Resources\Concerns\HasMoney;
+use TapPay\Tap\Resources\Concerns\HasPaymentStatus;
 
 class Refund extends Resource
 {
+    use HasMoney;
+    use HasPaymentStatus;
+
     protected function getIdPrefix(): string
     {
         return 'ref_';
     }
 
     /**
-     * Get the refund amount
-     */
-    public function amount(): float
-    {
-        return (float) ($this->attributes['amount'] ?? 0);
-    }
-
-    /**
-     * Get the currency
-     */
-    public function currency(): string
-    {
-        return $this->attributes['currency'] ?? '';
-    }
-
-    /**
      * Get the refund status
+     *
+     * @throws InvalidStatusException
      */
     public function status(): RefundStatus
     {
-        $status = strtoupper($this->attributes['status'] ?? 'FAILED');
+        $status = $this->attributes['status'] ?? null;
 
-        return RefundStatus::tryFrom($status) ?? RefundStatus::FAILED;
+        if ($status === null) {
+            return RefundStatus::FAILED;
+        }
+
+        return RefundStatus::tryFrom(strtoupper($status))
+            ?? InvalidStatusException::unknown($status, 'refund');
     }
 
     /**
@@ -53,29 +50,5 @@ class Refund extends Resource
     public function reason(): ?string
     {
         return $this->attributes['reason'] ?? null;
-    }
-
-    /**
-     * Check if refund was successful
-     */
-    public function isSuccessful(): bool
-    {
-        return $this->status()->isSuccessful();
-    }
-
-    /**
-     * Check if refund is pending
-     */
-    public function isPending(): bool
-    {
-        return $this->status()->isPending();
-    }
-
-    /**
-     * Check if refund has failed
-     */
-    public function hasFailed(): bool
-    {
-        return $this->status()->hasFailed();
     }
 }

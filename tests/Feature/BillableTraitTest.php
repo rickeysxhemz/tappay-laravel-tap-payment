@@ -101,7 +101,7 @@ class BillableTraitTest extends TestCase
         ]);
 
         $this->assertSame('chg_test_456', $charge->id());
-        $this->assertSame(50.00, $charge->amount());
+        $this->assertSame(50.00, $charge->amount()->toDecimal());
         $this->assertNotNull($user->fresh()->tap_customer_id);
     }
 
@@ -422,7 +422,7 @@ class BillableTraitTest extends TestCase
         ]);
 
         $this->assertSame('chg_with_options', $charge->id());
-        $this->assertSame(100.00, $charge->amount());
+        $this->assertSame(100.00, $charge->amount()->toDecimal());
     }
 
     #[Test]

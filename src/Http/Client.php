@@ -4,15 +4,23 @@ declare(strict_types=1);
 
 namespace TapPay\Tap\Http;
 
+use const JSON_THROW_ON_ERROR;
+
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\ServerException;
 use InvalidArgumentException;
+use JsonException;
 use Psr\Http\Message\ResponseInterface;
+use SensitiveParameter;
 use TapPay\Tap\Exceptions\ApiErrorException;
 use TapPay\Tap\Exceptions\AuthenticationException;
 use TapPay\Tap\Exceptions\InvalidRequestException;
+
+use function config;
+use function json_decode;
+use function trim;
 
 /**
  * HTTP client for making requests to Tap Payments API
@@ -30,14 +38,17 @@ class Client
      * @throws InvalidArgumentException
      */
     public function __construct(
+        #[SensitiveParameter]
         protected string $secretKey,
         protected ?string $baseUrl = null
     ) {
-        if (empty($this->secretKey)) {
+        if (trim($this->secretKey) === '') {
             throw new InvalidArgumentException('Secret key cannot be empty');
         }
 
-        $this->baseUrl ??= config('tap.base_url', 'https://api.tap.company/v2/');
+        if ($this->baseUrl === null || trim($this->baseUrl) === '') {
+            $this->baseUrl = config('tap.base_url', 'https://api.tap.company/v2/');
+        }
 
         $this->client = new GuzzleClient([
             'base_uri' => $this->baseUrl,
@@ -135,21 +146,35 @@ class Client
     }
 
     /**
-     * Decode JSON response body
+     * @throws ApiErrorException
      */
     protected function decodeResponse(ResponseInterface $response): array
     {
         $body = (string) $response->getBody();
 
-        return json_decode($body, true) ?? [];
+        if ($body === '') {
+            return [];
+        }
+
+        try {
+            return json_decode($body, true, 512, JSON_THROW_ON_ERROR) ?? [];
+        } catch (JsonException $e) {
+            throw new ApiErrorException('Invalid JSON response: ' . $e->getMessage(), 0);
+        }
     }
 
     /**
-     * Parse error response
+     * Extract error details from response
+     *
+     * @param  array<string, mixed>  $response
+     * @return array{message: string, errors: array<mixed>}
      */
-    protected function parseErrorResponse(ResponseInterface $response): array
+    protected function extractErrorDetails(array $response): array
     {
-        return $this->decodeResponse($response);
+        return [
+            'message' => $response['message'] ?? $response['error'] ?? 'Unknown API error',
+            'errors' => $response['errors'] ?? [],
+        ];
     }
 
     /**
@@ -162,10 +187,8 @@ class Client
     protected function handleClientException(ClientException $e): never
     {
         $statusCode = $e->getResponse()->getStatusCode();
-        $response = $this->parseErrorResponse($e->getResponse());
-
-        $message = $response['message'] ?? $response['error'] ?? 'Unknown API error';
-        $errors = $response['errors'] ?? [];
+        $response = $this->decodeResponse($e->getResponse());
+        ['message' => $message, 'errors' => $errors] = $this->extractErrorDetails($response);
 
         throw match ($statusCode) {
             401 => new AuthenticationException,
@@ -182,10 +205,8 @@ class Client
     protected function handleServerException(ServerException $e): never
     {
         $statusCode = $e->getResponse()->getStatusCode();
-        $response = $this->parseErrorResponse($e->getResponse());
-
-        $message = $response['message'] ?? $response['error'] ?? 'Unknown API error';
-        $errors = $response['errors'] ?? [];
+        $response = $this->decodeResponse($e->getResponse());
+        ['message' => $message, 'errors' => $errors] = $this->extractErrorDetails($response);
 
         throw new ApiErrorException($message, $statusCode, $errors);
     }

@@ -98,6 +98,36 @@ $user->charge(10000, 'SAR', [
 | Egypt | Fawry |
 | BNPL | Tabby, Deema |
 
+### Marketplace & Payment Splits
+
+Split payments across multiple merchants:
+
+```php
+use TapPay\Tap\Facades\Tap;
+use TapPay\Tap\ValueObjects\Destination;
+
+// Create a charge with payment splits
+$charge = Tap::charges()
+    ->amount(10000)
+    ->withCard()
+    ->destinations([
+        Destination::make('merchant_123', 7000),  // 70% to vendor
+        Destination::make('merchant_456', 3000),  // 30% platform fee
+    ])
+    ->redirectUrl('https://example.com/callback')
+    ->create();
+
+// Manage sub-merchants
+$merchant = Tap::merchants()->create([
+    'name' => 'Vendor Store',
+    'email' => 'vendor@example.com',
+    'country_code' => 'SA',
+]);
+
+// Track payouts
+$payouts = Tap::payouts()->listByMerchant('merchant_123');
+```
+
 ## Contributing
 
 Thank you for considering contributing to Laravel Tap Payments! The contribution guide can be found in the [CONTRIBUTING.md](.github/CONTRIBUTING.md) file.

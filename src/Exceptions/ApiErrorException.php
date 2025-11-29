@@ -7,15 +7,10 @@ namespace TapPay\Tap\Exceptions;
 use Exception;
 
 /**
- * Exception thrown when the Tap API returns an error response
+ * Exception for Tap API error responses
  */
 class ApiErrorException extends Exception
 {
-    /**
-     * @param  string  $message  Error message from API
-     * @param  int  $statusCode  HTTP status code
-     * @param  array  $errors  Validation errors from API
-     */
     public function __construct(
         string $message,
         protected int $statusCode = 0,
@@ -24,33 +19,21 @@ class ApiErrorException extends Exception
         parent::__construct($message, $statusCode);
     }
 
-    /**
-     * Get the errors from the API response
-     */
     public function getErrors(): array
     {
         return $this->errors;
     }
 
-    /**
-     * Get the HTTP status code
-     */
     public function getStatusCode(): int
     {
         return $this->statusCode;
     }
 
-    /**
-     * Check if the exception has validation errors
-     */
     public function hasErrors(): bool
     {
         return ! empty($this->errors);
     }
 
-    /**
-     * Get the first error message
-     */
     public function getFirstError(): ?string
     {
         if (empty($this->errors)) {
@@ -63,9 +46,6 @@ class ApiErrorException extends Exception
         return is_array($firstError) ? ($firstError[0] ?? null) : $firstError;
     }
 
-    /**
-     * Get exception data as array
-     */
     public function toArray(): array
     {
         return [

@@ -2,8 +2,11 @@
 
 declare(strict_types=1);
 
+use Carbon\Carbon;
 use TapPay\Tap\Enums\InvoiceStatus;
+use TapPay\Tap\Exceptions\InvalidDateTimeException;
 use TapPay\Tap\Resources\Invoice;
+use TapPay\Tap\ValueObjects\Money;
 
 test('can create invoice resource from array', function () {
     $data = loadFixture('invoice.json');
@@ -23,7 +26,9 @@ test('can get invoice amount', function () {
     $data = loadFixture('invoice.json');
     $invoice = new Invoice($data);
 
-    expect($invoice->amount())->toBe(100.0);
+    expect($invoice->amount())->toBeInstanceOf(Money::class)
+        ->and($invoice->amount()->toDecimal())->toBe(100.0)
+        ->and($invoice->amount()->currency)->toBe('SAR');
 })->group('unit');
 
 test('can get invoice currency', function () {
@@ -62,11 +67,11 @@ test('can get invoice URL', function () {
     expect($invoice->url())->toStartWith('https://sandbox.checkout.tap.company');
 })->group('unit');
 
-test('can get expiresAt as DateTime', function () {
+test('can get expiresAt as Carbon', function () {
     $data = loadFixture('invoice.json');
     $invoice = new Invoice($data);
 
-    expect($invoice->expiresAt())->toBeInstanceOf(DateTime::class);
+    expect($invoice->expiresAt())->toBeInstanceOf(Carbon::class);
 })->group('unit');
 
 test('can get invoice metadata', function () {
@@ -128,10 +133,10 @@ test('hasValidId returns false for ID without inv prefix', function () {
 })->group('unit');
 
 // Date parsing tests
-test('paidAt returns DateTime when paid_at is set', function () {
+test('paidAt returns Carbon when paid_at is set', function () {
     $invoice = new Invoice(['paid_at' => '2025-01-15T10:30:00Z']);
 
-    expect($invoice->paidAt())->toBeInstanceOf(DateTime::class);
+    expect($invoice->paidAt())->toBeInstanceOf(Carbon::class);
 })->group('unit');
 
 test('paidAt returns null when not paid', function () {
@@ -140,10 +145,10 @@ test('paidAt returns null when not paid', function () {
     expect($invoice->paidAt())->toBeNull();
 })->group('unit');
 
-test('expiresAt returns null for invalid date', function () {
+test('expiresAt throws exception for invalid date', function () {
     $invoice = new Invoice(['expiry' => 'invalid-date']);
 
-    expect($invoice->expiresAt())->toBeNull();
+    expect(fn () => $invoice->expiresAt())->toThrow(InvalidDateTimeException::class);
 })->group('unit');
 
 test('chargeId returns charge ID when available', function () {
@@ -159,16 +164,17 @@ test('returns empty string for missing id', function () {
     expect($invoice->id())->toBe('');
 })->group('unit');
 
-test('returns zero for missing amount', function () {
-    $invoice = new Invoice([]);
+test('throws exception for missing amount', function () {
+    $invoice = new Invoice(['currency' => 'SAR']);
 
-    expect($invoice->amount())->toBe(0.0);
+    expect(fn () => $invoice->amount())->toThrow(TapPay\Tap\Exceptions\InvalidAmountException::class);
 })->group('unit');
 
-test('returns empty string for missing currency', function () {
-    $invoice = new Invoice([]);
+test('uses default currency from config when not provided', function () {
+    config(['tap.currency' => 'KWD']);
+    $invoice = new Invoice(['amount' => 100.0]);
 
-    expect($invoice->currency())->toBe('');
+    expect($invoice->currency())->toBe('KWD');
 })->group('unit');
 
 test('returns FAILED for missing status', function () {

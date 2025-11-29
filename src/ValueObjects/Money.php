@@ -6,6 +6,7 @@ namespace TapPay\Tap\ValueObjects;
 
 use Illuminate\Contracts\Support\Arrayable;
 use InvalidArgumentException;
+use TapPay\Tap\Contracts\MoneyContract;
 
 /**
  * Money value object for currency conversion
@@ -14,26 +15,20 @@ use InvalidArgumentException;
  */
 readonly class Money implements Arrayable
 {
-    private const DECIMALS = [
-        'KWD' => 3, 'BHD' => 3, 'OMR' => 3, 'JOD' => 3,
-        'SAR' => 2, 'AED' => 2, 'QAR' => 2, 'EGP' => 2,
-        'LBP' => 2, 'USD' => 2, 'EUR' => 2, 'GBP' => 2,
-    ];
-
     public string $currency;
+
+    private MoneyContract $moneyService;
 
     public function __construct(
         public int $amount,
-        string $currency
+        string $currency,
+        ?MoneyContract $moneyService = null
     ) {
-        $this->currency = strtoupper(trim($currency));
+        $this->moneyService = $moneyService ?? app(MoneyContract::class);
+        $this->currency = $this->moneyService->normalizeCurrency($currency);
 
         if ($this->amount < 0) {
             throw new InvalidArgumentException('Amount cannot be negative');
-        }
-
-        if (! isset(self::DECIMALS[$this->currency])) {
-            throw new InvalidArgumentException("Unsupported currency: {$currency}");
         }
     }
 
@@ -44,28 +39,26 @@ readonly class Money implements Arrayable
 
     public static function fromDecimal(float|string $amount, string $currency): self
     {
-        $currency = strtoupper(trim($currency));
-        $decimals = self::DECIMALS[$currency] ?? 2;
-        $smallest = (int) round((float) $amount * (10 ** $decimals));
+        $moneyService = app(MoneyContract::class);
+        $currency = $moneyService->normalizeCurrency($currency);
+        $smallest = $moneyService->toSmallestUnit($amount, $currency);
 
-        return new self($smallest, $currency);
+        return new self($smallest, $currency, $moneyService);
     }
 
     public function toDecimal(): float
     {
-        $decimals = self::DECIMALS[$this->currency];
-
-        return round($this->amount / (10 ** $decimals), $decimals);
+        return $this->moneyService->toDecimal($this->amount, $this->currency);
     }
 
     public function getDecimalPlaces(): int
     {
-        return self::DECIMALS[$this->currency];
+        return $this->moneyService->getDecimalPlaces($this->currency);
     }
 
     public function getMinimumAmount(): int
     {
-        return $this->getDecimalPlaces() === 3 ? 100 : 10;
+        return $this->moneyService->getMinimumAmount($this->currency);
     }
 
     public function validateMinimum(): self

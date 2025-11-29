@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace TapPay\Tap\Resources;
 
-use DateTime;
+use Carbon\Carbon;
+use Exception;
+use TapPay\Tap\Exceptions\InvalidDateTimeException;
+
+use function str_starts_with;
 
 /**
  * Base resource class for all Tap API responses
@@ -61,9 +65,6 @@ abstract class Resource
 
     /**
      * Get an attribute by key with support for dot notation
-     *
-     * @param  string  $key  Attribute key (supports dot notation)
-     * @param  string|int|float|bool|array|null  $default  Default value if key doesn't exist
      */
     public function get(string $key, string|int|float|bool|array|null $default = null): string|int|float|bool|array|null
     {
@@ -90,8 +91,6 @@ abstract class Resource
 
     /**
      * Magic getter for attributes
-     *
-     * @param  string  $key  Attribute key
      */
     public function __get(string $key): string|int|float|bool|array|null
     {
@@ -99,20 +98,16 @@ abstract class Resource
     }
 
     /**
-     * Parse a timestamp or date string into a DateTime object
+     * Parse a timestamp or date string into a Carbon instance
      *
-     * @param  int|string  $value  Unix timestamp or date string
+     * @throws InvalidDateTimeException
      */
-    protected function parseDateTime(int|string $value): ?DateTime
+    protected function parseDateTime(int|string $value): Carbon
     {
         try {
-            if (is_numeric($value)) {
-                return (new DateTime)->setTimestamp((int) $value);
-            }
-
-            return new DateTime($value);
-        } catch (\Exception) {
-            return null;
+            return Carbon::parse($value);
+        } catch (Exception) {
+            InvalidDateTimeException::invalidValue($value);
         }
     }
 }

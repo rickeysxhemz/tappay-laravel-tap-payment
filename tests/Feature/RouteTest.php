@@ -277,6 +277,9 @@ test('webhook route does not dispatch events for unknown resources', function ()
     $payload = [
         'id' => 'unk_123',
         'object' => 'unknown_type',
+        'amount' => 10.00,
+        'currency' => 'USD',
+        'status' => 'UNKNOWN',
         'created' => time(),
     ];
 

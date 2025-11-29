@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use TapPay\Tap\Enums\AuthorizeStatus;
 use TapPay\Tap\Resources\Authorize;
+use TapPay\Tap\ValueObjects\Money;
 
 test('can create authorize resource from array', function () {
     $data = loadFixture('authorize.json');
@@ -23,7 +24,9 @@ test('can get authorization amount', function () {
     $data = loadFixture('authorize.json');
     $authorize = new Authorize($data);
 
-    expect($authorize->amount())->toBe(50.0);
+    expect($authorize->amount())->toBeInstanceOf(Money::class)
+        ->and($authorize->amount()->toDecimal())->toBe(50.0)
+        ->and($authorize->amount()->currency)->toBe('SAR');
 })->group('unit');
 
 test('can get authorization currency', function () {
@@ -122,8 +125,17 @@ test('CAPTURED status is neither authorized nor failed nor pending', function ()
         ->and($authorize->isPending())->toBeFalse();
 })->group('unit');
 
-test('handles unknown status gracefully', function () {
+test('throws exception for unknown status', function () {
     $authorize = new Authorize(['status' => 'INVALID_STATUS']);
+
+    expect(fn () => $authorize->status())->toThrow(
+        TapPay\Tap\Exceptions\InvalidStatusException::class,
+        "Unknown authorize status: 'INVALID_STATUS'"
+    );
+})->group('unit');
+
+test('returns UNKNOWN status when status is missing', function () {
+    $authorize = new Authorize([]);
 
     expect($authorize->status())->toBe(AuthorizeStatus::UNKNOWN)
         ->and($authorize->isAuthorized())->toBeFalse()
@@ -164,17 +176,50 @@ test('returns empty string for missing id', function () {
     expect($authorize->id())->toBe('');
 })->group('unit');
 
-test('returns zero for missing amount', function () {
+test('throws exception for missing amount', function () {
+    $authorize = new Authorize(['currency' => 'SAR']);
+
+    $authorize->amount();
+})->throws(TapPay\Tap\Exceptions\InvalidAmountException::class, 'Amount is required but not provided or invalid in response')->group('unit');
+
+test('throws exception for zero amount', function () {
+    $authorize = new Authorize(['amount' => 0, 'currency' => 'SAR']);
+
+    $authorize->amount();
+})->throws(TapPay\Tap\Exceptions\InvalidAmountException::class, 'Amount must be greater than zero')->group('unit');
+
+test('throws exception for negative amount', function () {
+    $authorize = new Authorize(['amount' => -10, 'currency' => 'SAR']);
+
+    $authorize->amount();
+})->throws(TapPay\Tap\Exceptions\InvalidAmountException::class, 'Amount must be greater than zero')->group('unit');
+
+test('throws exception for invalid amount', function () {
+    $authorize = new Authorize(['amount' => 'invalid', 'currency' => 'SAR']);
+
+    $authorize->amount();
+})->throws(TapPay\Tap\Exceptions\InvalidAmountException::class, 'Amount is required but not provided or invalid in response')->group('unit');
+
+test('throws exception for amount when currency is missing', function () {
+    config(['tap.currency' => '']);
+    $authorize = new Authorize(['amount' => 50]);
+
+    $authorize->amount();
+})->throws(TapPay\Tap\Exceptions\InvalidCurrencyException::class, 'Currency is required but not provided in response or config')->group('unit');
+
+test('returns default currency from config when missing', function () {
+    config(['tap.currency' => 'USD']);
     $authorize = new Authorize([]);
 
-    expect($authorize->amount())->toBe(0.0);
+    expect($authorize->currency())->toBe('USD');
 })->group('unit');
 
-test('returns empty string for missing currency', function () {
+test('throws exception for missing currency when config is empty', function () {
+    config(['tap.currency' => '']);
     $authorize = new Authorize([]);
 
-    expect($authorize->currency())->toBe('');
-})->group('unit');
+    $authorize->currency();
+})->throws(TapPay\Tap\Exceptions\InvalidCurrencyException::class, 'Currency is required but not provided in response or config')->group('unit');
 
 test('returns UNKNOWN for missing status', function () {
     $authorize = new Authorize([]);

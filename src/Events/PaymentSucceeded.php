@@ -8,6 +8,7 @@ use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 use TapPay\Tap\Resources\Charge;
+use TapPay\Tap\ValueObjects\Money;
 
 class PaymentSucceeded
 {
@@ -25,7 +26,7 @@ class PaymentSucceeded
         return $this->charge->id();
     }
 
-    public function getAmount(): float
+    public function getAmount(): Money
     {
         return $this->charge->amount();
     }

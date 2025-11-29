@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use TapPay\Tap\Enums\RefundStatus;
 use TapPay\Tap\Resources\Refund;
+use TapPay\Tap\ValueObjects\Money;
 
 test('can create refund resource from array', function () {
     $data = loadFixture('refund.json');
@@ -20,9 +21,11 @@ test('can get refund ID', function () {
 })->group('unit');
 
 test('can get refund amount', function () {
-    $refund = new Refund(['amount' => 50.0]);
+    $refund = new Refund(['amount' => 50.0, 'currency' => 'SAR']);
 
-    expect($refund->amount())->toBe(50.0);
+    expect($refund->amount())->toBeInstanceOf(Money::class)
+        ->and($refund->amount()->toDecimal())->toBe(50.0)
+        ->and($refund->amount()->currency)->toBe('SAR');
 })->group('unit');
 
 test('can get refund currency', function () {
@@ -114,16 +117,17 @@ test('returns empty string for missing id', function () {
     expect($refund->id())->toBe('');
 })->group('unit');
 
-test('returns zero for missing amount', function () {
-    $refund = new Refund([]);
+test('throws exception for missing amount', function () {
+    $refund = new Refund(['currency' => 'SAR']);
 
-    expect($refund->amount())->toBe(0.0);
+    expect(fn () => $refund->amount())->toThrow(TapPay\Tap\Exceptions\InvalidAmountException::class);
 })->group('unit');
 
-test('returns empty string for missing currency', function () {
-    $refund = new Refund([]);
+test('uses default currency from config when not provided', function () {
+    config(['tap.currency' => 'KWD']);
+    $refund = new Refund(['amount' => 50.0]);
 
-    expect($refund->currency())->toBe('');
+    expect($refund->currency())->toBe('KWD');
 })->group('unit');
 
 test('returns FAILED for missing status', function () {

@@ -6,31 +6,29 @@ namespace TapPay\Tap\Exceptions;
 
 use InvalidArgumentException;
 
+/**
+ * Exception for invalid currency values
+ */
 final class InvalidCurrencyException extends InvalidArgumentException
 {
-    public static function empty(): self
+    public static function missing(): never
     {
-        return new self('Currency cannot be empty');
+        throw new self('Currency is required but not provided in response or config');
     }
 
-    public static function unsupported(string $currency, array $supported): self
+    public static function empty(): never
     {
-        return new self(
+        throw new self('Currency cannot be empty');
+    }
+
+    public static function unsupported(string $currency, array $supported): never
+    {
+        throw new self(
             sprintf(
                 "Currency '%s' is not supported. Supported currencies: %s",
                 $currency,
                 implode(', ', $supported)
             )
         );
-    }
-
-    public static function negativeAmount(): self
-    {
-        return new self('Amount cannot be negative');
-    }
-
-    public static function invalidAmount(): self
-    {
-        return new self('Amount must be a valid numeric value');
     }
 }

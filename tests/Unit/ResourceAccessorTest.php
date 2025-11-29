@@ -14,6 +14,7 @@ use TapPay\Tap\Resources\Charge;
 use TapPay\Tap\Resources\Customer;
 use TapPay\Tap\Resources\Refund;
 use TapPay\Tap\Resources\Token;
+use TapPay\Tap\ValueObjects\Money;
 
 class ResourceAccessorTest extends TestCase
 {
@@ -36,7 +37,8 @@ class ResourceAccessorTest extends TestCase
         ]);
 
         $this->assertSame('chg_test_123', $charge->id());
-        $this->assertSame(50.75, $charge->amount());
+        // Note: amount() returns Money object which requires Laravel container
+        // This is tested in ChargeResourceTest.php with proper container setup
         $this->assertSame('KWD', $charge->currency());
         $this->assertSame(ChargeStatus::CAPTURED, $charge->status());
         $this->assertSame('Test payment', $charge->description());
@@ -77,11 +79,12 @@ class ResourceAccessorTest extends TestCase
     }
 
     #[Test]
-    public function charge_handles_zero_amount(): void
+    public function charge_throws_exception_for_missing_amount(): void
     {
-        $charge = new Charge([]);
+        $charge = new Charge(['currency' => 'USD']);
 
-        $this->assertSame(0.0, $charge->amount());
+        $this->expectException(\TapPay\Tap\Exceptions\InvalidAmountException::class);
+        $charge->amount();
     }
 
     #[Test]
@@ -206,7 +209,8 @@ class ResourceAccessorTest extends TestCase
         ]);
 
         $this->assertSame('ref_test_123', $refund->id());
-        $this->assertSame(25.50, $refund->amount());
+        // Note: amount() returns Money object which requires Laravel container
+        // This is tested in RefundResourceTest.php with proper container setup
         $this->assertSame('SAR', $refund->currency());
         $this->assertSame(RefundStatus::SUCCEEDED, $refund->status());
         $this->assertSame('chg_test_456', $refund->chargeId());
@@ -265,7 +269,8 @@ class ResourceAccessorTest extends TestCase
         ]);
 
         $this->assertSame('auth_test_123', $authorize->id());
-        $this->assertSame(100.00, $authorize->amount());
+        // Note: amount() returns Money object which requires Laravel container
+        // This is tested in AuthorizeResourceTest.php with proper container setup
         $this->assertSame('BHD', $authorize->currency());
         $this->assertSame(AuthorizeStatus::AUTHORIZED, $authorize->status());
         $this->assertSame('https://tap.company/redirect/auth/123', $authorize->transactionUrl());
@@ -314,11 +319,6 @@ class ResourceAccessorTest extends TestCase
     #[Test]
     public function resources_handle_completely_empty_data(): void
     {
-        $charge = new Charge([]);
-        $this->assertSame('', $charge->id());
-        $this->assertSame(0.0, $charge->amount());
-        $this->assertSame('', $charge->currency());
-
         $customer = new Customer([]);
         $this->assertSame('', $customer->id());
         $this->assertSame('', $customer->firstName());
@@ -326,13 +326,8 @@ class ResourceAccessorTest extends TestCase
         $token = new Token([]);
         $this->assertSame('', $token->id());
 
-        $refund = new Refund([]);
-        $this->assertSame('', $refund->id());
-        $this->assertSame(0.0, $refund->amount());
-
-        $authorize = new Authorize([]);
-        $this->assertSame('', $authorize->id());
-        $this->assertSame(0.0, $authorize->amount());
+        // Note: Charge, Refund, and Authorize now throw exceptions for missing amount/currency
+        // These are tested in their respective test files
     }
 
     #[Test]
@@ -370,29 +365,50 @@ class ResourceAccessorTest extends TestCase
         $this->assertNull($customerWithoutPhone->phone());
     }
 
+    // Note: all_resources_handle_string_amounts_correctly test removed
+    // amount() returns Money object which requires Laravel container
+    // This is tested in ChargeResourceTest.php, RefundResourceTest.php with proper container setup
+
     #[Test]
-    public function all_resources_handle_string_amounts_correctly(): void
+    public function charge_throws_exception_for_unknown_status(): void
     {
-        $charge = new Charge(['amount' => '123.45']);
-        $this->assertSame(123.45, $charge->amount());
+        $charge = new Charge(['status' => 'INVALID_STATUS']);
 
-        $refund = new Refund(['amount' => '67.89']);
-        $this->assertSame(67.89, $refund->amount());
-
-        $authorize = new Authorize(['amount' => '999.99']);
-        $this->assertSame(999.99, $authorize->amount());
+        $this->expectException(\TapPay\Tap\Exceptions\InvalidStatusException::class);
+        $this->expectExceptionMessage("Unknown charge status: 'INVALID_STATUS'");
+        $charge->status();
     }
 
     #[Test]
-    public function resources_handle_unknown_status_gracefully(): void
+    public function refund_throws_exception_for_unknown_status(): void
     {
-        $charge = new Charge(['status' => 'INVALID_STATUS']);
+        $refund = new Refund(['status' => 'INVALID_STATUS']);
+
+        $this->expectException(\TapPay\Tap\Exceptions\InvalidStatusException::class);
+        $this->expectExceptionMessage("Unknown refund status: 'INVALID_STATUS'");
+        $refund->status();
+    }
+
+    #[Test]
+    public function authorize_throws_exception_for_unknown_status(): void
+    {
+        $authorize = new Authorize(['status' => 'INVALID_STATUS']);
+
+        $this->expectException(\TapPay\Tap\Exceptions\InvalidStatusException::class);
+        $this->expectExceptionMessage("Unknown authorize status: 'INVALID_STATUS'");
+        $authorize->status();
+    }
+
+    #[Test]
+    public function resources_return_default_status_when_missing(): void
+    {
+        $charge = new Charge([]);
         $this->assertSame(ChargeStatus::UNKNOWN, $charge->status());
 
-        $refund = new Refund(['status' => 'INVALID_STATUS']);
+        $refund = new Refund([]);
         $this->assertSame(RefundStatus::FAILED, $refund->status());
 
-        $authorize = new Authorize(['status' => 'INVALID_STATUS']);
+        $authorize = new Authorize([]);
         $this->assertSame(AuthorizeStatus::UNKNOWN, $authorize->status());
     }
 

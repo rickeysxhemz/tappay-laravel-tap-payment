@@ -15,6 +15,13 @@ use TapPay\Tap\Exceptions\InvalidRequestException;
 use TapPay\Tap\Facades\Tap;
 use TapPay\Tap\Http\Middleware\VerifyRedirectUrl;
 
+use function config;
+use function is_string;
+use function redirect;
+
+/**
+ * Handles payment callback redirects from Tap Payments
+ */
 class PaymentCallbackController extends Controller
 {
     public function __construct()
@@ -28,7 +35,7 @@ class PaymentCallbackController extends Controller
         $redirect = $request->query('redirect');
         $redirectUrl = is_string($redirect) ? $redirect : null;
 
-        if (! $chargeId || ! is_string($chargeId)) {
+        if (! is_string($chargeId) || $chargeId === '') {
             return $this->redirectToFailure($redirectUrl, 'Missing or invalid tap_id');
         }
 

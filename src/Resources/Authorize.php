@@ -5,85 +5,40 @@ declare(strict_types=1);
 namespace TapPay\Tap\Resources;
 
 use TapPay\Tap\Enums\AuthorizeStatus;
+use TapPay\Tap\Exceptions\InvalidStatusException;
+use TapPay\Tap\Resources\Concerns\HasPaymentDetails;
 
 class Authorize extends Resource
 {
+    use HasPaymentDetails;
+
     protected function getIdPrefix(): string
     {
         return 'auth_';
     }
 
     /**
-     * Get the authorization amount
-     */
-    public function amount(): float
-    {
-        return (float) ($this->attributes['amount'] ?? 0);
-    }
-
-    /**
-     * Get the currency
-     */
-    public function currency(): string
-    {
-        return $this->attributes['currency'] ?? '';
-    }
-
-    /**
      * Get the authorization status
+     *
+     * @throws InvalidStatusException
      */
     public function status(): AuthorizeStatus
     {
-        $status = strtoupper($this->attributes['status'] ?? 'UNKNOWN');
+        $status = $this->attributes['status'] ?? null;
 
-        return AuthorizeStatus::tryFrom($status) ?? AuthorizeStatus::UNKNOWN;
+        if ($status === null) {
+            return AuthorizeStatus::UNKNOWN;
+        }
+
+        return AuthorizeStatus::tryFrom(strtoupper($status))
+            ?? InvalidStatusException::unknown($status, 'authorize');
     }
 
     /**
-     * Get the transaction URL for redirect
-     */
-    public function transactionUrl(): ?string
-    {
-        return $this->get('transaction.url');
-    }
-
-    /**
-     * Get the customer ID
-     */
-    public function customerId(): ?string
-    {
-        return $this->get('customer.id');
-    }
-
-    /**
-     * Get the source ID
-     */
-    public function sourceId(): ?string
-    {
-        return $this->get('source.id');
-    }
-
-    /**
-     * Check if authorization was successful
+     * Check if authorization was successful (alias for isSuccessful)
      */
     public function isAuthorized(): bool
     {
-        return $this->status()->isSuccessful();
-    }
-
-    /**
-     * Check if authorization is pending
-     */
-    public function isPending(): bool
-    {
-        return $this->status()->isPending();
-    }
-
-    /**
-     * Check if authorization has failed
-     */
-    public function hasFailed(): bool
-    {
-        return $this->status()->hasFailed();
+        return $this->isSuccessful();
     }
 }

@@ -44,7 +44,7 @@ class RefundServiceTest extends TestCase
         ]);
 
         $this->assertSame('ref_test_123456', $refund->id());
-        $this->assertSame(10.50, $refund->amount());
+        $this->assertSame(10.50, $refund->amount()->toDecimal());
         $this->assertSame('USD', $refund->currency());
         $this->assertSame(RefundStatus::INITIATED, $refund->status());
         $this->assertInstanceOf(RefundStatus::class, $refund->status());
@@ -84,7 +84,7 @@ class RefundServiceTest extends TestCase
         ]);
 
         $this->assertSame('ref_test_partial', $refund->id());
-        $this->assertSame(5.25, $refund->amount());
+        $this->assertSame(5.25, $refund->amount()->toDecimal());
         $this->assertSame(RefundStatus::PENDING, $refund->status());
         $this->assertTrue($refund->isPending());
         $this->assertFalse($refund->isSuccessful());
@@ -330,7 +330,7 @@ class RefundServiceTest extends TestCase
     }
 
     #[Test]
-    public function it_handles_invalid_refund_status_gracefully(): void
+    public function it_throws_exception_for_invalid_refund_status(): void
     {
         $this->mockHandler->append(new Response(200, [], json_encode([
             'id' => 'ref_test_invalid',
@@ -342,8 +342,8 @@ class RefundServiceTest extends TestCase
 
         $refund = $this->refundService->retrieve('ref_test_invalid');
 
-        // Should default to FAILED for unknown statuses
-        $this->assertSame(RefundStatus::FAILED, $refund->status());
-        $this->assertTrue($refund->hasFailed());
+        $this->expectException(\TapPay\Tap\Exceptions\InvalidStatusException::class);
+        $this->expectExceptionMessage("Unknown refund status: 'UNKNOWN_STATUS'");
+        $refund->status();
     }
 }

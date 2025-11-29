@@ -4,130 +4,132 @@ declare(strict_types=1);
 
 namespace TapPay\Tap\Http\Controllers;
 
+use const JSON_THROW_ON_ERROR;
+
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Event;
+use JsonException;
+use TapPay\Tap\Enums\HttpStatus;
 use TapPay\Tap\Events\WebhookProcessingFailed;
 use TapPay\Tap\Events\WebhookReceived;
 use TapPay\Tap\Events\WebhookValidationFailed;
+use TapPay\Tap\Webhooks\WebhookValidationResult;
 use TapPay\Tap\Webhooks\WebhookValidator;
 
+use function config;
+use function in_array;
+use function is_array;
+use function json_decode;
+use function response;
+
+/**
+ * Handles incoming webhooks from Tap Payments
+ */
 class WebhookController extends Controller
 {
     public function __construct(
         protected WebhookValidator $validator
     ) {}
 
-    /**
-     * Handle incoming webhook from Tap Payments
-     *
-     * @param  Request  $request  The webhook request
-     * @return Response HTTP response (200 on success, 400 on failure)
-     */
     public function __invoke(Request $request): Response
     {
-        // Decode payload once with explicit error checking
-        $content = $request->getContent();
-        $payload = json_decode($content, true);
+        $payload = $this->decodePayload($request);
 
-        // Check for JSON decode errors
-        if (json_last_error() !== JSON_ERROR_NONE || ! is_array($payload)) {
-            WebhookValidationFailed::dispatch(
-                'Invalid JSON payload',
-                $request->ip(),
-                ['json_error' => json_last_error_msg()]
-            );
-
-            return response(
-                config('tap.webhook.messages.invalid_payload', 'Invalid JSON payload'),
-                400
-            );
+        if ($payload instanceof Response) {
+            return $payload;
         }
 
-        // Validate webhook signature using already-decoded payload
-        $validationResult = $this->validator->validatePayload(
+        $signatureResult = $this->validator->validatePayload(
             $payload,
             $request->header('x-tap-signature') ?? ''
         );
 
-        if (! $validationResult->isValid()) {
-            WebhookValidationFailed::dispatch(
-                $validationResult->getError() ?? 'Invalid signature',
-                $request->ip(),
-                $validationResult->getContext()
-            );
-
-            return response(
-                config('tap.webhook.messages.invalid_signature', 'Invalid signature'),
-                400
-            );
+        if (! $signatureResult->isValid()) {
+            return $this->failureResponse($request, $signatureResult, 'invalid_signature');
         }
 
-        // Check tolerance (prevents replay attacks)
         $toleranceResult = $this->validator->checkTolerance($payload);
 
         if (! $toleranceResult->isValid()) {
-            WebhookValidationFailed::dispatch(
-                $toleranceResult->getError() ?? 'Webhook expired',
-                $request->ip(),
-                $toleranceResult->getContext()
-            );
-
-            return response(
-                config('tap.webhook.messages.expired', 'Webhook expired'),
-                400
-            );
+            return $this->failureResponse($request, $toleranceResult, 'expired');
         }
 
         $resource = $payload['object'] ?? 'unknown';
 
-        // Dispatch WebhookReceived event
-        WebhookReceived::dispatch(
-            $resource,
-            $payload,
-            $request->ip()
-        );
+        WebhookReceived::dispatch($resource, $payload, $request->ip());
 
-        // Dispatch event based on resource type
-        $this->dispatchWebhookEvent($payload);
+        $this->dispatchResourceEvent($resource, $payload);
 
-        return response(
-            config('tap.webhook.messages.success', 'Webhook received'),
-            200
-        );
+        return $this->successResponse();
     }
 
     /**
-     * Dispatch webhook events to Laravel event system
-     *
-     * @param  array  $payload  The webhook payload
+     * @return array<string, mixed>|Response
      */
-    protected function dispatchWebhookEvent(array $payload): void
+    protected function decodePayload(Request $request): array|Response
     {
-        $resource = $payload['object'] ?? 'unknown';
+        try {
+            $payload = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        } catch (JsonException $e) {
+            return $this->invalidPayloadResponse($request, $e->getMessage());
+        }
 
-        // Validate resource type to prevent arbitrary event names
-        $allowedResources = config('tap.webhook.allowed_resources', [
-            'charge', 'refund', 'customer', 'authorize', 'token',
-        ]);
+        if (! is_array($payload)) {
+            return $this->invalidPayloadResponse($request, 'Payload is not an array');
+        }
+
+        return $payload;
+    }
+
+    protected function invalidPayloadResponse(Request $request, string $error): Response
+    {
+        WebhookValidationFailed::dispatch('Invalid JSON payload', $request->ip(), ['json_error' => $error]);
+
+        return response(config('tap.webhook.messages.invalid_payload', 'Invalid JSON payload'), HttpStatus::BAD_REQUEST->value);
+    }
+
+    protected function failureResponse(
+        Request $request,
+        WebhookValidationResult $result,
+        string $messageKey
+    ): Response {
+        WebhookValidationFailed::dispatch(
+            $result->getError() ?? 'Validation failed',
+            $request->ip(),
+            $result->getContext()
+        );
+
+        return response(config("tap.webhook.messages.{$messageKey}", 'Validation failed'), HttpStatus::BAD_REQUEST->value);
+    }
+
+    protected function successResponse(): Response
+    {
+        return response(config('tap.webhook.messages.success', 'Webhook received'), HttpStatus::OK->value);
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    protected function dispatchResourceEvent(string $resource, array $payload): void
+    {
+        /** @var array<int, string> $allowedResources */
+        $allowedResources = config('tap.webhook.allowed_resources');
+
+        if (empty($allowedResources)) {
+            return;
+        }
 
         try {
-            // Dispatch resource-specific event only if allowed
             if (in_array($resource, $allowedResources, true)) {
                 Event::dispatch("tap.webhook.{$resource}", [$payload]);
             }
 
-            // Always dispatch general webhook event
             Event::dispatch('tap.webhook.received', [$resource, $payload]);
-        } catch (\Exception $e) {
-            // Dispatch processing failed event instead of logging
-            WebhookProcessingFailed::dispatch(
-                $e,
-                $resource,
-                $payload
-            );
-            // Don't throw - we still return 200 to prevent webhook retries
+        } catch (Exception $e) {
+            WebhookProcessingFailed::dispatch($e, $resource, $payload);
         }
     }
 }

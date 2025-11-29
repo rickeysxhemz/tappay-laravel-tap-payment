@@ -139,34 +139,34 @@ test('isExpired returns true for past expiry date', function () {
     expect($card->isExpired())->toBeTrue();
 })->group('unit');
 
-test('isExpired returns true when year is zero', function () {
+test('isExpired throws exception when year is zero', function () {
     $card = new Card(['exp_month' => 12, 'exp_year' => 0]);
 
-    expect($card->isExpired())->toBeTrue();
+    expect(fn () => $card->isExpired())->toThrow(TapPay\Tap\Exceptions\InvalidCardException::class);
 })->group('unit');
 
-test('isExpired returns true when month is zero', function () {
+test('isExpired throws exception when month is zero', function () {
     $card = new Card(['exp_month' => 0, 'exp_year' => 2028]);
 
-    expect($card->isExpired())->toBeTrue();
+    expect(fn () => $card->isExpired())->toThrow(TapPay\Tap\Exceptions\InvalidCardException::class);
 })->group('unit');
 
-test('isExpired returns true when month is greater than 12', function () {
+test('isExpired throws exception when month is greater than 12', function () {
     $card = new Card(['exp_month' => 13, 'exp_year' => 2028]);
 
-    expect($card->isExpired())->toBeTrue();
+    expect(fn () => $card->isExpired())->toThrow(TapPay\Tap\Exceptions\InvalidCardException::class);
 })->group('unit');
 
-test('isExpired returns true when month is negative', function () {
+test('isExpired throws exception when month is negative', function () {
     $card = new Card(['exp_month' => -1, 'exp_year' => 2028]);
 
-    expect($card->isExpired())->toBeTrue();
+    expect(fn () => $card->isExpired())->toThrow(TapPay\Tap\Exceptions\InvalidCardException::class);
 })->group('unit');
 
-test('isExpired returns true when year is negative', function () {
+test('isExpired throws exception when year is negative', function () {
     $card = new Card(['exp_month' => 12, 'exp_year' => -1]);
 
-    expect($card->isExpired())->toBeTrue();
+    expect(fn () => $card->isExpired())->toThrow(TapPay\Tap\Exceptions\InvalidCardException::class);
 })->group('unit');
 
 test('isExpired handles 2-digit year format', function () {

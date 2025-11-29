@@ -277,9 +277,9 @@ class WebhookTest extends TestCase
         Event::fake();
 
         $payloads = [
-            ['object' => 'charge', 'id' => 'chg_123'],
-            ['object' => 'refund', 'id' => 'ref_456'],
-            ['object' => 'customer', 'id' => 'cus_789'],
+            ['object' => 'charge', 'id' => 'chg_123', 'amount' => 10.50, 'currency' => 'USD', 'status' => 'CAPTURED'],
+            ['object' => 'refund', 'id' => 'ref_456', 'amount' => 5.00, 'currency' => 'USD', 'status' => 'SUCCEEDED'],
+            ['object' => 'customer', 'id' => 'cus_789', 'amount' => 0, 'currency' => 'USD', 'status' => 'ACTIVE'],
         ];
 
         foreach ($payloads as $payload) {
@@ -312,6 +312,9 @@ class WebhookTest extends TestCase
         $payload = [
             'object' => 'unknown_resource',
             'id' => 'unk_123',
+            'amount' => 10.00,
+            'currency' => 'USD',
+            'status' => 'UNKNOWN',
             'created' => time(),
         ];
 

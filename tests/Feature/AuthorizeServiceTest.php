@@ -51,7 +51,7 @@ class AuthorizeServiceTest extends TestCase
         ]);
 
         $this->assertSame('auth_test_123456', $authorization->id());
-        $this->assertSame(50.00, $authorization->amount());
+        $this->assertSame(50.00, $authorization->amount()->toDecimal());
         $this->assertSame('USD', $authorization->currency());
         $this->assertSame(AuthorizeStatus::INITIATED, $authorization->status());
         $this->assertInstanceOf(AuthorizeStatus::class, $authorization->status());
@@ -252,7 +252,7 @@ class AuthorizeServiceTest extends TestCase
     }
 
     #[Test]
-    public function it_handles_unknown_authorization_status_gracefully(): void
+    public function it_throws_exception_for_unknown_authorization_status(): void
     {
         $this->mockHandler->append(new Response(200, [], json_encode([
             'id' => 'auth_test_unknown',
@@ -263,11 +263,9 @@ class AuthorizeServiceTest extends TestCase
 
         $authorization = $this->authorizeService->retrieve('auth_test_unknown');
 
-        $this->assertSame(AuthorizeStatus::UNKNOWN, $authorization->status());
-        $this->assertFalse($authorization->isAuthorized());
-        $this->assertFalse($authorization->isPending());
-        $this->assertFalse($authorization->hasFailed());
-        $this->assertSame('Unknown', $authorization->status()->label());
+        $this->expectException(\TapPay\Tap\Exceptions\InvalidStatusException::class);
+        $this->expectExceptionMessage("Unknown authorize status: 'INVALID_STATUS'");
+        $authorization->status();
     }
 
     #[Test]

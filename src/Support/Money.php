@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TapPay\Tap\Support;
 
 use TapPay\Tap\Contracts\MoneyContract;
+use TapPay\Tap\Exceptions\InvalidAmountException;
 use TapPay\Tap\Exceptions\InvalidCurrencyException;
 
 use function round;
@@ -69,12 +70,12 @@ final class Money implements MoneyContract
     }
 
     /**
-     * @throws InvalidCurrencyException
+     * @throws InvalidAmountException
      */
     public function toDecimal(int $amount, ?string $currency = null): float
     {
         if ($amount < 0) {
-            throw InvalidCurrencyException::negativeAmount();
+            InvalidAmountException::negative();
         }
 
         $decimals = $this->getDecimalPlaces($currency);
@@ -83,19 +84,19 @@ final class Money implements MoneyContract
     }
 
     /**
-     * @throws InvalidCurrencyException
+     * @throws InvalidAmountException
      */
     public function toSmallestUnit(float|int|string $amount, ?string $currency = null): int
     {
         if (is_string($amount)) {
             if (! is_numeric($amount)) {
-                throw InvalidCurrencyException::invalidAmount();
+                InvalidAmountException::invalid();
             }
             $amount = (float) $amount;
         }
 
         if ($amount < 0) {
-            throw InvalidCurrencyException::negativeAmount();
+            InvalidAmountException::negative();
         }
 
         $divisor = $this->getDivisor($currency);
@@ -111,12 +112,12 @@ final class Money implements MoneyContract
     }
 
     /**
-     * @throws InvalidCurrencyException
+     * @throws InvalidAmountException
      */
     public function format(int $amount, ?string $currency = null): string
     {
         if ($amount < 0) {
-            throw InvalidCurrencyException::negativeAmount();
+            InvalidAmountException::negative();
         }
 
         $currency = $currency !== null

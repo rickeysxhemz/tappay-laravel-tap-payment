@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use TapPay\Tap\Enums\ChargeStatus;
 use TapPay\Tap\Resources\Charge;
+use TapPay\Tap\ValueObjects\Money;
 
 test('can create charge resource from array', function () {
     $data = loadFixture('charge.json');
@@ -23,7 +24,9 @@ test('can get charge amount', function () {
     $data = loadFixture('charge.json');
     $charge = new Charge($data);
 
-    expect($charge->amount())->toBe(10.5);
+    expect($charge->amount())->toBeInstanceOf(Money::class)
+        ->and($charge->amount()->toDecimal())->toBe(10.5)
+        ->and($charge->amount()->currency)->toBe('SAR');
 })->group('unit');
 
 test('can get charge currency', function () {
