@@ -45,7 +45,7 @@ jobs:
 
   code-style:
     runs-on: ubuntu-latest
-    name: Code Style (PHP CS Fixer)
+    name: Code Style (Laravel Pint)
     timeout-minutes: 10
 
     steps:
@@ -73,5 +73,5 @@ jobs:
       - name: Install dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
 
-      - name: Run PHP CS Fixer
-        run: vendor/bin/php-cs-fixer fix --dry-run --diff --config=.php-cs-fixer.php
+      - name: Run Laravel Pint
+        run: vendor/bin/pint --test

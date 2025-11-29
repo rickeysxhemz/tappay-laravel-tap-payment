@@ -84,7 +84,7 @@ jobs:
             }
 
             // Check for config changes
-            if (files.some(f => f.startsWith('config/') || f === 'phpunit.xml' || f === '.php-cs-fixer.php' || f === 'phpstan.neon.dist')) {
+            if (files.some(f => f.startsWith('config/') || f === 'phpunit.xml' || f === 'pint.json' || f === 'phpstan.neon.dist')) {
               labels.push('config');
             }
 
