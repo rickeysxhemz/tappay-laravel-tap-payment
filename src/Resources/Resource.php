@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TapPay\Tap\Resources;
 
+use DateTime;
+
 /**
  * Base resource class for all Tap API responses
  */
@@ -17,6 +19,45 @@ abstract class Resource
     public function __construct(
         protected array $attributes
     ) {}
+
+    /**
+     * Get the resource ID
+     *
+     * @return string
+     */
+    public function id(): string
+    {
+        return $this->attributes['id'] ?? '';
+    }
+
+    /**
+     * Get the ID prefix for this resource type (e.g., 'chg_', 'cus_', 'ref_')
+     *
+     * @return string
+     */
+    abstract protected function getIdPrefix(): string;
+
+    /**
+     * Check if the resource ID has a valid format
+     *
+     * @return bool
+     */
+    public function hasValidId(): bool
+    {
+        $id = $this->id();
+
+        return $id !== '' && str_starts_with($id, $this->getIdPrefix());
+    }
+
+    /**
+     * Get metadata
+     *
+     * @return array
+     */
+    public function metadata(): array
+    {
+        return $this->attributes['metadata'] ?? [];
+    }
 
     /**
      * Get all attributes
@@ -70,5 +111,23 @@ abstract class Resource
     public function __get(string $key): string|int|float|bool|array|null
     {
         return $this->get($key);
+    }
+
+    /**
+     * Parse a timestamp or date string into a DateTime object
+     *
+     * @param int|string $value Unix timestamp or date string
+     * @return DateTime|null
+     */
+    protected function parseDateTime(int|string $value): ?DateTime
+    {
+        try {
+            if (is_numeric($value)) {
+                return (new DateTime())->setTimestamp((int) $value);
+            }
+            return new DateTime($value);
+        } catch (\Exception) {
+            return null;
+        }
     }
 }

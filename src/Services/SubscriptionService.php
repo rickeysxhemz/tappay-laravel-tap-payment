@@ -16,6 +16,16 @@ class SubscriptionService extends AbstractService
         return 'subscription';
     }
 
+    protected function getListKey(): string
+    {
+        return 'subscriptions';
+    }
+
+    protected function getResourceClass(): string
+    {
+        return Subscription::class;
+    }
+
     /**
      * Create a new subscription
      *
@@ -100,9 +110,6 @@ class SubscriptionService extends AbstractService
     {
         $response = $this->client->post(sprintf('%s/list', $this->getEndpoint()), $params);
 
-        return array_map(
-            fn($subscription) => new Subscription($subscription),
-            $response['subscriptions'] ?? $response['data'] ?? []
-        );
+        return $this->mapToResources($response);
     }
 }

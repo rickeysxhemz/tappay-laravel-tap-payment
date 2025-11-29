@@ -8,14 +8,9 @@ use TapPay\Tap\Enums\ChargeStatus;
 
 class Charge extends Resource
 {
-    /**
-     * Get the charge ID
-     *
-     * @return string
-     */
-    public function id(): string
+    protected function getIdPrefix(): string
     {
-        return $this->attributes['id'] ?? '';
+        return 'chg_';
     }
 
     /**
@@ -45,7 +40,7 @@ class Charge extends Resource
      */
     public function status(): ChargeStatus
     {
-        $status = $this->attributes['status'] ?? 'UNKNOWN';
+        $status = strtoupper($this->attributes['status'] ?? 'UNKNOWN');
         return ChargeStatus::tryFrom($status) ?? ChargeStatus::UNKNOWN;
     }
 
@@ -90,16 +85,6 @@ class Charge extends Resource
     }
 
     /**
-     * Get metadata
-     *
-     * @return array
-     */
-    public function metadata(): array
-    {
-        return $this->attributes['metadata'] ?? [];
-    }
-
-    /**
      * Get saved card ID if card was saved
      *
      * @return string|null
@@ -137,17 +122,5 @@ class Charge extends Resource
     public function hasFailed(): bool
     {
         return $this->status()->hasFailed();
-    }
-
-    /**
-     * Check if charge ID has valid format
-     *
-     * @return bool
-     */
-    public function hasValidId(): bool
-    {
-        $id = $this->id();
-
-        return $id !== '' && str_starts_with($id, 'chg_');
     }
 }

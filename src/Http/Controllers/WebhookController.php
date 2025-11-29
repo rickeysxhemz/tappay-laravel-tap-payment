@@ -10,6 +10,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Event;
 use TapPay\Tap\Events\WebhookProcessingFailed;
 use TapPay\Tap\Events\WebhookReceived;
+use TapPay\Tap\Events\WebhookValidationFailed;
 use TapPay\Tap\Webhooks\WebhookValidator;
 
 class WebhookController extends Controller
@@ -32,24 +33,49 @@ class WebhookController extends Controller
 
         // Check for JSON decode errors
         if (json_last_error() !== JSON_ERROR_NONE || !is_array($payload)) {
+            WebhookValidationFailed::dispatch(
+                'Invalid JSON payload',
+                $request->ip(),
+                ['json_error' => json_last_error_msg()]
+            );
+
             return response(
-                config('tap.webhook_messages.invalid_payload', 'Invalid JSON payload'),
+                config('tap.webhook.messages.invalid_payload', 'Invalid JSON payload'),
                 400
             );
         }
 
         // Validate webhook signature using already-decoded payload
-        if (!$this->validator->validatePayload($payload, $request->header('x-tap-signature') ?? '')) {
+        $validationResult = $this->validator->validatePayload(
+            $payload,
+            $request->header('x-tap-signature') ?? ''
+        );
+
+        if (!$validationResult->isValid()) {
+            WebhookValidationFailed::dispatch(
+                $validationResult->getError() ?? 'Invalid signature',
+                $request->ip(),
+                $validationResult->getContext()
+            );
+
             return response(
-                config('tap.webhook_messages.invalid_signature', 'Invalid signature'),
+                config('tap.webhook.messages.invalid_signature', 'Invalid signature'),
                 400
             );
         }
 
         // Check tolerance (prevents replay attacks)
-        if (!$this->validator->isWithinTolerance($payload)) {
+        $toleranceResult = $this->validator->checkTolerance($payload);
+
+        if (!$toleranceResult->isValid()) {
+            WebhookValidationFailed::dispatch(
+                $toleranceResult->getError() ?? 'Webhook expired',
+                $request->ip(),
+                $toleranceResult->getContext()
+            );
+
             return response(
-                config('tap.webhook_messages.expired', 'Webhook expired'),
+                config('tap.webhook.messages.expired', 'Webhook expired'),
                 400
             );
         }
@@ -67,7 +93,7 @@ class WebhookController extends Controller
         $this->dispatchWebhookEvent($payload);
 
         return response(
-            config('tap.webhook_messages.success', 'Webhook received'),
+            config('tap.webhook.messages.success', 'Webhook received'),
             200
         );
     }
@@ -83,7 +109,7 @@ class WebhookController extends Controller
         $resource = $payload['object'] ?? 'unknown';
 
         // Validate resource type to prevent arbitrary event names
-        $allowedResources = config('tap.webhook_allowed_resources', [
+        $allowedResources = config('tap.webhook.allowed_resources', [
             'charge', 'refund', 'customer', 'authorize', 'token'
         ]);
 

@@ -78,15 +78,17 @@ class ChargeBuilderTest extends TestCase
         $this->assertSame('tok_abc123', $data['source']['id']);
     }
     #[Test]
-    public function it_can_add_metadata_incrementally(): void
+    public function it_can_set_metadata(): void
     {
         $builder = $this->createBuilder();
 
         $data = $builder
             ->amount(1000)
-            ->addMetadata('order_id', '123')
-            ->addMetadata('user_id', '456')
-            ->addMetadata('invoice', 'INV-001')
+            ->metadata([
+                'order_id' => '123',
+                'user_id' => '456',
+                'invoice' => 'INV-001',
+            ])
             ->toArray();
 
         $this->assertSame([
@@ -471,8 +473,7 @@ class ChargeBuilderTest extends TestCase
             ->redirectUrl('https://example.com/success')
             ->postUrl('https://example.com/webhook')
             ->reference('ORDER-2024-001')
-            ->metadata(['plan' => 'premium', 'duration' => 'yearly'])
-            ->addMetadata('promo_code', 'SAVE20')
+            ->metadata(['plan' => 'premium', 'duration' => 'yearly', 'promo_code' => 'SAVE20'])
             ->emailReceipt(true)
             ->smsReceipt(true)
             ->auto(['type' => 'VOID', 'time' => 168])

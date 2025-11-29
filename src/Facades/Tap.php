@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static \TapPay\Tap\Services\CardService cards()
  * @method static \TapPay\Tap\Services\InvoiceService invoices()
  * @method static \TapPay\Tap\Services\SubscriptionService subscriptions()
- * @method static \TapPay\Tap\Http\Client getClient()
+ * @method static bool registersRoutes()
  *
  * @see \TapPay\Tap\Tap
  */

@@ -52,7 +52,7 @@ class TapServiceProviderTest extends TestCase
     #[Test]
     public function it_throws_exception_when_secret_key_is_not_configured(): void
     {
-        $this->app['config']->set('tap.secret_key', '');
+        $this->app['config']->set('tap.secret', '');
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Tap secret key is not configured');
@@ -63,7 +63,7 @@ class TapServiceProviderTest extends TestCase
     #[Test]
     public function it_throws_exception_when_secret_key_is_null(): void
     {
-        $this->app['config']->set('tap.secret_key', null);
+        $this->app['config']->set('tap.secret', null);
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Tap secret key is not configured');
@@ -74,8 +74,8 @@ class TapServiceProviderTest extends TestCase
     #[Test]
     public function it_merges_config_from_package(): void
     {
-        $this->assertNotNull(config('tap.secret_key'));
-        $this->assertNotNull(config('tap.publishable_key'));
+        $this->assertNotNull(config('tap.secret'));
+        $this->assertNotNull(config('tap.key'));
         $this->assertNotNull(config('tap.currency'));
         $this->assertNotNull(config('tap.base_url'));
     }
@@ -91,7 +91,7 @@ class TapServiceProviderTest extends TestCase
     #[Test]
     public function it_creates_http_client_with_configured_secret_key(): void
     {
-        $this->app['config']->set('tap.secret_key', 'sk_test_custom_key');
+        $this->app['config']->set('tap.secret', 'sk_test_custom_key');
 
         $client = $this->app->make(Client::class);
 

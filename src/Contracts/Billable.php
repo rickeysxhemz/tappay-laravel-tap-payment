@@ -24,7 +24,7 @@ interface Billable
 
     public function updateTapCustomer(array $data): Customer;
 
-    public function deleteTapCustomer(): bool;
+    public function deleteTapCustomer(): void;
 
     /**
      * @param int $amount Amount in smallest currency unit

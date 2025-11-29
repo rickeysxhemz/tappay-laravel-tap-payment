@@ -15,7 +15,10 @@ enum SubscriptionStatus: string
 
     public function isActive(): bool
     {
-        return in_array($this, [self::ACTIVE, self::TRIALING], true);
+        return match ($this) {
+            self::ACTIVE, self::TRIALING => true,
+            default => false,
+        };
     }
 
     public function isPaused(): bool
@@ -25,7 +28,10 @@ enum SubscriptionStatus: string
 
     public function isCancelled(): bool
     {
-        return in_array($this, [self::CANCELLED, self::EXPIRED], true);
+        return match ($this) {
+            self::CANCELLED, self::EXPIRED => true,
+            default => false,
+        };
     }
 
     public function requiresAttention(): bool

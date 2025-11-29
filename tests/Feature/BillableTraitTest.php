@@ -39,12 +39,10 @@ class BillableTraitTest extends TestCase
 
         // Rebind Tap singleton with mocked client
         $this->app->singleton('tap', function ($app) use ($httpClient) {
-            $tap = new \TapPay\Tap\Tap();
-            $reflection = new \ReflectionClass($tap);
-            $property = $reflection->getProperty('client');
-            $property->setAccessible(true);
-            $property->setValue($tap, $httpClient);
-            return $tap;
+            return new \TapPay\Tap\Tap(
+                $httpClient,
+                $app->make(\TapPay\Tap\Contracts\MoneyContract::class)
+            );
         });
     }
 
@@ -190,22 +188,24 @@ class BillableTraitTest extends TestCase
             'deleted' => true,
         ])));
 
-        $result = $user->deleteTapCustomer();
+        // deleteTapCustomer() returns void - no exception means success
+        $user->deleteTapCustomer();
 
-        $this->assertTrue($result);
         $this->assertNull($user->fresh()->tap_customer_id);
     }
     #[Test]
-    public function it_returns_false_when_deleting_non_existent_customer(): void
+    public function it_does_nothing_when_deleting_non_existent_customer(): void
     {
         $user = User::create([
             'name' => 'John Doe',
             'email' => 'john@example.com',
         ]);
 
-        $result = $user->deleteTapCustomer();
+        // deleteTapCustomer() returns void - should not throw when no customer exists
+        $user->deleteTapCustomer();
 
-        $this->assertFalse($result);
+        // No exception thrown means success
+        $this->assertNull($user->tap_customer_id);
     }
     #[Test]
     public function it_can_create_card_token(): void

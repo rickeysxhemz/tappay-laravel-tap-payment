@@ -7,12 +7,13 @@ use Illuminate\Support\Facades\Route;
 use TapPay\Tap\Events\PaymentFailed;
 use TapPay\Tap\Events\PaymentSucceeded;
 use TapPay\Tap\Events\WebhookReceived;
+use TapPay\Tap\Exceptions\ApiErrorException;
 use TapPay\Tap\Facades\Tap;
 use TapPay\Tap\Resources\Charge;
 
 beforeEach(function () {
-    config(['tap.secret_key' => 'sk_test_XKokBfNWv6FIYuTMg5sLPjhJ']);
-    config(['tap.webhook_secret' => 'sk_test_XKokBfNWv6FIYuTMg5sLPjhJ']);
+    config(['tap.secret' => 'sk_test_XKokBfNWv6FIYuTMg5sLPjhJ']);
+    config(['tap.webhook.secret' => 'sk_test_XKokBfNWv6FIYuTMg5sLPjhJ']);
 });
 
 // Route Registration Tests
@@ -151,7 +152,7 @@ test('callback route redirects to success url with charge id', function () {
 test('callback route handles api exception gracefully', function () {
     Tap::shouldReceive('charges->retrieve')
         ->once()
-        ->andThrow(new \Exception('API Error'));
+        ->andThrow(new ApiErrorException('API Error'));
 
     $response = $this->get(route('tap.callback', ['tap_id' => 'chg_invalid']));
 

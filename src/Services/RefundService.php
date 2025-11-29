@@ -9,17 +9,21 @@ use TapPay\Tap\Exceptions\AuthenticationException;
 use TapPay\Tap\Exceptions\InvalidRequestException;
 use TapPay\Tap\Resources\Refund;
 
-use function array_map;
-use function sprintf;
-
 class RefundService extends AbstractService
 {
-    /**
-     * Get the endpoint for refunds
-     */
     protected function getEndpoint(): string
     {
         return 'refunds';
+    }
+
+    protected function getListKey(): string
+    {
+        return 'refunds';
+    }
+
+    protected function getResourceClass(): string
+    {
+        return Refund::class;
     }
 
     /**
@@ -84,9 +88,6 @@ class RefundService extends AbstractService
     {
         $response = $this->client->post(sprintf('%s/list', $this->getEndpoint()), $params);
 
-        return array_map(
-            fn($refund) => new Refund($refund),
-            $response['refunds'] ?? []
-        );
+        return $this->mapToResources($response);
     }
 }

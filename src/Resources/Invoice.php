@@ -9,9 +9,9 @@ use TapPay\Tap\Enums\InvoiceStatus;
 
 class Invoice extends Resource
 {
-    public function id(): string
+    protected function getIdPrefix(): string
     {
-        return $this->attributes['id'] ?? '';
+        return 'inv_';
     }
 
     public function amount(): float
@@ -49,40 +49,19 @@ class Invoice extends Resource
     {
         $expiry = $this->attributes['expiry'] ?? $this->attributes['expires_at'] ?? null;
 
-        if (!$expiry) {
-            return null;
-        }
-
-        try {
-            return new DateTime($expiry);
-        } catch (\Exception) {
-            return null;
-        }
+        return $expiry ? $this->parseDateTime($expiry) : null;
     }
 
     public function paidAt(): ?DateTime
     {
         $paid = $this->attributes['paid_at'] ?? null;
 
-        if (!$paid) {
-            return null;
-        }
-
-        try {
-            return new DateTime($paid);
-        } catch (\Exception) {
-            return null;
-        }
+        return $paid ? $this->parseDateTime($paid) : null;
     }
 
     public function chargeId(): ?string
     {
         return $this->attributes['charge_id'] ?? $this->get('charge.id');
-    }
-
-    public function metadata(): array
-    {
-        return $this->attributes['metadata'] ?? [];
     }
 
     public function isSuccessful(): bool
@@ -103,17 +82,5 @@ class Invoice extends Resource
     public function isExpired(): bool
     {
         return $this->status() === InvoiceStatus::EXPIRED;
-    }
-
-    /**
-     * Check if invoice ID has valid format
-     *
-     * @return bool
-     */
-    public function hasValidId(): bool
-    {
-        $id = $this->id();
-
-        return $id !== '' && str_starts_with($id, 'inv_');
     }
 }

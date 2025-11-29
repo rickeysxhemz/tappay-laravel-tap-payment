@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace TapPay\Tap\Webhooks;
 
 use Illuminate\Http\Request;
-use TapPay\Tap\Events\WebhookValidationFailed;
 
 class WebhookValidator
 {
@@ -18,10 +17,10 @@ class WebhookValidator
     public function __construct(
         protected ?string $secret = null
     ) {
-        $this->secret = $secret ?? config('tap.webhook_secret') ?? config('tap.secret_key');
+        $this->secret = $secret ?? config('tap.webhook.secret') ?? config('tap.secret');
 
         if (empty($this->secret)) {
-            throw new \RuntimeException('Webhook secret key is not configured. Please set tap.webhook_secret or tap.secret_key in config.');
+            throw new \RuntimeException('Webhook secret key is not configured. Please set tap.webhook.secret or tap.secret in config.');
         }
     }
 
@@ -29,64 +28,51 @@ class WebhookValidator
      * Validate the webhook signature using HMAC-SHA256
      *
      * @param Request $request The incoming webhook request
-     * @return bool True if signature is valid, false otherwise
+     * @return WebhookValidationResult Validation result with error details if failed
      */
-    public function validate(Request $request): bool
+    public function validate(Request $request): WebhookValidationResult
     {
         $signature = $request->header('x-tap-signature');
 
         // Validate signature exists and has correct length (SHA256 = 64 hex chars)
         if (!$signature || strlen($signature) !== 64) {
-            WebhookValidationFailed::dispatch(
+            return WebhookValidationResult::failed(
                 'Missing or invalid signature length',
-                $request->ip(),
                 [
                     'has_signature' => !empty($signature),
                     'signature_length' => $signature ? strlen($signature) : 0,
                 ]
             );
-            return false;
         }
 
         $payload = $request->getContent();
 
         if (empty($payload)) {
-            WebhookValidationFailed::dispatch(
-                'Empty payload',
-                $request->ip()
-            );
-            return false;
+            return WebhookValidationResult::failed('Empty payload');
         }
 
         $data = json_decode($payload, true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            WebhookValidationFailed::dispatch(
+            return WebhookValidationResult::failed(
                 'Invalid JSON',
-                $request->ip(),
                 ['json_error' => json_last_error_msg()]
             );
-            return false;
         }
 
         if (!is_array($data) || empty($data)) {
-            WebhookValidationFailed::dispatch(
+            return WebhookValidationResult::failed(
                 'Invalid payload structure',
-                $request->ip(),
                 ['is_array' => is_array($data)]
             );
-            return false;
         }
 
         $hashString = $this->buildHashString($data);
         $computedSignature = hash_hmac('sha256', $hashString, $this->secret);
 
-        $isValid = hash_equals($computedSignature, $signature);
-
-        if (!$isValid) {
-            WebhookValidationFailed::dispatch(
+        if (!hash_equals($computedSignature, $signature)) {
+            return WebhookValidationResult::failed(
                 'Signature mismatch',
-                $request->ip(),
                 [
                     'expected_length' => strlen($computedSignature),
                     'received_length' => strlen($signature),
@@ -94,7 +80,7 @@ class WebhookValidator
             );
         }
 
-        return $isValid;
+        return WebhookValidationResult::success();
     }
 
     /**
@@ -102,22 +88,29 @@ class WebhookValidator
      *
      * @param array $payload The decoded webhook payload
      * @param string $signature The signature from x-tap-signature header
-     * @return bool True if signature is valid, false otherwise
+     * @return WebhookValidationResult Validation result with error details if failed
      */
-    public function validatePayload(array $payload, string $signature): bool
+    public function validatePayload(array $payload, string $signature): WebhookValidationResult
     {
         if (empty($signature) || strlen($signature) !== 64) {
-            return false;
+            return WebhookValidationResult::failed(
+                'Invalid signature',
+                ['signature_length' => strlen($signature)]
+            );
         }
 
         if (empty($payload)) {
-            return false;
+            return WebhookValidationResult::failed('Empty payload');
         }
 
         $hashString = $this->buildHashString($payload);
         $computedSignature = hash_hmac('sha256', $hashString, $this->secret);
 
-        return hash_equals($computedSignature, $signature);
+        if (!hash_equals($computedSignature, $signature)) {
+            return WebhookValidationResult::failed('Signature mismatch');
+        }
+
+        return WebhookValidationResult::success();
     }
 
     /**
@@ -145,24 +138,27 @@ class WebhookValidator
      * Check if the webhook is within tolerance time (prevents replay attacks)
      *
      * @param array $data The webhook payload
-     * @return bool True if within tolerance, false if expired or missing timestamp
+     * @return WebhookValidationResult Validation result with error details if failed
      */
-    public function isWithinTolerance(array $data): bool
+    public function checkTolerance(array $data): WebhookValidationResult
     {
-        $tolerance = config('tap.webhook_tolerance', 300); // 5 minutes default
+        $tolerance = config('tap.webhook.tolerance', 300); // 5 minutes default
 
         if (!isset($data['created'])) {
-            // Reject webhooks without timestamp to prevent replay attacks
-            WebhookValidationFailed::dispatch(
-                'Missing created timestamp',
-                request()->ip() ?? 'unknown'
-            );
-            return false;
+            return WebhookValidationResult::failed('Missing created timestamp');
         }
 
         $created = (int) $data['created'];
         $now = time();
 
-        return abs($now - $created) <= $tolerance;
+        if (abs($now - $created) > $tolerance) {
+            return WebhookValidationResult::failed(
+                'Webhook expired',
+                ['created' => $created, 'now' => $now, 'tolerance' => $tolerance]
+            );
+        }
+
+        return WebhookValidationResult::success();
     }
+
 }

@@ -170,18 +170,14 @@ test('passes request to next middleware', function () {
     expect($nextCalled)->toBeTrue();
 })->group('unit', 'middleware');
 
-test('allows javascript protocol URL without host', function () {
+test('blocks javascript protocol URL for XSS protection', function () {
     $middleware = new VerifyRedirectUrl();
     $request = Request::create('https://myapp.com/callback', 'GET', [
         'redirect' => 'javascript:alert(1)',
     ]);
 
-    // javascript: URLs don't have a host, so they pass through
-    // This documents current behavior - consider enhancing middleware for XSS protection
-    $response = $middleware->handle($request, fn ($req) => response('OK'));
-
-    expect($response->getContent())->toBe('OK');
-})->group('unit', 'middleware');
+    $middleware->handle($request, fn ($req) => response('OK'));
+})->throws(AccessDeniedHttpException::class, 'Invalid redirect URL.')->group('unit', 'middleware');
 
 test('denies URL with credentials in different host', function () {
     $middleware = new VerifyRedirectUrl();

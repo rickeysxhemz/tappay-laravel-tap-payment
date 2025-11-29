@@ -18,24 +18,27 @@ final class TapServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__ . '/../config/tap.php', 'tap');
 
         $this->app->singleton(Client::class, function (): Client {
-            $secretKey = config('tap.secret_key');
+            $secret = config('tap.secret');
 
-            if (empty($secretKey)) {
+            if (empty($secret)) {
                 throw new RuntimeException(
-                    'Tap secret key is not configured. Set the TAP_SECRET_KEY environment variable or publish and configure the tap.php config file using: php artisan vendor:publish --tag=tap-config'
+                    'Tap secret key is not configured. Set the TAP_SECRET environment variable or publish and configure the tap.php config file using: php artisan vendor:publish --tag=tap-config'
                 );
             }
 
-            return new Client($secretKey);
+            return new Client($secret);
         });
-
-        $this->app->singleton(Tap::class, fn (): Tap => new Tap());
 
         $this->app->singleton(MoneyContract::class, function (): Money {
             $currency = config('tap.currency', 'SAR');
 
             return new Money(is_string($currency) ? $currency : 'SAR');
         });
+
+        $this->app->singleton(Tap::class, fn (): Tap => new Tap(
+            $this->app->make(Client::class),
+            $this->app->make(MoneyContract::class)
+        ));
 
         $this->app->alias(MoneyContract::class, Money::class);
         $this->app->alias(Tap::class, 'tap');
@@ -58,7 +61,7 @@ final class TapServiceProvider extends ServiceProvider
 
     protected function registerRoutes(): void
     {
-        if (Tap::$registersRoutes) {
+        if (Tap::registersRoutes()) {
             Route::group([
                 'prefix' => config('tap.path', 'tap'),
                 'as' => 'tap.',

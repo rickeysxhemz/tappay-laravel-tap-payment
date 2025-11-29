@@ -16,6 +16,16 @@ class InvoiceService extends AbstractService
         return 'invoices';
     }
 
+    protected function getListKey(): string
+    {
+        return 'invoices';
+    }
+
+    protected function getResourceClass(): string
+    {
+        return Invoice::class;
+    }
+
     /**
      * Create a new invoice
      *
@@ -94,9 +104,6 @@ class InvoiceService extends AbstractService
     {
         $response = $this->client->post(sprintf('%s/list', $this->getEndpoint()), $params);
 
-        return array_map(
-            fn($invoice) => new Invoice($invoice),
-            $response['invoices'] ?? $response['data'] ?? []
-        );
+        return $this->mapToResources($response);
     }
 }

@@ -10,9 +10,9 @@ use TapPay\Tap\Enums\SubscriptionStatus;
 
 class Subscription extends Resource
 {
-    public function id(): string
+    protected function getIdPrefix(): string
     {
-        return $this->attributes['id'] ?? '';
+        return 'sub_';
     }
 
     public function amount(): float
@@ -96,26 +96,6 @@ class Subscription extends Resource
         return $this->parseDateTime($cancelled);
     }
 
-    /**
-     * Parse a timestamp or date string into a DateTime object
-     */
-    protected function parseDateTime(int|string $value): ?DateTime
-    {
-        try {
-            if (is_numeric($value)) {
-                return (new DateTime())->setTimestamp((int) $value);
-            }
-            return new DateTime($value);
-        } catch (\Exception) {
-            return null;
-        }
-    }
-
-    public function metadata(): array
-    {
-        return $this->attributes['metadata'] ?? [];
-    }
-
     public function isActive(): bool
     {
         return $this->status()->isActive();
@@ -144,17 +124,5 @@ class Subscription extends Resource
     public function requiresAttention(): bool
     {
         return $this->status()->requiresAttention();
-    }
-
-    /**
-     * Check if subscription ID has valid format
-     *
-     * @return bool
-     */
-    public function hasValidId(): bool
-    {
-        $id = $this->id();
-
-        return $id !== '' && str_starts_with($id, 'sub_');
     }
 }

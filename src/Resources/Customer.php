@@ -6,14 +6,9 @@ namespace TapPay\Tap\Resources;
 
 class Customer extends Resource
 {
-    /**
-     * Get the customer ID
-     *
-     * @return string
-     */
-    public function id(): string
+    protected function getIdPrefix(): string
     {
-        return $this->attributes['id'] ?? '';
+        return 'cus_';
     }
 
     /**
@@ -57,16 +52,6 @@ class Customer extends Resource
     }
 
     /**
-     * Get the customer's metadata
-     *
-     * @return array
-     */
-    public function metadata(): array
-    {
-        return $this->attributes['metadata'] ?? [];
-    }
-
-    /**
      * Get full name
      *
      * @return string
@@ -77,17 +62,5 @@ class Customer extends Resource
         $lastName = $this->lastName();
 
         return trim($firstName . ' ' . ($lastName ?? ''));
-    }
-
-    /**
-     * Check if customer ID has valid format
-     *
-     * @return bool
-     */
-    public function hasValidId(): bool
-    {
-        $id = $this->id();
-
-        return $id !== '' && str_starts_with($id, 'cus_');
     }
 }

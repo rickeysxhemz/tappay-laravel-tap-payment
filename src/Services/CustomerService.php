@@ -9,17 +9,21 @@ use TapPay\Tap\Exceptions\AuthenticationException;
 use TapPay\Tap\Exceptions\InvalidRequestException;
 use TapPay\Tap\Resources\Customer;
 
-use function array_map;
-use function sprintf;
-
 class CustomerService extends AbstractService
 {
-    /**
-     * Get the endpoint for customers
-     */
     protected function getEndpoint(): string
     {
         return 'customers';
+    }
+
+    protected function getListKey(): string
+    {
+        return 'customers';
+    }
+
+    protected function getResourceClass(): string
+    {
+        return Customer::class;
     }
 
     /**
@@ -84,25 +88,20 @@ class CustomerService extends AbstractService
     {
         $response = $this->client->post(sprintf('%s/list', $this->getEndpoint()), $params);
 
-        return array_map(
-            fn($customer) => new Customer($customer),
-            $response['customers'] ?? []
-        );
+        return $this->mapToResources($response);
     }
 
     /**
      * Delete a customer
      *
      * @param string $customerId Customer ID
-     * @return bool
+     * @return void
      * @throws AuthenticationException If API authentication fails
      * @throws InvalidRequestException If customer ID is invalid
      * @throws ApiErrorException If API returns an error or network error occurs
      */
-    public function delete(string $customerId): bool
+    public function delete(string $customerId): void
     {
         $this->client->delete(sprintf('%s/%s', $this->getEndpoint(), $customerId));
-
-        return true;
     }
 }

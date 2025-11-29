@@ -138,18 +138,13 @@ trait HasTapCustomer
      * @throws InvalidRequestException
      * @throws ApiErrorException
      */
-    public function deleteTapCustomer(): bool
+    public function deleteTapCustomer(): void
     {
         if (!$this->tapCustomerId()) {
-            return false;
+            return;
         }
 
-        $deleted = Tap::customers()->delete($this->tapCustomerId());
-
-        if ($deleted) {
-            $this->setTapCustomerId(null);
-        }
-
-        return $deleted;
+        Tap::customers()->delete($this->tapCustomerId());
+        $this->setTapCustomerId(null);
     }
 }

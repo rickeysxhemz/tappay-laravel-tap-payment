@@ -118,16 +118,6 @@ describe('ChargeBuilder', function () {
         expect($this->builder->get('metadata'))->toBe($metadata);
     })->group('unit');
 
-    test('can add single metadata item', function () {
-        $this->builder->addMetadata('order_id', '12345');
-        $this->builder->addMetadata('user_id', '67890');
-
-        expect($this->builder->get('metadata'))->toBe([
-            'order_id' => '12345',
-            'user_id' => '67890',
-        ]);
-    })->group('unit');
-
     test('can set redirect URL', function () {
         $this->builder->redirectUrl('https://example.com/success');
 
@@ -231,5 +221,265 @@ describe('ChargeBuilder', function () {
 
     test('has default currency from config', function () {
         expect($this->builder->get('currency'))->toBe('SAR');
+    })->group('unit');
+
+    test('can enable 3D Secure', function () {
+        $this->builder->threeDSecure();
+
+        expect($this->builder->get('threeDSecure'))->toBeTrue();
+    })->group('unit');
+
+    test('can disable 3D Secure', function () {
+        $this->builder->threeDSecure(false);
+
+        expect($this->builder->get('threeDSecure'))->toBeFalse();
+    })->group('unit');
+
+    test('can set customer initiated flag', function () {
+        $this->builder->customerInitiated();
+
+        expect($this->builder->get('customer_initiated'))->toBeTrue();
+    })->group('unit');
+
+    test('can set merchant initiated flag', function () {
+        $this->builder->customerInitiated(false);
+
+        expect($this->builder->get('customer_initiated'))->toBeFalse();
+    })->group('unit');
+
+    test('can set merchant ID', function () {
+        $this->builder->merchant('mer_123456');
+
+        expect($this->builder->get('merchant'))->toBe(['id' => 'mer_123456']);
+    })->group('unit');
+
+    test('can set payment agreement', function () {
+        $this->builder->paymentAgreement('pa_123456');
+
+        expect($this->builder->get('payment_agreement'))->toBe([
+            'id' => 'pa_123456',
+            'type' => 'UNSCHEDULED',
+        ]);
+    })->group('unit');
+
+    test('can set payment agreement with custom type', function () {
+        $this->builder->paymentAgreement('pa_123456', 'RECURRING');
+
+        expect($this->builder->get('payment_agreement'))->toBe([
+            'id' => 'pa_123456',
+            'type' => 'RECURRING',
+        ]);
+    })->group('unit');
+
+    test('can set transaction expiry', function () {
+        $this->builder->expiresIn(30);
+
+        expect($this->builder->get('transaction'))->toBe([
+            'expiry' => [
+                'period' => 30,
+                'type' => 'MINUTE',
+            ],
+        ]);
+    })->group('unit');
+
+    test('can set destinations for marketplace', function () {
+        $destinations = [
+            ['id' => 'dest_1', 'amount' => 50.0],
+            ['id' => 'dest_2', 'amount' => 30.0],
+        ];
+
+        $this->builder->destinations($destinations);
+
+        expect($this->builder->get('destinations'))->toBe(['destination' => $destinations]);
+    })->group('unit');
+
+    test('can set order reference', function () {
+        $this->builder->orderReference('order_12345');
+
+        expect($this->builder->get('reference'))->toBe(['order' => 'order_12345']);
+    })->group('unit');
+
+    test('can set both transaction and order reference', function () {
+        $this->builder->reference('txn_12345')->orderReference('order_12345');
+
+        expect($this->builder->get('reference'))->toBe([
+            'transaction' => 'txn_12345',
+            'order' => 'order_12345',
+        ]);
+    })->group('unit');
+
+    test('can build merchant initiated transaction', function () {
+        $this->builder
+            ->amount(5000)
+            ->withToken('tok_saved_card')
+            ->customerInitiated(false)
+            ->threeDSecure(false)
+            ->paymentAgreement('pa_123456');
+
+        $array = $this->builder->toArray();
+
+        expect($array['customer_initiated'])->toBeFalse()
+            ->and($array['threeDSecure'])->toBeFalse()
+            ->and($array['payment_agreement'])->toBe([
+                'id' => 'pa_123456',
+                'type' => 'UNSCHEDULED',
+            ]);
+    })->group('unit');
+
+    test('can set authentication object', function () {
+        $auth = [
+            'eci' => '05',
+            'cavv' => 'AAABBJJJkkkAAABBBJJJkkk=',
+            'xid' => 'MDAwMDAwMDAwMTE=',
+        ];
+
+        $this->builder->authentication($auth);
+
+        expect($this->builder->get('authentication'))->toBe($auth);
+    })->group('unit');
+
+    test('can set authentication details with all parameters', function () {
+        $this->builder->authenticationDetails(
+            eci: '05',
+            cavv: 'AAABBJJJkkkAAABBBJJJkkk=',
+            xid: 'MDAwMDAwMDAwMTE=',
+            dsTransId: 'f25084f0-5b16-4c0a-ae5d-b24808a95e4b',
+            version: '2.1.0'
+        );
+
+        expect($this->builder->get('authentication'))->toBe([
+            'eci' => '05',
+            'cavv' => 'AAABBJJJkkkAAABBBJJJkkk=',
+            'xid' => 'MDAwMDAwMDAwMTE=',
+            'ds_trans_id' => 'f25084f0-5b16-4c0a-ae5d-b24808a95e4b',
+            'version' => '2.1.0',
+        ]);
+    })->group('unit');
+
+    test('can set authentication details with minimal parameters', function () {
+        $this->builder->authenticationDetails(eci: '07');
+
+        expect($this->builder->get('authentication'))->toBe(['eci' => '07']);
+    })->group('unit');
+
+    test('can set contract for payment agreement', function () {
+        $this->builder->contract('card_123456');
+
+        expect($this->builder->get('payment_agreement'))->toBe([
+            'contract' => [
+                'id' => 'card_123456',
+                'type' => 'UNSCHEDULED',
+            ],
+        ]);
+    })->group('unit');
+
+    test('can set contract with custom type', function () {
+        $this->builder->contract('sub_123456', 'RECURRING');
+
+        expect($this->builder->get('payment_agreement'))->toBe([
+            'contract' => [
+                'id' => 'sub_123456',
+                'type' => 'RECURRING',
+            ],
+        ]);
+    })->group('unit');
+
+    test('can set total payments count', function () {
+        $this->builder->totalPaymentsCount(12);
+
+        expect($this->builder->get('payment_agreement'))->toBe([
+            'total_payments_count' => 12,
+        ]);
+    })->group('unit');
+
+    test('can combine payment agreement with contract and count', function () {
+        $this->builder
+            ->paymentAgreement('pa_123456', 'RECURRING')
+            ->contract('card_789', 'RECURRING')
+            ->totalPaymentsCount(12);
+
+        expect($this->builder->get('payment_agreement'))->toBe([
+            'id' => 'pa_123456',
+            'type' => 'RECURRING',
+            'contract' => [
+                'id' => 'card_789',
+                'type' => 'RECURRING',
+            ],
+            'total_payments_count' => 12,
+        ]);
+    })->group('unit');
+
+    test('can build charge with external 3DS authentication', function () {
+        $this->builder
+            ->amount(5000)
+            ->withToken('tok_google_pay')
+            ->authenticationDetails(
+                eci: '05',
+                cavv: 'AAABBJJJkkkAAABBBJJJkkk=',
+                version: '2.2.0'
+            );
+
+        $array = $this->builder->toArray();
+
+        expect($array['authentication'])->toBe([
+            'eci' => '05',
+            'cavv' => 'AAABBJJJkkkAAABBBJJJkkk=',
+            'version' => '2.2.0',
+        ]);
+    })->group('unit');
+
+    test('can set platform ID', function () {
+        $this->builder->platform('woocommerce_v1');
+
+        expect($this->builder->get('platform'))->toBe(['id' => 'woocommerce_v1']);
+    })->group('unit');
+
+    test('can build complete charge with all parameters', function () {
+        $this->builder
+            ->amount(10000)
+            ->currency('SAR')
+            ->withCard()
+            ->customer([
+                'first_name' => 'John',
+                'last_name' => 'Doe',
+                'email' => 'john@example.com',
+                'phone' => ['country_code' => '966', 'number' => '500000000'],
+            ])
+            ->description('Complete test charge')
+            ->redirectUrl('https://example.com/callback')
+            ->postUrl('https://example.com/webhook')
+            ->reference('txn_123')
+            ->orderReference('order_456')
+            ->metadata(['key' => 'value'])
+            ->saveCard()
+            ->emailReceipt()
+            ->smsReceipt()
+            ->statementDescriptor('ACME STORE')
+            ->threeDSecure()
+            ->customerInitiated()
+            ->merchant('mer_123')
+            ->platform('laravel_tap_v1')
+            ->expiresIn(30);
+
+        $array = $this->builder->toArray();
+
+        expect($array)
+            ->toHaveKey('amount')
+            ->toHaveKey('currency')
+            ->toHaveKey('source')
+            ->toHaveKey('customer')
+            ->toHaveKey('description')
+            ->toHaveKey('redirect')
+            ->toHaveKey('post')
+            ->toHaveKey('reference')
+            ->toHaveKey('metadata')
+            ->toHaveKey('save_card')
+            ->toHaveKey('receipt')
+            ->toHaveKey('statement_descriptor')
+            ->toHaveKey('threeDSecure')
+            ->toHaveKey('customer_initiated')
+            ->toHaveKey('merchant')
+            ->toHaveKey('platform')
+            ->toHaveKey('transaction');
     })->group('unit');
 });

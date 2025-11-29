@@ -23,7 +23,7 @@ class WebhookTest extends TestCase
     {
         parent::setUp();
 
-        config(['tap.secret_key' => $this->secretKey]);
+        config(['tap.secret' => $this->secretKey]);
         $this->validator = new WebhookValidator($this->secretKey);
     }
     #[Test]
@@ -43,13 +43,12 @@ class WebhookTest extends TestCase
             'HTTP_X_TAP_SIGNATURE' => $signature,
         ], json_encode($payload));
 
-        $this->assertTrue($this->validator->validate($request));
+        $result = $this->validator->validate($request);
+        $this->assertTrue($result->isValid());
     }
     #[Test]
     public function it_rejects_invalid_signature(): void
     {
-        Event::fake();
-
         $payload = [
             'id' => 'chg_test_123',
             'amount' => 10.50,
@@ -63,17 +62,13 @@ class WebhookTest extends TestCase
             'HTTP_X_TAP_SIGNATURE' => str_repeat('a', 64),
         ], json_encode($payload));
 
-        $this->assertFalse($this->validator->validate($request));
-
-        Event::assertDispatched(WebhookValidationFailed::class, function ($event) {
-            return $event->reason === 'Signature mismatch';
-        });
+        $result = $this->validator->validate($request);
+        $this->assertFalse($result->isValid());
+        $this->assertSame('Signature mismatch', $result->getError());
     }
     #[Test]
     public function it_rejects_webhook_without_signature(): void
     {
-        Event::fake();
-
         $payload = [
             'id' => 'chg_test_123',
             'amount' => 10.50,
@@ -83,18 +78,14 @@ class WebhookTest extends TestCase
 
         $request = Request::create('/webhook', 'POST', [], [], [], [], json_encode($payload));
 
-        $this->assertFalse($this->validator->validate($request));
-
-        Event::assertDispatched(WebhookValidationFailed::class, function ($event) {
-            return $event->reason === 'Missing or invalid signature length';
-        });
+        $result = $this->validator->validate($request);
+        $this->assertFalse($result->isValid());
+        $this->assertSame('Missing or invalid signature length', $result->getError());
     }
 
     #[Test]
     public function it_rejects_webhook_with_invalid_signature_length(): void
     {
-        Event::fake();
-
         $payload = [
             'id' => 'chg_test_123',
             'amount' => 10.50,
@@ -107,47 +98,37 @@ class WebhookTest extends TestCase
             'HTTP_X_TAP_SIGNATURE' => 'invalid_short_signature',
         ], json_encode($payload));
 
-        $this->assertFalse($this->validator->validate($request));
-
-        Event::assertDispatched(WebhookValidationFailed::class, function ($event) {
-            return $event->reason === 'Missing or invalid signature length';
-        });
+        $result = $this->validator->validate($request);
+        $this->assertFalse($result->isValid());
+        $this->assertSame('Missing or invalid signature length', $result->getError());
     }
 
     #[Test]
     public function it_rejects_webhook_with_empty_payload(): void
     {
-        Event::fake();
-
         $signature = str_repeat('a', 64); // Valid length, wrong signature
 
         $request = Request::create('/webhook', 'POST', [], [], [], [
             'HTTP_X_TAP_SIGNATURE' => $signature,
         ], '');
 
-        $this->assertFalse($this->validator->validate($request));
-
-        Event::assertDispatched(WebhookValidationFailed::class, function ($event) {
-            return $event->reason === 'Empty payload';
-        });
+        $result = $this->validator->validate($request);
+        $this->assertFalse($result->isValid());
+        $this->assertSame('Empty payload', $result->getError());
     }
 
     #[Test]
     public function it_rejects_webhook_with_invalid_json(): void
     {
-        Event::fake();
-
         $signature = str_repeat('a', 64); // Valid length, wrong signature
 
         $request = Request::create('/webhook', 'POST', [], [], [], [
             'HTTP_X_TAP_SIGNATURE' => $signature,
         ], '{invalid json}');
 
-        $this->assertFalse($this->validator->validate($request));
-
-        Event::assertDispatched(WebhookValidationFailed::class, function ($event) {
-            return $event->reason === 'Invalid JSON';
-        });
+        $result = $this->validator->validate($request);
+        $this->assertFalse($result->isValid());
+        $this->assertSame('Invalid JSON', $result->getError());
     }
 
     #[Test]
@@ -163,7 +144,8 @@ class WebhookTest extends TestCase
 
         $signature = $this->generateSignature($payload);
 
-        $this->assertTrue($this->validator->validatePayload($payload, $signature));
+        $result = $this->validator->validatePayload($payload, $signature);
+        $this->assertTrue($result->isValid());
     }
 
     #[Test]
@@ -174,32 +156,30 @@ class WebhookTest extends TestCase
             'amount' => 10.50,
         ];
 
-        $this->assertFalse($this->validator->validatePayload($payload, 'wrong_signature'));
+        $result = $this->validator->validatePayload($payload, 'wrong_signature');
+        $this->assertFalse($result->isValid());
     }
     #[Test]
     public function it_checks_webhook_tolerance(): void
     {
         // Recent timestamp - within tolerance
         $recentPayload = ['created' => time() - 60]; // 1 minute ago
-        $this->assertTrue($this->validator->isWithinTolerance($recentPayload));
+        $this->assertTrue($this->validator->checkTolerance($recentPayload)->isValid());
 
         // Old timestamp - outside tolerance
         $oldPayload = ['created' => time() - 400]; // 6+ minutes ago
-        $this->assertFalse($this->validator->isWithinTolerance($oldPayload));
+        $this->assertFalse($this->validator->checkTolerance($oldPayload)->isValid());
     }
 
     #[Test]
     public function it_rejects_webhook_without_timestamp(): void
     {
-        Event::fake();
-
         // No timestamp - should be rejected to prevent replay attacks
         $noTimestampPayload = ['id' => 'test'];
-        $this->assertFalse($this->validator->isWithinTolerance($noTimestampPayload));
+        $result = $this->validator->checkTolerance($noTimestampPayload);
 
-        Event::assertDispatched(WebhookValidationFailed::class, function ($event) {
-            return $event->reason === 'Missing created timestamp';
-        });
+        $this->assertFalse($result->isValid());
+        $this->assertSame('Missing created timestamp', $result->getError());
     }
     #[Test]
     public function it_handles_webhook_request_successfully(): void

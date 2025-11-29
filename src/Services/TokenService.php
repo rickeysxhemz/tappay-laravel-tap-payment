@@ -9,8 +9,6 @@ use TapPay\Tap\Exceptions\AuthenticationException;
 use TapPay\Tap\Exceptions\InvalidRequestException;
 use TapPay\Tap\Resources\Token;
 
-use function sprintf;
-
 class TokenService extends AbstractService
 {
     /**
@@ -19,6 +17,16 @@ class TokenService extends AbstractService
     protected function getEndpoint(): string
     {
         return 'tokens';
+    }
+
+    protected function getListKey(): string
+    {
+        return 'tokens';
+    }
+
+    protected function getResourceClass(): string
+    {
+        return Token::class;
     }
 
     /**

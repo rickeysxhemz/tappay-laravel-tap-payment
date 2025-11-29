@@ -36,7 +36,7 @@ abstract class TestCase extends Orchestra
         $handlerStack = HandlerStack::create($this->mockHandler);
         $guzzleClient = new GuzzleClient(['handler' => $handlerStack]);
 
-        $httpClient = new Client(config('tap.secret_key'));
+        $httpClient = new Client(config('tap.secret'));
 
         // Use reflection to inject mocked Guzzle client
         $reflection = new \ReflectionClass($httpClient);
@@ -72,11 +72,11 @@ abstract class TestCase extends Orchestra
      */
     protected function defineEnvironment($app): void
     {
-        $app['config']->set('tap.secret_key', 'sk_test_XKokBfNWv6FIYuTMg5sLPjhJ');
-        $app['config']->set('tap.publishable_key', 'pk_test_EtHFV4BuPQokJT6jiROls87Y');
+        $app['config']->set('tap.secret', 'sk_test_XKokBfNWv6FIYuTMg5sLPjhJ');
+        $app['config']->set('tap.key', 'pk_test_EtHFV4BuPQokJT6jiROls87Y');
         $app['config']->set('tap.currency', 'SAR');
         $app['config']->set('tap.base_url', 'https://api.tap.company/v2/');
-        $app['config']->set('tap.webhook_secret', 'test_webhook_secret');
+        $app['config']->set('tap.webhook.secret', 'test_webhook_secret');
     }
 
     /**

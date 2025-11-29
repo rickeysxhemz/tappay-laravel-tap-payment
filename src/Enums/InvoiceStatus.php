@@ -20,12 +20,18 @@ enum InvoiceStatus: string
 
     public function isPending(): bool
     {
-        return in_array($this, [self::DRAFT, self::PENDING], true);
+        return match ($this) {
+            self::DRAFT, self::PENDING => true,
+            default => false,
+        };
     }
 
     public function hasFailed(): bool
     {
-        return in_array($this, [self::CANCELLED, self::EXPIRED, self::FAILED], true);
+        return match ($this) {
+            self::CANCELLED, self::EXPIRED, self::FAILED => true,
+            default => false,
+        };
     }
 
     public function label(): string

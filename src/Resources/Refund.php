@@ -8,14 +8,9 @@ use TapPay\Tap\Enums\RefundStatus;
 
 class Refund extends Resource
 {
-    /**
-     * Get the refund ID
-     *
-     * @return string
-     */
-    public function id(): string
+    protected function getIdPrefix(): string
     {
-        return $this->attributes['id'] ?? '';
+        return 'ref_';
     }
 
     /**
@@ -45,7 +40,7 @@ class Refund extends Resource
      */
     public function status(): RefundStatus
     {
-        $status = $this->attributes['status'] ?? 'FAILED';
+        $status = strtoupper($this->attributes['status'] ?? 'FAILED');
         return RefundStatus::tryFrom($status) ?? RefundStatus::FAILED;
     }
 
@@ -67,16 +62,6 @@ class Refund extends Resource
     public function reason(): ?string
     {
         return $this->attributes['reason'] ?? null;
-    }
-
-    /**
-     * Get metadata
-     *
-     * @return array
-     */
-    public function metadata(): array
-    {
-        return $this->attributes['metadata'] ?? [];
     }
 
     /**
@@ -107,17 +92,5 @@ class Refund extends Resource
     public function hasFailed(): bool
     {
         return $this->status()->hasFailed();
-    }
-
-    /**
-     * Check if refund ID has valid format
-     *
-     * @return bool
-     */
-    public function hasValidId(): bool
-    {
-        $id = $this->id();
-
-        return $id !== '' && str_starts_with($id, 'ref_');
     }
 }

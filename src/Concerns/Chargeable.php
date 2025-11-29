@@ -10,6 +10,7 @@ use TapPay\Tap\Contracts\MoneyContract;
 use TapPay\Tap\Exceptions\ApiErrorException;
 use TapPay\Tap\Facades\Tap;
 use TapPay\Tap\Resources\Charge;
+use TapPay\Tap\ValueObjects\Money;
 
 /**
  * @see HasTapCustomer
@@ -66,21 +67,29 @@ trait Chargeable
      * @throws InvalidArgumentException
      * @throws ApiErrorException
      */
-    public function charge(int $amount, ?string $currency = null, array $options = []): Charge
+    public function charge(int|Money $amount, ?string $currency = null, array $options = []): Charge
     {
-        $currency = $this->getCurrency($currency);
-        $minimumAmount = $this->money()->getMinimumAmount($currency);
+        if ($amount instanceof Money) {
+            $amount->validateMinimum();
+            $decimalAmount = $amount->toDecimal();
+            $currency = $amount->currency;
+        } else {
+            $currency = $this->getCurrency($currency);
+            $minimumAmount = $this->money()->getMinimumAmount($currency);
 
-        if ($amount < $minimumAmount) {
-            throw new InvalidArgumentException(
-                "Amount must be at least {$minimumAmount} for {$currency}"
-            );
+            if ($amount < $minimumAmount) {
+                throw new InvalidArgumentException(
+                    "Amount must be at least {$minimumAmount} for {$currency}"
+                );
+            }
+
+            $decimalAmount = $this->money()->toDecimal($amount, $currency);
         }
 
         $sanitizedOptions = array_intersect_key($options, array_flip(self::CHARGE_OPTIONS));
 
         $chargeData = array_merge($sanitizedOptions, [
-            'amount' => $this->money()->toDecimal($amount, $currency),
+            'amount' => $decimalAmount,
             'currency' => $currency,
             'customer' => ['id' => $this->getValidCustomerId()],
         ]);
@@ -92,11 +101,16 @@ trait Chargeable
      * @throws InvalidArgumentException
      * @throws ApiErrorException
      */
-    public function newCharge(int $amount, ?string $currency = null): ChargeBuilder
+    public function newCharge(int|Money $amount, ?string $currency = null): ChargeBuilder
     {
-        return (new ChargeBuilder(Tap::charges(), $this->money()))
-            ->amount($amount)
-            ->currency($this->getCurrency($currency))
-            ->customerId($this->getValidCustomerId());
+        $builder = new ChargeBuilder(Tap::charges(), $this->money());
+
+        if ($amount instanceof Money) {
+            $builder->amount($amount);
+        } else {
+            $builder->amount($amount)->currency($this->getCurrency($currency));
+        }
+
+        return $builder->customerId($this->getValidCustomerId());
     }
 }

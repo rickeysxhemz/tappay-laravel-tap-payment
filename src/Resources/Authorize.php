@@ -8,14 +8,9 @@ use TapPay\Tap\Enums\AuthorizeStatus;
 
 class Authorize extends Resource
 {
-    /**
-     * Get the authorization ID
-     *
-     * @return string
-     */
-    public function id(): string
+    protected function getIdPrefix(): string
     {
-        return $this->attributes['id'] ?? '';
+        return 'auth_';
     }
 
     /**
@@ -45,7 +40,7 @@ class Authorize extends Resource
      */
     public function status(): AuthorizeStatus
     {
-        $status = $this->attributes['status'] ?? 'UNKNOWN';
+        $status = strtoupper($this->attributes['status'] ?? 'UNKNOWN');
         return AuthorizeStatus::tryFrom($status) ?? AuthorizeStatus::UNKNOWN;
     }
 
@@ -80,16 +75,6 @@ class Authorize extends Resource
     }
 
     /**
-     * Get metadata
-     *
-     * @return array
-     */
-    public function metadata(): array
-    {
-        return $this->attributes['metadata'] ?? [];
-    }
-
-    /**
      * Check if authorization was successful
      *
      * @return bool
@@ -117,17 +102,5 @@ class Authorize extends Resource
     public function hasFailed(): bool
     {
         return $this->status()->hasFailed();
-    }
-
-    /**
-     * Check if authorization ID has valid format
-     *
-     * @return bool
-     */
-    public function hasValidId(): bool
-    {
-        $id = $this->id();
-
-        return $id !== '' && str_starts_with($id, 'auth_');
     }
 }

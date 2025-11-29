@@ -9,17 +9,21 @@ use TapPay\Tap\Exceptions\AuthenticationException;
 use TapPay\Tap\Exceptions\InvalidRequestException;
 use TapPay\Tap\Resources\Authorize;
 
-use function array_map;
-use function sprintf;
-
 class AuthorizeService extends AbstractService
 {
-    /**
-     * Get the endpoint for authorizations
-     */
     protected function getEndpoint(): string
     {
         return 'authorize';
+    }
+
+    protected function getListKey(): string
+    {
+        return 'authorizations';
+    }
+
+    protected function getResourceClass(): string
+    {
+        return Authorize::class;
     }
 
     /**
@@ -84,9 +88,6 @@ class AuthorizeService extends AbstractService
     {
         $response = $this->client->post(sprintf('%s/list', $this->getEndpoint()), $params);
 
-        return array_map(
-            fn($auth) => new Authorize($auth),
-            $response['authorizations'] ?? []
-        );
+        return $this->mapToResources($response);
     }
 }

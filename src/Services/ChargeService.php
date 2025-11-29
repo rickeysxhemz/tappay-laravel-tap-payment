@@ -12,9 +12,6 @@ use TapPay\Tap\Exceptions\InvalidRequestException;
 use TapPay\Tap\Http\Client;
 use TapPay\Tap\Resources\Charge;
 
-use function array_map;
-use function sprintf;
-
 class ChargeService extends AbstractService
 {
     public function __construct(
@@ -24,12 +21,19 @@ class ChargeService extends AbstractService
         parent::__construct($client);
     }
 
-    /**
-     * Get the endpoint for charges
-     */
     protected function getEndpoint(): string
     {
         return 'charges';
+    }
+
+    protected function getListKey(): string
+    {
+        return 'charges';
+    }
+
+    protected function getResourceClass(): string
+    {
+        return Charge::class;
     }
 
     /**
@@ -102,9 +106,6 @@ class ChargeService extends AbstractService
     {
         $response = $this->client->post(sprintf('%s/list', $this->getEndpoint()), $params);
 
-        return array_map(
-            fn($charge) => new Charge($charge),
-            $response['charges'] ?? []
-        );
+        return $this->mapToResources($response);
     }
 }

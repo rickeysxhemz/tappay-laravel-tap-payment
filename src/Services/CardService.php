@@ -16,6 +16,16 @@ class CardService extends AbstractService
         return 'card';
     }
 
+    protected function getListKey(): string
+    {
+        return 'cards';
+    }
+
+    protected function getResourceClass(): string
+    {
+        return Card::class;
+    }
+
     /**
      * Retrieve a saved card
      *
@@ -47,10 +57,7 @@ class CardService extends AbstractService
     {
         $response = $this->client->get(sprintf('%s/%s', $this->getEndpoint(), $customerId), $params);
 
-        return array_map(
-            fn($card) => new Card($card),
-            $response['cards'] ?? $response['data'] ?? []
-        );
+        return $this->mapToResources($response);
     }
 
     /**
@@ -58,18 +65,14 @@ class CardService extends AbstractService
      *
      * @param string $customerId Customer ID
      * @param string $cardId Card ID
-     * @return bool
+     * @return void
      * @throws AuthenticationException
      * @throws InvalidRequestException
      * @throws ApiErrorException
      */
-    public function delete(string $customerId, string $cardId): bool
+    public function delete(string $customerId, string $cardId): void
     {
-        $response = $this->client->delete(sprintf('%s/%s/%s', $this->getEndpoint(), $customerId, $cardId));
-
-        // Handle various response formats for deletion confirmation
-        return ($response['deleted'] ?? $response['status'] ?? false) === true
-            || (isset($response['id']) && $response['id'] === $cardId);
+        $this->client->delete(sprintf('%s/%s/%s', $this->getEndpoint(), $customerId, $cardId));
     }
 
     /**
