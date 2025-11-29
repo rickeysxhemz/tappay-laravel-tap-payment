@@ -14,7 +14,7 @@ trait HasCustomer
 {
     public function customer(array|Customer $customer): static
     {
-        $existing = isset($this->data['customer']) ? $this->data['customer'] : [];
+        $existing = $this->data['customer'] ?? [];
         $newData = $customer instanceof Customer ? $customer->toArray() : $customer;
         $this->data['customer'] = array_merge($existing, $newData);
 
@@ -23,7 +23,7 @@ trait HasCustomer
 
     public function customerId(string $customerId): static
     {
-        $existing = isset($this->data['customer']) ? $this->data['customer'] : [];
+        $existing = $this->data['customer'] ?? [];
         $this->data['customer'] = array_merge($existing, ['id' => $customerId]);
 
         return $this;
@@ -31,7 +31,7 @@ trait HasCustomer
 
     public function customerFirstName(string $firstName): static
     {
-        $existing = isset($this->data['customer']) ? $this->data['customer'] : [];
+        $existing = $this->data['customer'] ?? [];
         $this->data['customer'] = array_merge($existing, ['first_name' => $firstName]);
 
         return $this;
@@ -39,7 +39,7 @@ trait HasCustomer
 
     public function customerLastName(string $lastName): static
     {
-        $existing = isset($this->data['customer']) ? $this->data['customer'] : [];
+        $existing = $this->data['customer'] ?? [];
         $this->data['customer'] = array_merge($existing, ['last_name' => $lastName]);
 
         return $this;
@@ -47,11 +47,11 @@ trait HasCustomer
 
     public function customerEmail(string $email): static
     {
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
             throw new InvalidArgumentException('Invalid email format');
         }
 
-        $existing = isset($this->data['customer']) ? $this->data['customer'] : [];
+        $existing = $this->data['customer'] ?? [];
         $this->data['customer'] = array_merge($existing, ['email' => $email]);
 
         return $this;
@@ -59,15 +59,15 @@ trait HasCustomer
 
     public function customerPhone(string $countryCode, string $number): static
     {
-        if (!preg_match('/^\d{1,4}$/', $countryCode)) {
+        if (! preg_match('/^\d{1,4}$/', $countryCode)) {
             throw new InvalidArgumentException('Country code must be 1-4 digits');
         }
 
-        if (!preg_match('/^\d{6,15}$/', $number)) {
+        if (! preg_match('/^\d{6,15}$/', $number)) {
             throw new InvalidArgumentException('Phone number must be 6-15 digits');
         }
 
-        $existing = isset($this->data['customer']) ? $this->data['customer'] : [];
+        $existing = $this->data['customer'] ?? [];
         $this->data['customer'] = array_merge($existing, [
             'phone' => [
                 'country_code' => $countryCode,

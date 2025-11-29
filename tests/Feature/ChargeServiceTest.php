@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace TapPay\Tap\Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
 use GuzzleHttp\Psr7\Response;
+use PHPUnit\Framework\Attributes\Test;
 use TapPay\Tap\Contracts\MoneyContract;
 use TapPay\Tap\Enums\ChargeStatus;
 use TapPay\Tap\Exceptions\ApiErrorException;
@@ -26,6 +26,7 @@ class ChargeServiceTest extends TestCase
             app(MoneyContract::class)
         );
     }
+
     #[Test]
     public function it_can_create_a_charge_successfully(): void
     {
@@ -64,6 +65,7 @@ class ChargeServiceTest extends TestCase
         $this->assertSame('Initiated', $charge->status()->label());
         $this->assertSame('https://tap.company/redirect/123', $charge->transactionUrl());
     }
+
     #[Test]
     public function it_can_retrieve_a_charge(): void
     {
@@ -83,6 +85,7 @@ class ChargeServiceTest extends TestCase
         $this->assertFalse($charge->hasFailed());
         $this->assertSame('Captured', $charge->status()->label());
     }
+
     #[Test]
     public function it_can_list_charges(): void
     {
@@ -109,6 +112,7 @@ class ChargeServiceTest extends TestCase
         $this->assertSame('chg_test_1', $charges[0]->id());
         $this->assertSame('chg_test_2', $charges[1]->id());
     }
+
     #[Test]
     public function it_throws_authentication_exception_on_401(): void
     {
@@ -120,6 +124,7 @@ class ChargeServiceTest extends TestCase
 
         $this->chargeService->create(['amount' => 10]);
     }
+
     #[Test]
     public function it_throws_api_error_exception_on_400(): void
     {
@@ -142,6 +147,7 @@ class ChargeServiceTest extends TestCase
             $this->assertArrayHasKey('errors', $e->toArray());
         }
     }
+
     #[Test]
     public function it_handles_server_errors(): void
     {

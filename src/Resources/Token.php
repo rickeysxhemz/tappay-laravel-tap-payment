@@ -13,8 +13,6 @@ class Token extends Resource
 
     /**
      * Get the card ID associated with this token
-     *
-     * @return string|null
      */
     public function cardId(): ?string
     {
@@ -23,8 +21,6 @@ class Token extends Resource
 
     /**
      * Get the customer ID
-     *
-     * @return string|null
      */
     public function customerId(): ?string
     {
@@ -33,8 +29,6 @@ class Token extends Resource
 
     /**
      * Get the created timestamp
-     *
-     * @return int|null
      */
     public function created(): ?int
     {

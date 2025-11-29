@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace TapPay\Tap\Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use PHPUnit\Framework\Attributes\Test;
 use TapPay\Tap\Concerns\Billable;
 use TapPay\Tap\Http\Client;
 use TapPay\Tap\Tests\TestCase;
@@ -51,6 +51,7 @@ class BillableTraitTest extends TestCase
         Schema::dropIfExists('users');
         parent::tearDown();
     }
+
     #[Test]
     public function it_can_create_tap_customer(): void
     {
@@ -70,6 +71,7 @@ class BillableTraitTest extends TestCase
         $this->assertSame('cus_test_123', $customer->id());
         $this->assertSame('cus_test_123', $user->fresh()->tap_customer_id);
     }
+
     #[Test]
     public function it_can_charge_billable_model(): void
     {
@@ -102,6 +104,7 @@ class BillableTraitTest extends TestCase
         $this->assertSame(50.00, $charge->amount());
         $this->assertNotNull($user->fresh()->tap_customer_id);
     }
+
     #[Test]
     public function it_can_retrieve_tap_customer(): void
     {
@@ -122,6 +125,7 @@ class BillableTraitTest extends TestCase
         $this->assertNotNull($customer);
         $this->assertSame('cus_test_123', $customer->id());
     }
+
     #[Test]
     public function it_returns_null_when_no_tap_customer_exists(): void
     {
@@ -132,6 +136,7 @@ class BillableTraitTest extends TestCase
 
         $this->assertNull($user->asTapCustomer());
     }
+
     #[Test]
     public function it_can_update_tap_customer(): void
     {
@@ -154,6 +159,7 @@ class BillableTraitTest extends TestCase
 
         $this->assertSame('Jane Doe', $customer->firstName());
     }
+
     #[Test]
     public function it_creates_customer_if_updating_non_existent_customer(): void
     {
@@ -175,6 +181,7 @@ class BillableTraitTest extends TestCase
         $this->assertSame('cus_new_123', $customer->id());
         $this->assertSame('cus_new_123', $user->fresh()->tap_customer_id);
     }
+
     #[Test]
     public function it_can_delete_tap_customer(): void
     {
@@ -193,6 +200,7 @@ class BillableTraitTest extends TestCase
 
         $this->assertNull($user->fresh()->tap_customer_id);
     }
+
     #[Test]
     public function it_does_nothing_when_deleting_non_existent_customer(): void
     {
@@ -207,6 +215,7 @@ class BillableTraitTest extends TestCase
         // No exception thrown means success
         $this->assertNull($user->tap_customer_id);
     }
+
     #[Test]
     public function it_can_create_card_token(): void
     {
@@ -226,6 +235,7 @@ class BillableTraitTest extends TestCase
 
         $this->assertSame('tok_test_789', $token->id());
     }
+
     #[Test]
     public function it_throws_exception_when_creating_token_without_customer(): void
     {
@@ -239,6 +249,7 @@ class BillableTraitTest extends TestCase
 
         $user->createCardToken('card_abc');
     }
+
     #[Test]
     public function it_can_build_charge_with_fluent_interface(): void
     {
@@ -538,6 +549,7 @@ class User extends Model
     use Billable;
 
     protected $guarded = [];
+
     public $timestamps = true;
 }
 
@@ -549,7 +561,9 @@ class UserWithPhone extends Model
     use Billable;
 
     protected $table = 'users';
+
     protected $guarded = [];
+
     public $timestamps = true;
 }
 
@@ -561,7 +575,9 @@ class UserWithFirstName extends Model
     use Billable;
 
     protected $table = 'users';
+
     protected $guarded = [];
+
     public $timestamps = true;
 }
 
@@ -573,6 +589,8 @@ class UserMinimal extends Model
     use Billable;
 
     protected $table = 'users';
+
     protected $guarded = [];
+
     public $timestamps = true;
 }

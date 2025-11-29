@@ -14,7 +14,7 @@ abstract class Resource
     /**
      * Create a new resource instance
      *
-     * @param array $attributes Resource attributes from API
+     * @param  array  $attributes  Resource attributes from API
      */
     public function __construct(
         protected array $attributes
@@ -22,8 +22,6 @@ abstract class Resource
 
     /**
      * Get the resource ID
-     *
-     * @return string
      */
     public function id(): string
     {
@@ -32,15 +30,11 @@ abstract class Resource
 
     /**
      * Get the ID prefix for this resource type (e.g., 'chg_', 'cus_', 'ref_')
-     *
-     * @return string
      */
     abstract protected function getIdPrefix(): string;
 
     /**
      * Check if the resource ID has a valid format
-     *
-     * @return bool
      */
     public function hasValidId(): bool
     {
@@ -51,8 +45,6 @@ abstract class Resource
 
     /**
      * Get metadata
-     *
-     * @return array
      */
     public function metadata(): array
     {
@@ -61,8 +53,6 @@ abstract class Resource
 
     /**
      * Get all attributes
-     *
-     * @return array
      */
     public function toArray(): array
     {
@@ -72,9 +62,8 @@ abstract class Resource
     /**
      * Get an attribute by key with support for dot notation
      *
-     * @param string $key Attribute key (supports dot notation)
-     * @param string|int|float|bool|array|null $default Default value if key doesn't exist
-     * @return string|int|float|bool|array|null
+     * @param  string  $key  Attribute key (supports dot notation)
+     * @param  string|int|float|bool|array|null  $default  Default value if key doesn't exist
      */
     public function get(string $key, string|int|float|bool|array|null $default = null): string|int|float|bool|array|null
     {
@@ -84,8 +73,7 @@ abstract class Resource
     /**
      * Check if an attribute exists
      *
-     * @param string $key Attribute key
-     * @return bool
+     * @param  string  $key  Attribute key
      */
     public function has(string $key): bool
     {
@@ -94,8 +82,6 @@ abstract class Resource
 
     /**
      * Check if the resource has any data
-     *
-     * @return bool
      */
     public function isEmpty(): bool
     {
@@ -105,8 +91,7 @@ abstract class Resource
     /**
      * Magic getter for attributes
      *
-     * @param string $key Attribute key
-     * @return string|int|float|bool|array|null
+     * @param  string  $key  Attribute key
      */
     public function __get(string $key): string|int|float|bool|array|null
     {
@@ -116,15 +101,15 @@ abstract class Resource
     /**
      * Parse a timestamp or date string into a DateTime object
      *
-     * @param int|string $value Unix timestamp or date string
-     * @return DateTime|null
+     * @param  int|string  $value  Unix timestamp or date string
      */
     protected function parseDateTime(int|string $value): ?DateTime
     {
         try {
             if (is_numeric($value)) {
-                return (new DateTime())->setTimestamp((int) $value);
+                return (new DateTime)->setTimestamp((int) $value);
             }
+
             return new DateTime($value);
         } catch (\Exception) {
             return null;

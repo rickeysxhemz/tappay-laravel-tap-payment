@@ -33,7 +33,7 @@ expect()->extend('toBeOne', function () {
 });
 
 expect()->extend('toBeValidTapId', function (string $prefix) {
-    return $this->toStartWith($prefix.'_');
+    return $this->toStartWith($prefix . '_');
 });
 
 /*
@@ -73,7 +73,7 @@ function loadFixture(string $name): array
 {
     $path = fixture($name);
 
-    if (!file_exists($path)) {
+    if (! file_exists($path)) {
         throw new RuntimeException("Fixture file not found: {$path}");
     }
 

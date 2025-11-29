@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace TapPay\Tap\Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
+use PHPUnit\Framework\Attributes\Test;
 use TapPay\Tap\Events\WebhookProcessingFailed;
 use TapPay\Tap\Events\WebhookReceived;
-use TapPay\Tap\Events\WebhookValidationFailed;
-use TapPay\Tap\Tests\TestCase;
 use TapPay\Tap\Http\Controllers\WebhookController;
+use TapPay\Tap\Tests\TestCase;
 use TapPay\Tap\Webhooks\WebhookValidator;
 
 class WebhookTest extends TestCase
 {
     protected WebhookValidator $validator;
+
     protected string $secretKey = 'sk_test_XKokBfNWv6FIYuTMg5sLPjhJ';
 
     protected function setUp(): void
@@ -26,6 +26,7 @@ class WebhookTest extends TestCase
         config(['tap.secret' => $this->secretKey]);
         $this->validator = new WebhookValidator($this->secretKey);
     }
+
     #[Test]
     public function it_validates_webhook_signature_correctly(): void
     {
@@ -46,6 +47,7 @@ class WebhookTest extends TestCase
         $result = $this->validator->validate($request);
         $this->assertTrue($result->isValid());
     }
+
     #[Test]
     public function it_rejects_invalid_signature(): void
     {
@@ -66,6 +68,7 @@ class WebhookTest extends TestCase
         $this->assertFalse($result->isValid());
         $this->assertSame('Signature mismatch', $result->getError());
     }
+
     #[Test]
     public function it_rejects_webhook_without_signature(): void
     {
@@ -149,7 +152,7 @@ class WebhookTest extends TestCase
     }
 
     #[Test]
-    public function it_rejects_invalid_payload_with_validatePayload(): void
+    public function it_rejects_invalid_payload_with_validate_payload(): void
     {
         $payload = [
             'id' => 'chg_test_123',
@@ -159,6 +162,7 @@ class WebhookTest extends TestCase
         $result = $this->validator->validatePayload($payload, 'wrong_signature');
         $this->assertFalse($result->isValid());
     }
+
     #[Test]
     public function it_checks_webhook_tolerance(): void
     {
@@ -181,6 +185,7 @@ class WebhookTest extends TestCase
         $this->assertFalse($result->isValid());
         $this->assertSame('Missing created timestamp', $result->getError());
     }
+
     #[Test]
     public function it_handles_webhook_request_successfully(): void
     {
@@ -218,6 +223,7 @@ class WebhookTest extends TestCase
                 && $event->getId() === 'chg_test_123';
         });
     }
+
     #[Test]
     public function it_rejects_webhook_with_invalid_signature(): void
     {
@@ -239,6 +245,7 @@ class WebhookTest extends TestCase
         $this->assertEquals(400, $response->getStatusCode());
         $this->assertEquals('Invalid signature', $response->getContent());
     }
+
     #[Test]
     public function it_rejects_expired_webhook(): void
     {
@@ -263,6 +270,7 @@ class WebhookTest extends TestCase
         $this->assertEquals(400, $response->getStatusCode());
         $this->assertEquals('Webhook expired', $response->getContent());
     }
+
     #[Test]
     public function it_dispatches_events_for_different_resource_types(): void
     {

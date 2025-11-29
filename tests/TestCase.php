@@ -16,6 +16,7 @@ use TapPay\Tap\TapServiceProvider;
 abstract class TestCase extends Orchestra
 {
     protected MockHandler $mockHandler;
+
     protected bool $useRealApi = false;
 
     protected function setUp(): void
@@ -27,12 +28,10 @@ abstract class TestCase extends Orchestra
 
     /**
      * Create a mocked HTTP client for testing
-     *
-     * @return Client
      */
     protected function mockHttpClient(): Client
     {
-        $this->mockHandler = new MockHandler();
+        $this->mockHandler = new MockHandler;
         $handlerStack = HandlerStack::create($this->mockHandler);
         $guzzleClient = new GuzzleClient(['handler' => $handlerStack]);
 
@@ -106,7 +105,7 @@ abstract class TestCase extends Orchestra
     {
         $path = __DIR__ . '/Fixtures/' . $name;
 
-        if (!file_exists($path)) {
+        if (! file_exists($path)) {
             throw new \RuntimeException("Fixture file not found: {$path}");
         }
 
@@ -148,7 +147,7 @@ abstract class TestCase extends Orchestra
      */
     protected function requiresRealApi(): void
     {
-        if (!$this->useRealApi) {
+        if (! $this->useRealApi) {
             $this->markTestSkipped('This test requires real API testing to be enabled. Set TAP_REAL_API_TESTING=true in phpunit.xml');
         }
     }

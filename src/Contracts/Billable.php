@@ -27,12 +27,12 @@ interface Billable
     public function deleteTapCustomer(): void;
 
     /**
-     * @param int $amount Amount in smallest currency unit
+     * @param  int  $amount  Amount in smallest currency unit
      */
     public function charge(int $amount, ?string $currency = null, array $options = []): Charge;
 
     /**
-     * @param int $amount Amount in smallest currency unit
+     * @param  int  $amount  Amount in smallest currency unit
      */
     public function newCharge(int $amount, ?string $currency = null): ChargeBuilder;
 

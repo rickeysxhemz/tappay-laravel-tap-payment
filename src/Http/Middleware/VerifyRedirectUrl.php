@@ -24,7 +24,7 @@ class VerifyRedirectUrl
     public function handle(Request $request, Closure $next): Response
     {
         if ($redirect = $request->query('redirect')) {
-            if (!$this->isValidRedirectUrl($redirect, $request->getHost())) {
+            if (! $this->isValidRedirectUrl($redirect, $request->getHost())) {
                 throw new AccessDeniedHttpException('Invalid redirect URL.');
             }
         }
@@ -40,7 +40,7 @@ class VerifyRedirectUrl
         $url = parse_url($redirect);
 
         // Block dangerous schemes (javascript:, data:, vbscript:, etc.)
-        if (isset($url['scheme']) && !in_array(strtolower($url['scheme']), self::ALLOWED_SCHEMES, true)) {
+        if (isset($url['scheme']) && ! in_array(strtolower($url['scheme']), self::ALLOWED_SCHEMES, true)) {
             return false;
         }
 

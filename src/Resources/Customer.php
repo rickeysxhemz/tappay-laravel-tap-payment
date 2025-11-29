@@ -13,8 +13,6 @@ class Customer extends Resource
 
     /**
      * Get the customer's first name
-     *
-     * @return string
      */
     public function firstName(): string
     {
@@ -23,8 +21,6 @@ class Customer extends Resource
 
     /**
      * Get the customer's last name
-     *
-     * @return string|null
      */
     public function lastName(): ?string
     {
@@ -33,8 +29,6 @@ class Customer extends Resource
 
     /**
      * Get the customer's email
-     *
-     * @return string|null
      */
     public function email(): ?string
     {
@@ -43,8 +37,6 @@ class Customer extends Resource
 
     /**
      * Get the customer's phone
-     *
-     * @return array|null
      */
     public function phone(): ?array
     {
@@ -53,8 +45,6 @@ class Customer extends Resource
 
     /**
      * Get full name
-     *
-     * @return string
      */
     public function fullName(): string
     {

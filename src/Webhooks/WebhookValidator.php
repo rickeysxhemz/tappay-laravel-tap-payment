@@ -11,7 +11,8 @@ class WebhookValidator
     /**
      * Create a new webhook validator instance
      *
-     * @param string|null $secret Webhook secret key (uses config if not provided)
+     * @param  string|null  $secret  Webhook secret key (uses config if not provided)
+     *
      * @throws \RuntimeException If secret key is not configured
      */
     public function __construct(
@@ -27,7 +28,7 @@ class WebhookValidator
     /**
      * Validate the webhook signature using HMAC-SHA256
      *
-     * @param Request $request The incoming webhook request
+     * @param  Request  $request  The incoming webhook request
      * @return WebhookValidationResult Validation result with error details if failed
      */
     public function validate(Request $request): WebhookValidationResult
@@ -35,11 +36,11 @@ class WebhookValidator
         $signature = $request->header('x-tap-signature');
 
         // Validate signature exists and has correct length (SHA256 = 64 hex chars)
-        if (!$signature || strlen($signature) !== 64) {
+        if (! $signature || strlen($signature) !== 64) {
             return WebhookValidationResult::failed(
                 'Missing or invalid signature length',
                 [
-                    'has_signature' => !empty($signature),
+                    'has_signature' => ! empty($signature),
                     'signature_length' => $signature ? strlen($signature) : 0,
                 ]
             );
@@ -60,7 +61,7 @@ class WebhookValidator
             );
         }
 
-        if (!is_array($data) || empty($data)) {
+        if (! is_array($data) || empty($data)) {
             return WebhookValidationResult::failed(
                 'Invalid payload structure',
                 ['is_array' => is_array($data)]
@@ -70,7 +71,7 @@ class WebhookValidator
         $hashString = $this->buildHashString($data);
         $computedSignature = hash_hmac('sha256', $hashString, $this->secret);
 
-        if (!hash_equals($computedSignature, $signature)) {
+        if (! hash_equals($computedSignature, $signature)) {
             return WebhookValidationResult::failed(
                 'Signature mismatch',
                 [
@@ -86,8 +87,8 @@ class WebhookValidator
     /**
      * Validate webhook payload directly (without Request object)
      *
-     * @param array $payload The decoded webhook payload
-     * @param string $signature The signature from x-tap-signature header
+     * @param  array  $payload  The decoded webhook payload
+     * @param  string  $signature  The signature from x-tap-signature header
      * @return WebhookValidationResult Validation result with error details if failed
      */
     public function validatePayload(array $payload, string $signature): WebhookValidationResult
@@ -106,7 +107,7 @@ class WebhookValidator
         $hashString = $this->buildHashString($payload);
         $computedSignature = hash_hmac('sha256', $hashString, $this->secret);
 
-        if (!hash_equals($computedSignature, $signature)) {
+        if (! hash_equals($computedSignature, $signature)) {
             return WebhookValidationResult::failed('Signature mismatch');
         }
 
@@ -117,7 +118,7 @@ class WebhookValidator
      * Build the hash string from webhook payload
      * Concatenates specific values from the webhook payload according to Tap's signature algorithm
      *
-     * @param array $data The webhook payload
+     * @param  array  $data  The webhook payload
      * @return string The concatenated hash string
      */
     protected function buildHashString(array $data): string
@@ -137,14 +138,14 @@ class WebhookValidator
     /**
      * Check if the webhook is within tolerance time (prevents replay attacks)
      *
-     * @param array $data The webhook payload
+     * @param  array  $data  The webhook payload
      * @return WebhookValidationResult Validation result with error details if failed
      */
     public function checkTolerance(array $data): WebhookValidationResult
     {
         $tolerance = config('tap.webhook.tolerance', 300); // 5 minutes default
 
-        if (!isset($data['created'])) {
+        if (! isset($data['created'])) {
             return WebhookValidationResult::failed('Missing created timestamp');
         }
 
@@ -160,5 +161,4 @@ class WebhookValidator
 
         return WebhookValidationResult::success();
     }
-
 }

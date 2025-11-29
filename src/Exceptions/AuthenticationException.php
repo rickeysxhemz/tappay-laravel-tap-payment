@@ -17,7 +17,7 @@ class AuthenticationException extends ApiErrorException
     /**
      * Create a new authentication exception
      *
-     * @param string $message Custom error message
+     * @param  string  $message  Custom error message
      */
     public function __construct(string $message = 'Authentication failed. Please check your API keys.')
     {

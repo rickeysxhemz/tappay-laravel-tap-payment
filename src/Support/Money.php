@@ -88,7 +88,7 @@ final class Money implements MoneyContract
     public function toSmallestUnit(float|int|string $amount, ?string $currency = null): int
     {
         if (is_string($amount)) {
-            if (!is_numeric($amount)) {
+            if (! is_numeric($amount)) {
                 throw InvalidCurrencyException::invalidAmount();
             }
             $amount = (float) $amount;
@@ -147,7 +147,7 @@ final class Money implements MoneyContract
      */
     private function assertSupportedCurrency(string $currency): void
     {
-        if (!isset(self::CURRENCY_DECIMALS[$currency])) {
+        if (! isset(self::CURRENCY_DECIMALS[$currency])) {
             throw InvalidCurrencyException::unsupported(
                 $currency,
                 array_keys(self::CURRENCY_DECIMALS)

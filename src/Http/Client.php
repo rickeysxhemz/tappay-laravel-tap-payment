@@ -24,8 +24,9 @@ class Client
     /**
      * Create a new HTTP client
      *
-     * @param string $secretKey Tap API secret key
-     * @param string|null $baseUrl Optional custom base URL
+     * @param  string  $secretKey  Tap API secret key
+     * @param  string|null  $baseUrl  Optional custom base URL
+     *
      * @throws InvalidArgumentException
      */
     public function __construct(
@@ -53,9 +54,10 @@ class Client
     /**
      * Make a GET request
      *
-     * @param string $endpoint API endpoint
-     * @param array $query Query parameters
+     * @param  string  $endpoint  API endpoint
+     * @param  array  $query  Query parameters
      * @return array Response data
+     *
      * @throws ApiErrorException
      */
     public function get(string $endpoint, array $query = []): array
@@ -66,9 +68,10 @@ class Client
     /**
      * Make a POST request
      *
-     * @param string $endpoint API endpoint
-     * @param array $data Request body data
+     * @param  string  $endpoint  API endpoint
+     * @param  array  $data  Request body data
      * @return array Response data
+     *
      * @throws ApiErrorException
      */
     public function post(string $endpoint, array $data = []): array
@@ -79,9 +82,10 @@ class Client
     /**
      * Make a PUT request
      *
-     * @param string $endpoint API endpoint
-     * @param array $data Request body data
+     * @param  string  $endpoint  API endpoint
+     * @param  array  $data  Request body data
      * @return array Response data
+     *
      * @throws ApiErrorException
      */
     public function put(string $endpoint, array $data = []): array
@@ -92,8 +96,9 @@ class Client
     /**
      * Make a DELETE request
      *
-     * @param string $endpoint API endpoint
+     * @param  string  $endpoint  API endpoint
      * @return array Response data
+     *
      * @throws ApiErrorException
      */
     public function delete(string $endpoint): array
@@ -104,16 +109,18 @@ class Client
     /**
      * Make an HTTP request
      *
-     * @param string $method HTTP method
-     * @param string $endpoint API endpoint
-     * @param array $options Guzzle request options
+     * @param  string  $method  HTTP method
+     * @param  string  $endpoint  API endpoint
+     * @param  array  $options  Guzzle request options
      * @return array Response data
+     *
      * @throws ApiErrorException
      */
     protected function request(string $method, string $endpoint, array $options = []): array
     {
         try {
             $response = $this->client->request($method, $endpoint, $options);
+
             return $this->decodeResponse($response);
         } catch (ClientException $e) {
             $this->handleClientException($e);
@@ -129,21 +136,16 @@ class Client
 
     /**
      * Decode JSON response body
-     *
-     * @param ResponseInterface $response
-     * @return array
      */
     protected function decodeResponse(ResponseInterface $response): array
     {
         $body = (string) $response->getBody();
+
         return json_decode($body, true) ?? [];
     }
 
     /**
      * Parse error response
-     *
-     * @param ResponseInterface $response
-     * @return array
      */
     protected function parseErrorResponse(ResponseInterface $response): array
     {
@@ -153,8 +155,6 @@ class Client
     /**
      * Handle 4xx client errors
      *
-     * @param ClientException $e
-     * @return never
      * @throws AuthenticationException
      * @throws InvalidRequestException
      * @throws ApiErrorException
@@ -167,8 +167,8 @@ class Client
         $message = $response['message'] ?? $response['error'] ?? 'Unknown API error';
         $errors = $response['errors'] ?? [];
 
-        throw match($statusCode) {
-            401 => new AuthenticationException(),
+        throw match ($statusCode) {
+            401 => new AuthenticationException,
             400, 422 => new InvalidRequestException($message, $statusCode, $errors),
             default => new ApiErrorException($message, $statusCode, $errors),
         };
@@ -177,8 +177,6 @@ class Client
     /**
      * Handle 5xx server errors
      *
-     * @param ServerException $e
-     * @return never
      * @throws ApiErrorException
      */
     protected function handleServerException(ServerException $e): never

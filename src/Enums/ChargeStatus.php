@@ -21,12 +21,10 @@ enum ChargeStatus: string
 
     /**
      * Check if the charge is successful
-     *
-     * @return bool
      */
     public function isSuccessful(): bool
     {
-        return match($this) {
+        return match ($this) {
             self::CAPTURED, self::AUTHORIZED => true,
             default => false,
         };
@@ -34,12 +32,10 @@ enum ChargeStatus: string
 
     /**
      * Check if the charge is pending
-     *
-     * @return bool
      */
     public function isPending(): bool
     {
-        return match($this) {
+        return match ($this) {
             self::INITIATED, self::IN_PROGRESS => true,
             default => false,
         };
@@ -47,12 +43,10 @@ enum ChargeStatus: string
 
     /**
      * Check if the charge has failed
-     *
-     * @return bool
      */
     public function hasFailed(): bool
     {
-        return match($this) {
+        return match ($this) {
             self::FAILED,
             self::DECLINED,
             self::CANCELLED,
@@ -65,12 +59,10 @@ enum ChargeStatus: string
 
     /**
      * Get human-readable status label
-     *
-     * @return string
      */
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::INITIATED => 'Initiated',
             self::IN_PROGRESS => 'In Progress',
             self::ABANDONED => 'Abandoned',

@@ -9,6 +9,9 @@ use TapPay\Tap\Exceptions\AuthenticationException;
 use TapPay\Tap\Exceptions\InvalidRequestException;
 use TapPay\Tap\Resources\Subscription;
 
+/**
+ * @extends AbstractService<Subscription>
+ */
 class SubscriptionService extends AbstractService
 {
     protected function getEndpoint(): string
@@ -29,14 +32,14 @@ class SubscriptionService extends AbstractService
     /**
      * Create a new subscription
      *
-     * @param array $data Subscription data including:
-     *   - amount: float
-     *   - currency: string
-     *   - customer: array with id
-     *   - term: array with interval (DAILY|WEEKLY|MONTHLY|YEARLY), period (int)
-     *   - trial: array with days (int) - optional
-     *   - source: array with id (card token or payment method)
-     * @return Subscription
+     * @param  array  $data  Subscription data including:
+     *                       - amount: float
+     *                       - currency: string
+     *                       - customer: array with id
+     *                       - term: array with interval (DAILY|WEEKLY|MONTHLY|YEARLY), period (int)
+     *                       - trial: array with days (int) - optional
+     *                       - source: array with id (card token or payment method)
+     *
      * @throws AuthenticationException
      * @throws InvalidRequestException
      * @throws ApiErrorException
@@ -51,8 +54,8 @@ class SubscriptionService extends AbstractService
     /**
      * Retrieve a subscription by ID
      *
-     * @param string $subscriptionId Subscription ID
-     * @return Subscription
+     * @param  string  $subscriptionId  Subscription ID
+     *
      * @throws AuthenticationException
      * @throws InvalidRequestException
      * @throws ApiErrorException
@@ -67,9 +70,9 @@ class SubscriptionService extends AbstractService
     /**
      * Update a subscription
      *
-     * @param string $subscriptionId Subscription ID
-     * @param array $data Update data
-     * @return Subscription
+     * @param  string  $subscriptionId  Subscription ID
+     * @param  array  $data  Update data
+     *
      * @throws AuthenticationException
      * @throws InvalidRequestException
      * @throws ApiErrorException
@@ -84,8 +87,8 @@ class SubscriptionService extends AbstractService
     /**
      * Cancel a subscription
      *
-     * @param string $subscriptionId Subscription ID
-     * @return Subscription
+     * @param  string  $subscriptionId  Subscription ID
+     *
      * @throws AuthenticationException
      * @throws InvalidRequestException
      * @throws ApiErrorException
@@ -100,8 +103,9 @@ class SubscriptionService extends AbstractService
     /**
      * List all subscriptions
      *
-     * @param array $params Query parameters
+     * @param  array  $params  Query parameters
      * @return Subscription[]
+     *
      * @throws AuthenticationException
      * @throws InvalidRequestException
      * @throws ApiErrorException

@@ -9,9 +9,9 @@ namespace TapPay\Tap\Builders\Concerns;
  */
 trait HasChargeCapabilities
 {
-    use HasSource;
-    use HasReceipt;
-    use HasPaymentAgreement;
     use HasAuthentication;
     use HasDestinations;
+    use HasPaymentAgreement;
+    use HasReceipt;
+    use HasSource;
 }

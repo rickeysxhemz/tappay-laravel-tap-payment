@@ -28,7 +28,7 @@ class PaymentCallbackController extends Controller
         $redirect = $request->query('redirect');
         $redirectUrl = is_string($redirect) ? $redirect : null;
 
-        if (!$chargeId || !is_string($chargeId)) {
+        if (! $chargeId || ! is_string($chargeId)) {
             return $this->redirectToFailure($redirectUrl, 'Missing or invalid tap_id');
         }
 

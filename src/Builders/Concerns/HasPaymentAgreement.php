@@ -16,7 +16,7 @@ trait HasPaymentAgreement
         string $agreementId,
         string|AgreementType $type = AgreementType::UNSCHEDULED
     ): static {
-        $existing = isset($this->data['payment_agreement']) ? $this->data['payment_agreement'] : [];
+        $existing = $this->data['payment_agreement'] ?? [];
         $this->data['payment_agreement'] = array_merge($existing, [
             'id' => $agreementId,
             'type' => $type instanceof AgreementType ? $type->value : $type,
@@ -29,7 +29,7 @@ trait HasPaymentAgreement
         string $contractId,
         string|ContractType $type = ContractType::UNSCHEDULED
     ): static {
-        $existing = isset($this->data['payment_agreement']) ? $this->data['payment_agreement'] : [];
+        $existing = $this->data['payment_agreement'] ?? [];
         $this->data['payment_agreement'] = array_merge($existing, [
             'contract' => [
                 'id' => $contractId,
@@ -42,7 +42,7 @@ trait HasPaymentAgreement
 
     public function totalPaymentsCount(int $count): static
     {
-        $existing = isset($this->data['payment_agreement']) ? $this->data['payment_agreement'] : [];
+        $existing = $this->data['payment_agreement'] ?? [];
         $this->data['payment_agreement'] = array_merge($existing, ['total_payments_count' => $count]);
 
         return $this;

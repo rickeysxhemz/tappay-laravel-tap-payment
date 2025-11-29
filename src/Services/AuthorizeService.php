@@ -9,6 +9,9 @@ use TapPay\Tap\Exceptions\AuthenticationException;
 use TapPay\Tap\Exceptions\InvalidRequestException;
 use TapPay\Tap\Resources\Authorize;
 
+/**
+ * @extends AbstractService<Authorize>
+ */
 class AuthorizeService extends AbstractService
 {
     protected function getEndpoint(): string
@@ -29,8 +32,8 @@ class AuthorizeService extends AbstractService
     /**
      * Create a new authorization
      *
-     * @param array $data Authorization data
-     * @return Authorize
+     * @param  array  $data  Authorization data
+     *
      * @throws AuthenticationException If API authentication fails
      * @throws InvalidRequestException If request parameters are invalid
      * @throws ApiErrorException If API returns an error or network error occurs
@@ -45,8 +48,8 @@ class AuthorizeService extends AbstractService
     /**
      * Retrieve an authorization by ID
      *
-     * @param string $authId Authorization ID
-     * @return Authorize
+     * @param  string  $authId  Authorization ID
+     *
      * @throws AuthenticationException If API authentication fails
      * @throws InvalidRequestException If authorization ID is invalid
      * @throws ApiErrorException If API returns an error or network error occurs
@@ -61,9 +64,9 @@ class AuthorizeService extends AbstractService
     /**
      * Update an authorization
      *
-     * @param string $authId Authorization ID
-     * @param array $data Update data
-     * @return Authorize
+     * @param  string  $authId  Authorization ID
+     * @param  array  $data  Update data
+     *
      * @throws AuthenticationException If API authentication fails
      * @throws InvalidRequestException If request parameters are invalid
      * @throws ApiErrorException If API returns an error or network error occurs
@@ -78,8 +81,9 @@ class AuthorizeService extends AbstractService
     /**
      * List all authorizations
      *
-     * @param array $params Query parameters
+     * @param  array  $params  Query parameters
      * @return Authorize[]
+     *
      * @throws AuthenticationException If API authentication fails
      * @throws InvalidRequestException If query parameters are invalid
      * @throws ApiErrorException If API returns an error or network error occurs

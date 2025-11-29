@@ -10,14 +10,16 @@ use Illuminate\Queue\SerializesModels;
 
 class WebhookReceived
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable;
+    use InteractsWithSockets;
+    use SerializesModels;
 
     /**
      * Create a new event instance
      *
-     * @param string $resource The webhook resource type (charge, refund, etc.)
-     * @param array $payload The full webhook payload
-     * @param string $ip The IP address of the request
+     * @param  string  $resource  The webhook resource type (charge, refund, etc.)
+     * @param  array  $payload  The full webhook payload
+     * @param  string  $ip  The IP address of the request
      */
     public function __construct(
         public string $resource,
@@ -27,8 +29,6 @@ class WebhookReceived
 
     /**
      * Get the webhook ID
-     *
-     * @return string|null
      */
     public function getId(): ?string
     {
@@ -38,8 +38,7 @@ class WebhookReceived
     /**
      * Check if this is a specific resource type
      *
-     * @param string $type The resource type to check
-     * @return bool
+     * @param  string  $type  The resource type to check
      */
     public function isType(string $type): bool
     {

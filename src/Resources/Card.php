@@ -16,8 +16,6 @@ class Card extends Resource
 
     /**
      * Get the object type
-     *
-     * @return string
      */
     public function object(): string
     {
@@ -26,8 +24,6 @@ class Card extends Resource
 
     /**
      * Get the customer ID associated with this card
-     *
-     * @return string
      */
     public function customerId(): string
     {
@@ -36,8 +32,6 @@ class Card extends Resource
 
     /**
      * Get the card brand (VISA, MASTERCARD, etc.)
-     *
-     * @return string
      */
     public function brand(): string
     {
@@ -46,8 +40,6 @@ class Card extends Resource
 
     /**
      * Get the card funding type (credit, debit, prepaid)
-     *
-     * @return string
      */
     public function funding(): string
     {
@@ -56,8 +48,6 @@ class Card extends Resource
 
     /**
      * Get the first six digits of the card number (BIN)
-     *
-     * @return string
      */
     public function firstSix(): string
     {
@@ -66,8 +56,6 @@ class Card extends Resource
 
     /**
      * Get the last four digits of the card number
-     *
-     * @return string
      */
     public function lastFour(): string
     {
@@ -76,8 +64,6 @@ class Card extends Resource
 
     /**
      * Get the card expiry month (1-12)
-     *
-     * @return int
      */
     public function expiryMonth(): int
     {
@@ -86,8 +72,6 @@ class Card extends Resource
 
     /**
      * Get the card expiry year
-     *
-     * @return int
      */
     public function expiryYear(): int
     {
@@ -96,8 +80,6 @@ class Card extends Resource
 
     /**
      * Get the cardholder name
-     *
-     * @return string
      */
     public function name(): string
     {
@@ -106,8 +88,6 @@ class Card extends Resource
 
     /**
      * Get the card fingerprint for duplicate detection
-     *
-     * @return string
      */
     public function fingerprint(): string
     {
@@ -116,8 +96,6 @@ class Card extends Resource
 
     /**
      * Check if the card has valid expiry data
-     *
-     * @return bool
      */
     public function hasExpiry(): bool
     {
@@ -128,8 +106,6 @@ class Card extends Resource
 
     /**
      * Check if the card has expired
-     *
-     * @return bool
      */
     public function isExpired(): bool
     {
@@ -161,8 +137,6 @@ class Card extends Resource
 
     /**
      * Get the masked card number (first six + asterisks + last four)
-     *
-     * @return string
      */
     public function maskedNumber(): string
     {
@@ -178,8 +152,6 @@ class Card extends Resource
 
     /**
      * Check if the card has valid first six and last four digits
-     *
-     * @return bool
      */
     public function hasValidCardNumber(): bool
     {

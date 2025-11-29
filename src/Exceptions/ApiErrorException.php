@@ -12,9 +12,9 @@ use Exception;
 class ApiErrorException extends Exception
 {
     /**
-     * @param string $message Error message from API
-     * @param int $statusCode HTTP status code
-     * @param array $errors Validation errors from API
+     * @param  string  $message  Error message from API
+     * @param  int  $statusCode  HTTP status code
+     * @param  array  $errors  Validation errors from API
      */
     public function __construct(
         string $message,
@@ -26,8 +26,6 @@ class ApiErrorException extends Exception
 
     /**
      * Get the errors from the API response
-     *
-     * @return array
      */
     public function getErrors(): array
     {
@@ -36,8 +34,6 @@ class ApiErrorException extends Exception
 
     /**
      * Get the HTTP status code
-     *
-     * @return int
      */
     public function getStatusCode(): int
     {
@@ -46,18 +42,14 @@ class ApiErrorException extends Exception
 
     /**
      * Check if the exception has validation errors
-     *
-     * @return bool
      */
     public function hasErrors(): bool
     {
-        return !empty($this->errors);
+        return ! empty($this->errors);
     }
 
     /**
      * Get the first error message
-     *
-     * @return string|null
      */
     public function getFirstError(): ?string
     {
@@ -73,8 +65,6 @@ class ApiErrorException extends Exception
 
     /**
      * Get exception data as array
-     *
-     * @return array
      */
     public function toArray(): array
     {
@@ -84,5 +74,4 @@ class ApiErrorException extends Exception
             'errors' => $this->errors,
         ];
     }
-
 }

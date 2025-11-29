@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace TapPay\Tap\Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
 use GuzzleHttp\Psr7\Response;
+use PHPUnit\Framework\Attributes\Test;
 use TapPay\Tap\Builders\ChargeBuilder;
 use TapPay\Tap\Contracts\MoneyContract;
 use TapPay\Tap\Enums\SourceObject;
@@ -30,6 +30,7 @@ class ChargeBuilderTest extends TestCase
     {
         return new ChargeBuilder($this->chargeService, $this->money);
     }
+
     #[Test]
     public function it_builds_charge_with_fluent_interface(): void
     {
@@ -58,6 +59,7 @@ class ChargeBuilderTest extends TestCase
         $this->assertSame('https://example.com/webhook', $data['post']['url']);
         $this->assertSame(['order_id' => '12345'], $data['metadata']);
     }
+
     #[Test]
     public function it_can_use_different_payment_methods(): void
     {
@@ -77,6 +79,7 @@ class ChargeBuilderTest extends TestCase
         $data = $builder->amount(1000)->withToken('tok_abc123')->toArray();
         $this->assertSame('tok_abc123', $data['source']['id']);
     }
+
     #[Test]
     public function it_can_set_metadata(): void
     {
@@ -97,6 +100,7 @@ class ChargeBuilderTest extends TestCase
             'invoice' => 'INV-001',
         ], $data['metadata']);
     }
+
     #[Test]
     public function it_can_set_receipt_options(): void
     {
@@ -111,6 +115,7 @@ class ChargeBuilderTest extends TestCase
         $this->assertTrue($data['receipt']['email']);
         $this->assertTrue($data['receipt']['sms']);
     }
+
     #[Test]
     public function it_can_capture_authorization(): void
     {
@@ -123,6 +128,7 @@ class ChargeBuilderTest extends TestCase
 
         $this->assertSame('auth_xyz789', $data['source']['id']);
     }
+
     #[Test]
     public function it_creates_charge_via_builder(): void
     {
@@ -142,6 +148,7 @@ class ChargeBuilderTest extends TestCase
         $this->assertSame('chg_test_builder', $charge->id());
         $this->assertSame(25.00, $charge->amount());
     }
+
     #[Test]
     public function it_uses_default_currency_from_config(): void
     {
@@ -152,6 +159,7 @@ class ChargeBuilderTest extends TestCase
 
         $this->assertSame('KWD', $data['currency']);
     }
+
     #[Test]
     public function it_can_override_default_currency(): void
     {
@@ -165,6 +173,7 @@ class ChargeBuilderTest extends TestCase
 
         $this->assertSame('SAR', $data['currency']);
     }
+
     #[Test]
     public function it_accepts_source_enum_or_string(): void
     {

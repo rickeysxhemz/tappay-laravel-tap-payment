@@ -18,12 +18,10 @@ enum AuthorizeStatus: string
 
     /**
      * Check if the authorization is successful
-     *
-     * @return bool
      */
     public function isSuccessful(): bool
     {
-        return match($this) {
+        return match ($this) {
             self::AUTHORIZED => true,
             default => false,
         };
@@ -31,12 +29,10 @@ enum AuthorizeStatus: string
 
     /**
      * Check if the authorization is pending
-     *
-     * @return bool
      */
     public function isPending(): bool
     {
-        return match($this) {
+        return match ($this) {
             self::INITIATED => true,
             default => false,
         };
@@ -44,12 +40,10 @@ enum AuthorizeStatus: string
 
     /**
      * Check if the authorization has failed
-     *
-     * @return bool
      */
     public function hasFailed(): bool
     {
-        return match($this) {
+        return match ($this) {
             self::FAILED,
             self::DECLINED,
             self::CANCELLED,
@@ -61,12 +55,10 @@ enum AuthorizeStatus: string
 
     /**
      * Get human-readable status label
-     *
-     * @return string
      */
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::INITIATED => 'Initiated',
             self::AUTHORIZED => 'Authorized',
             self::CAPTURED => 'Captured',

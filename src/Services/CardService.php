@@ -9,6 +9,9 @@ use TapPay\Tap\Exceptions\AuthenticationException;
 use TapPay\Tap\Exceptions\InvalidRequestException;
 use TapPay\Tap\Resources\Card;
 
+/**
+ * @extends AbstractService<Card>
+ */
 class CardService extends AbstractService
 {
     protected function getEndpoint(): string
@@ -29,9 +32,9 @@ class CardService extends AbstractService
     /**
      * Retrieve a saved card
      *
-     * @param string $customerId Customer ID
-     * @param string $cardId Card ID
-     * @return Card
+     * @param  string  $customerId  Customer ID
+     * @param  string  $cardId  Card ID
+     *
      * @throws AuthenticationException
      * @throws InvalidRequestException
      * @throws ApiErrorException
@@ -46,9 +49,10 @@ class CardService extends AbstractService
     /**
      * List all cards for a customer
      *
-     * @param string $customerId Customer ID
-     * @param array $params Query parameters
+     * @param  string  $customerId  Customer ID
+     * @param  array  $params  Query parameters
      * @return Card[]
+     *
      * @throws AuthenticationException
      * @throws InvalidRequestException
      * @throws ApiErrorException
@@ -63,9 +67,9 @@ class CardService extends AbstractService
     /**
      * Delete a saved card
      *
-     * @param string $customerId Customer ID
-     * @param string $cardId Card ID
-     * @return void
+     * @param  string  $customerId  Customer ID
+     * @param  string  $cardId  Card ID
+     *
      * @throws AuthenticationException
      * @throws InvalidRequestException
      * @throws ApiErrorException
@@ -78,8 +82,8 @@ class CardService extends AbstractService
     /**
      * Verify a card
      *
-     * @param array $data Verification data
-     * @return Card
+     * @param  array  $data  Verification data
+     *
      * @throws AuthenticationException
      * @throws InvalidRequestException
      * @throws ApiErrorException

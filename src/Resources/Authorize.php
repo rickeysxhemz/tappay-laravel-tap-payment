@@ -15,8 +15,6 @@ class Authorize extends Resource
 
     /**
      * Get the authorization amount
-     *
-     * @return float
      */
     public function amount(): float
     {
@@ -25,8 +23,6 @@ class Authorize extends Resource
 
     /**
      * Get the currency
-     *
-     * @return string
      */
     public function currency(): string
     {
@@ -35,19 +31,16 @@ class Authorize extends Resource
 
     /**
      * Get the authorization status
-     *
-     * @return AuthorizeStatus
      */
     public function status(): AuthorizeStatus
     {
         $status = strtoupper($this->attributes['status'] ?? 'UNKNOWN');
+
         return AuthorizeStatus::tryFrom($status) ?? AuthorizeStatus::UNKNOWN;
     }
 
     /**
      * Get the transaction URL for redirect
-     *
-     * @return string|null
      */
     public function transactionUrl(): ?string
     {
@@ -56,8 +49,6 @@ class Authorize extends Resource
 
     /**
      * Get the customer ID
-     *
-     * @return string|null
      */
     public function customerId(): ?string
     {
@@ -66,8 +57,6 @@ class Authorize extends Resource
 
     /**
      * Get the source ID
-     *
-     * @return string|null
      */
     public function sourceId(): ?string
     {
@@ -76,8 +65,6 @@ class Authorize extends Resource
 
     /**
      * Check if authorization was successful
-     *
-     * @return bool
      */
     public function isAuthorized(): bool
     {
@@ -86,8 +73,6 @@ class Authorize extends Resource
 
     /**
      * Check if authorization is pending
-     *
-     * @return bool
      */
     public function isPending(): bool
     {
@@ -96,8 +81,6 @@ class Authorize extends Resource
 
     /**
      * Check if authorization has failed
-     *
-     * @return bool
      */
     public function hasFailed(): bool
     {

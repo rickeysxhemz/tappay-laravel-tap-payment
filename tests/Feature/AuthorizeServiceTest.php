@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace TapPay\Tap\Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
 use GuzzleHttp\Psr7\Response;
+use PHPUnit\Framework\Attributes\Test;
 use TapPay\Tap\Enums\AuthorizeStatus;
 use TapPay\Tap\Exceptions\ApiErrorException;
 use TapPay\Tap\Exceptions\AuthenticationException;

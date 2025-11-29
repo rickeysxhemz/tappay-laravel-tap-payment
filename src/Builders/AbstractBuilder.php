@@ -49,7 +49,7 @@ abstract class AbstractBuilder implements Arrayable, Jsonable
     public function get(string $key, mixed $default = null): mixed
     {
         if ($key === 'amount') {
-            if (!$this->hasAmount()) {
+            if (! $this->hasAmount()) {
                 return $default;
             }
             $currency = $this->data['currency'] ?? config('tap.currency', 'SAR');
@@ -74,7 +74,8 @@ abstract class AbstractBuilder implements Arrayable, Jsonable
     /**
      * Validate required fields before building
      *
-     * @param array<string> $requiredFields Fields required for this builder
+     * @param  array<string>  $requiredFields  Fields required for this builder
+     *
      * @throws InvalidArgumentException
      */
     protected function validateRequired(array $requiredFields = []): void
@@ -82,7 +83,7 @@ abstract class AbstractBuilder implements Arrayable, Jsonable
         $missing = [];
 
         foreach ($requiredFields as $field) {
-            if (!$this->has($field)) {
+            if (! $this->has($field)) {
                 $missing[] = $field;
             }
         }
@@ -98,6 +99,7 @@ abstract class AbstractBuilder implements Arrayable, Jsonable
      * Get the built data array
      *
      * @return array<string, mixed>
+     *
      * @throws InvalidArgumentException
      */
     public function toArray(): array
@@ -115,7 +117,8 @@ abstract class AbstractBuilder implements Arrayable, Jsonable
     /**
      * Get the JSON representation of the builder data
      *
-     * @param int $options JSON encoding options
+     * @param  int  $options  JSON encoding options
+     *
      * @throws \JsonException
      */
     public function toJson($options = 0): string
@@ -126,7 +129,7 @@ abstract class AbstractBuilder implements Arrayable, Jsonable
     /**
      * Build and execute the request
      *
-     * @return Resource The API response as a Resource object
+     * @return resource The API response as a Resource object
      */
     abstract public function create(): Resource;
 }

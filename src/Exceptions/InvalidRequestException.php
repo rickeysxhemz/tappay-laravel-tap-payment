@@ -18,9 +18,9 @@ class InvalidRequestException extends ApiErrorException
     /**
      * Create a new invalid request exception
      *
-     * @param string $message Custom error message
-     * @param int $statusCode HTTP status code (400 or 422)
-     * @param array $errors Validation errors from API
+     * @param  string  $message  Custom error message
+     * @param  int  $statusCode  HTTP status code (400 or 422)
+     * @param  array  $errors  Validation errors from API
      */
     public function __construct(string $message = 'Invalid request parameters.', int $statusCode = 400, array $errors = [])
     {

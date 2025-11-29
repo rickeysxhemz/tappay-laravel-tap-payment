@@ -84,7 +84,7 @@ trait HasSource
 
     public function withToken(string $tokenId): static
     {
-        if (!str_starts_with($tokenId, 'tok_')) {
+        if (! str_starts_with($tokenId, 'tok_')) {
             throw new InvalidArgumentException('Token ID must start with "tok_"');
         }
 
@@ -93,7 +93,7 @@ trait HasSource
 
     public function captureAuthorization(string $authId): static
     {
-        if (!str_starts_with($authId, 'auth_')) {
+        if (! str_starts_with($authId, 'auth_')) {
             throw new InvalidArgumentException('Authorization ID must start with "auth_"');
         }
 

@@ -15,8 +15,6 @@ class Refund extends Resource
 
     /**
      * Get the refund amount
-     *
-     * @return float
      */
     public function amount(): float
     {
@@ -25,8 +23,6 @@ class Refund extends Resource
 
     /**
      * Get the currency
-     *
-     * @return string
      */
     public function currency(): string
     {
@@ -35,19 +31,16 @@ class Refund extends Resource
 
     /**
      * Get the refund status
-     *
-     * @return RefundStatus
      */
     public function status(): RefundStatus
     {
         $status = strtoupper($this->attributes['status'] ?? 'FAILED');
+
         return RefundStatus::tryFrom($status) ?? RefundStatus::FAILED;
     }
 
     /**
      * Get the charge ID being refunded
-     *
-     * @return string
      */
     public function chargeId(): string
     {
@@ -56,8 +49,6 @@ class Refund extends Resource
 
     /**
      * Get the refund reason
-     *
-     * @return string|null
      */
     public function reason(): ?string
     {
@@ -66,8 +57,6 @@ class Refund extends Resource
 
     /**
      * Check if refund was successful
-     *
-     * @return bool
      */
     public function isSuccessful(): bool
     {
@@ -76,8 +65,6 @@ class Refund extends Resource
 
     /**
      * Check if refund is pending
-     *
-     * @return bool
      */
     public function isPending(): bool
     {
@@ -86,8 +73,6 @@ class Refund extends Resource
 
     /**
      * Check if refund has failed
-     *
-     * @return bool
      */
     public function hasFailed(): bool
     {

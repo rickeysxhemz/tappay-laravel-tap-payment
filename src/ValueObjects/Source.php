@@ -16,6 +16,7 @@ use TapPay\Tap\Enums\SourceObject;
 readonly class Source implements Arrayable
 {
     private const PREFIX_TOKEN = 'tok_';
+
     private const PREFIX_AUTH = 'auth_';
 
     public function __construct(
@@ -35,7 +36,7 @@ readonly class Source implements Arrayable
 
     public static function fromToken(string $tokenId): self
     {
-        if (!str_starts_with($tokenId, self::PREFIX_TOKEN)) {
+        if (! str_starts_with($tokenId, self::PREFIX_TOKEN)) {
             throw new InvalidArgumentException('Token ID must start with "tok_"');
         }
 
@@ -44,7 +45,7 @@ readonly class Source implements Arrayable
 
     public static function fromAuthorization(string $authId): self
     {
-        if (!str_starts_with($authId, self::PREFIX_AUTH)) {
+        if (! str_starts_with($authId, self::PREFIX_AUTH)) {
             throw new InvalidArgumentException('Authorization ID must start with "auth_"');
         }
 
@@ -63,7 +64,7 @@ readonly class Source implements Arrayable
 
     public function isRedirect(): bool
     {
-        return !$this->isToken() && !$this->isAuthorizationCapture();
+        return ! $this->isToken() && ! $this->isAuthorizationCapture();
     }
 
     /** @return array{id: string} */

@@ -13,7 +13,7 @@ trait HasRedirects
 {
     public function redirectUrl(string $url): static
     {
-        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+        if (! filter_var($url, FILTER_VALIDATE_URL)) {
             throw new InvalidArgumentException('Invalid redirect URL format');
         }
 
@@ -24,7 +24,7 @@ trait HasRedirects
 
     public function postUrl(string $url): static
     {
-        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+        if (! filter_var($url, FILTER_VALIDATE_URL)) {
             throw new InvalidArgumentException('Invalid webhook URL format');
         }
 

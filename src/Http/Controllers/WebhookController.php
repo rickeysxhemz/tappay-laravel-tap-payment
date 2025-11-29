@@ -22,7 +22,7 @@ class WebhookController extends Controller
     /**
      * Handle incoming webhook from Tap Payments
      *
-     * @param Request $request The webhook request
+     * @param  Request  $request  The webhook request
      * @return Response HTTP response (200 on success, 400 on failure)
      */
     public function __invoke(Request $request): Response
@@ -32,7 +32,7 @@ class WebhookController extends Controller
         $payload = json_decode($content, true);
 
         // Check for JSON decode errors
-        if (json_last_error() !== JSON_ERROR_NONE || !is_array($payload)) {
+        if (json_last_error() !== JSON_ERROR_NONE || ! is_array($payload)) {
             WebhookValidationFailed::dispatch(
                 'Invalid JSON payload',
                 $request->ip(),
@@ -51,7 +51,7 @@ class WebhookController extends Controller
             $request->header('x-tap-signature') ?? ''
         );
 
-        if (!$validationResult->isValid()) {
+        if (! $validationResult->isValid()) {
             WebhookValidationFailed::dispatch(
                 $validationResult->getError() ?? 'Invalid signature',
                 $request->ip(),
@@ -67,7 +67,7 @@ class WebhookController extends Controller
         // Check tolerance (prevents replay attacks)
         $toleranceResult = $this->validator->checkTolerance($payload);
 
-        if (!$toleranceResult->isValid()) {
+        if (! $toleranceResult->isValid()) {
             WebhookValidationFailed::dispatch(
                 $toleranceResult->getError() ?? 'Webhook expired',
                 $request->ip(),
@@ -101,8 +101,7 @@ class WebhookController extends Controller
     /**
      * Dispatch webhook events to Laravel event system
      *
-     * @param array $payload The webhook payload
-     * @return void
+     * @param  array  $payload  The webhook payload
      */
     protected function dispatchWebhookEvent(array $payload): void
     {
@@ -110,7 +109,7 @@ class WebhookController extends Controller
 
         // Validate resource type to prevent arbitrary event names
         $allowedResources = config('tap.webhook.allowed_resources', [
-            'charge', 'refund', 'customer', 'authorize', 'token'
+            'charge', 'refund', 'customer', 'authorize', 'token',
         ]);
 
         try {

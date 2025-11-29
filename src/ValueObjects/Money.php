@@ -32,7 +32,7 @@ readonly class Money implements Arrayable
             throw new InvalidArgumentException('Amount cannot be negative');
         }
 
-        if (!isset(self::DECIMALS[$this->currency])) {
+        if (! isset(self::DECIMALS[$this->currency])) {
             throw new InvalidArgumentException("Unsupported currency: {$currency}");
         }
     }

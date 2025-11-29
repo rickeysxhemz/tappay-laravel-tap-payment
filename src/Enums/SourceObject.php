@@ -38,8 +38,6 @@ enum SourceObject: string
 
     /**
      * Check if this source requires redirect flow
-     *
-     * @return bool
      */
     public function requiresRedirect(): bool
     {
@@ -49,9 +47,6 @@ enum SourceObject: string
 
     /**
      * Check if a source ID is a token
-     *
-     * @param string $sourceId
-     * @return bool
      */
     public static function isToken(string $sourceId): bool
     {
@@ -60,9 +55,6 @@ enum SourceObject: string
 
     /**
      * Check if a source ID is an authorization
-     *
-     * @param string $sourceId
-     * @return bool
      */
     public static function isAuthorization(string $sourceId): bool
     {
@@ -71,24 +63,19 @@ enum SourceObject: string
 
     /**
      * Check if a source ID requires redirect (vs direct processing)
-     *
-     * @param string $sourceId
-     * @return bool
      */
     public static function sourceRequiresRedirect(string $sourceId): bool
     {
         // Tokens and authorizations are processed directly without redirect
-        return !self::isToken($sourceId) && !self::isAuthorization($sourceId);
+        return ! self::isToken($sourceId) && ! self::isAuthorization($sourceId);
     }
 
     /**
      * Check if this is a regional payment method
-     *
-     * @return bool
      */
     public function isRegionalMethod(): bool
     {
-        return match($this) {
+        return match ($this) {
             self::SRC_KNET,
             self::SRC_KFAST,
             self::SRC_MADA,
@@ -102,12 +89,10 @@ enum SourceObject: string
 
     /**
      * Check if this is a digital wallet
-     *
-     * @return bool
      */
     public function isDigitalWallet(): bool
     {
-        return match($this) {
+        return match ($this) {
             self::SRC_STC_PAY => true,
             default => false,
         };
@@ -115,12 +100,10 @@ enum SourceObject: string
 
     /**
      * Check if this is a BNPL method
-     *
-     * @return bool
      */
     public function isBNPL(): bool
     {
-        return match($this) {
+        return match ($this) {
             self::SRC_TABBY, self::SRC_DEEMA => true,
             default => false,
         };
@@ -128,12 +111,10 @@ enum SourceObject: string
 
     /**
      * Get the country code for regional payment methods
-     *
-     * @return string|null
      */
     public function getCountry(): ?string
     {
-        return match($this) {
+        return match ($this) {
             self::SRC_KNET, self::SRC_KFAST => 'KW',
             self::SRC_MADA => 'SA',
             self::SRC_BENEFIT => 'BH',
@@ -147,12 +128,10 @@ enum SourceObject: string
 
     /**
      * Get human-readable label
-     *
-     * @return string
      */
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::SRC_CARD => 'Card Payment',
             self::SRC_ALL => 'All Payment Methods',
             self::SRC_KNET => 'KNET',

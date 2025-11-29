@@ -27,6 +27,7 @@ class Invoice extends Resource
     public function status(): InvoiceStatus
     {
         $status = strtoupper($this->attributes['status'] ?? 'FAILED');
+
         return InvoiceStatus::tryFrom($status) ?? InvoiceStatus::FAILED;
     }
 

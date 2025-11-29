@@ -18,7 +18,7 @@ trait HasReferences
 
     public function reference(string|array $reference): static
     {
-        $existing = isset($this->data['reference']) ? $this->data['reference'] : [];
+        $existing = $this->data['reference'] ?? [];
 
         if (is_array($reference)) {
             $this->data['reference'] = array_merge($existing, $reference);
@@ -31,7 +31,7 @@ trait HasReferences
 
     public function orderReference(string $orderId): static
     {
-        $existing = isset($this->data['reference']) ? $this->data['reference'] : [];
+        $existing = $this->data['reference'] ?? [];
         $this->data['reference'] = array_merge($existing, ['order' => $orderId]);
 
         return $this;

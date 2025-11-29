@@ -28,6 +28,7 @@ class Subscription extends Resource
     public function status(): SubscriptionStatus
     {
         $status = strtoupper($this->attributes['status'] ?? 'CANCELLED');
+
         return SubscriptionStatus::tryFrom($status) ?? SubscriptionStatus::CANCELLED;
     }
 
@@ -39,6 +40,7 @@ class Subscription extends Resource
     public function interval(): ?SubscriptionInterval
     {
         $interval = strtoupper($this->get('term.interval', ''));
+
         return $interval ? SubscriptionInterval::tryFrom($interval) : null;
     }
 
@@ -56,7 +58,7 @@ class Subscription extends Resource
     {
         $start = $this->attributes['start_date'] ?? $this->attributes['created'] ?? null;
 
-        if (!$start) {
+        if (! $start) {
             return null;
         }
 
@@ -67,7 +69,7 @@ class Subscription extends Resource
     {
         $start = $this->attributes['current_period_start'] ?? null;
 
-        if (!$start) {
+        if (! $start) {
             return null;
         }
 
@@ -78,7 +80,7 @@ class Subscription extends Resource
     {
         $end = $this->attributes['current_period_end'] ?? null;
 
-        if (!$end) {
+        if (! $end) {
             return null;
         }
 
@@ -89,7 +91,7 @@ class Subscription extends Resource
     {
         $cancelled = $this->attributes['cancelled_at'] ?? null;
 
-        if (!$cancelled) {
+        if (! $cancelled) {
             return null;
         }
 

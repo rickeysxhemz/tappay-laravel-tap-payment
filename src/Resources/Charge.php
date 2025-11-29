@@ -15,8 +15,6 @@ class Charge extends Resource
 
     /**
      * Get the charge amount
-     *
-     * @return float
      */
     public function amount(): float
     {
@@ -25,8 +23,6 @@ class Charge extends Resource
 
     /**
      * Get the currency
-     *
-     * @return string
      */
     public function currency(): string
     {
@@ -35,19 +31,16 @@ class Charge extends Resource
 
     /**
      * Get the charge status
-     *
-     * @return ChargeStatus
      */
     public function status(): ChargeStatus
     {
         $status = strtoupper($this->attributes['status'] ?? 'UNKNOWN');
+
         return ChargeStatus::tryFrom($status) ?? ChargeStatus::UNKNOWN;
     }
 
     /**
      * Get the transaction URL for redirect
-     *
-     * @return string|null
      */
     public function transactionUrl(): ?string
     {
@@ -56,8 +49,6 @@ class Charge extends Resource
 
     /**
      * Get the customer ID
-     *
-     * @return string|null
      */
     public function customerId(): ?string
     {
@@ -66,8 +57,6 @@ class Charge extends Resource
 
     /**
      * Get the source ID
-     *
-     * @return string|null
      */
     public function sourceId(): ?string
     {
@@ -76,8 +65,6 @@ class Charge extends Resource
 
     /**
      * Get the description
-     *
-     * @return string|null
      */
     public function description(): ?string
     {
@@ -86,8 +73,6 @@ class Charge extends Resource
 
     /**
      * Get saved card ID if card was saved
-     *
-     * @return string|null
      */
     public function cardId(): ?string
     {
@@ -96,8 +81,6 @@ class Charge extends Resource
 
     /**
      * Check if charge was successful
-     *
-     * @return bool
      */
     public function isSuccessful(): bool
     {
@@ -106,8 +89,6 @@ class Charge extends Resource
 
     /**
      * Check if charge is pending
-     *
-     * @return bool
      */
     public function isPending(): bool
     {
@@ -116,8 +97,6 @@ class Charge extends Resource
 
     /**
      * Check if charge has failed
-     *
-     * @return bool
      */
     public function hasFailed(): bool
     {

@@ -30,7 +30,7 @@ trait HasPaymentMethods
      */
     public function createCardToken(string $cardId): Token
     {
-        if (!$this->tapCustomerId()) {
+        if (! $this->tapCustomerId()) {
             throw new InvalidArgumentException('Customer must be created in Tap first');
         }
 

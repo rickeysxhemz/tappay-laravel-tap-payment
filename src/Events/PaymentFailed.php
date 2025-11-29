@@ -11,7 +11,9 @@ use TapPay\Tap\Resources\Charge;
 
 class PaymentFailed
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable;
+    use InteractsWithSockets;
+    use SerializesModels;
 
     public function __construct(
         public Charge $charge,

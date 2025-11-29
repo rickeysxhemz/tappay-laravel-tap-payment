@@ -9,6 +9,9 @@ use TapPay\Tap\Exceptions\AuthenticationException;
 use TapPay\Tap\Exceptions\InvalidRequestException;
 use TapPay\Tap\Resources\Invoice;
 
+/**
+ * @extends AbstractService<Invoice>
+ */
 class InvoiceService extends AbstractService
 {
     protected function getEndpoint(): string
@@ -29,8 +32,8 @@ class InvoiceService extends AbstractService
     /**
      * Create a new invoice
      *
-     * @param array $data Invoice data
-     * @return Invoice
+     * @param  array  $data  Invoice data
+     *
      * @throws AuthenticationException
      * @throws InvalidRequestException
      * @throws ApiErrorException
@@ -45,8 +48,8 @@ class InvoiceService extends AbstractService
     /**
      * Retrieve an invoice by ID
      *
-     * @param string $invoiceId Invoice ID
-     * @return Invoice
+     * @param  string  $invoiceId  Invoice ID
+     *
      * @throws AuthenticationException
      * @throws InvalidRequestException
      * @throws ApiErrorException
@@ -61,9 +64,9 @@ class InvoiceService extends AbstractService
     /**
      * Update an invoice
      *
-     * @param string $invoiceId Invoice ID
-     * @param array $data Update data
-     * @return Invoice
+     * @param  string  $invoiceId  Invoice ID
+     * @param  array  $data  Update data
+     *
      * @throws AuthenticationException
      * @throws InvalidRequestException
      * @throws ApiErrorException
@@ -78,8 +81,8 @@ class InvoiceService extends AbstractService
     /**
      * Cancel/finalize an invoice
      *
-     * @param string $invoiceId Invoice ID
-     * @return Invoice
+     * @param  string  $invoiceId  Invoice ID
+     *
      * @throws AuthenticationException
      * @throws InvalidRequestException
      * @throws ApiErrorException
@@ -94,8 +97,9 @@ class InvoiceService extends AbstractService
     /**
      * List all invoices
      *
-     * @param array $params Query parameters
+     * @param  array  $params  Query parameters
      * @return Invoice[]
+     *
      * @throws AuthenticationException
      * @throws InvalidRequestException
      * @throws ApiErrorException

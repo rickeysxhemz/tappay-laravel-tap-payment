@@ -17,6 +17,7 @@ use TapPay\Tap\Resources\Customer;
  * This trait should be used on Eloquent models (typically User).
  *
  * Required database column:
+ *
  * @property string|null $tap_customer_id - The Tap customer ID (add via migration)
  *
  * Required properties on using class:
@@ -29,6 +30,7 @@ use TapPay\Tap\Resources\Customer;
  * @property string|null $phone_country_code - Phone country code (defaults to config)
  *
  * Required methods from Eloquent Model:
+ *
  * @method bool save(array $options = []) Save the model to the database
  * @method $this refresh() Reload the model from the database
  */
@@ -59,7 +61,7 @@ trait HasTapCustomer
 
         $this->refresh();
 
-        if (!$this->tapCustomerId()) {
+        if (! $this->tapCustomerId()) {
             $this->createAsTapCustomer();
         }
     }
@@ -98,7 +100,7 @@ trait HasTapCustomer
 
         $customer = Tap::customers()->create($customerData);
 
-        if (!$customer->id()) {
+        if (! $customer->id()) {
             throw new ApiErrorException('Failed to create Tap customer');
         }
 
@@ -126,7 +128,7 @@ trait HasTapCustomer
      */
     public function updateTapCustomer(array $data): Customer
     {
-        if (!$this->tapCustomerId()) {
+        if (! $this->tapCustomerId()) {
             return $this->createAsTapCustomer($data);
         }
 
@@ -140,7 +142,7 @@ trait HasTapCustomer
      */
     public function deleteTapCustomer(): void
     {
-        if (!$this->tapCustomerId()) {
+        if (! $this->tapCustomerId()) {
             return;
         }
 

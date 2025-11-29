@@ -9,6 +9,9 @@ use TapPay\Tap\Exceptions\AuthenticationException;
 use TapPay\Tap\Exceptions\InvalidRequestException;
 use TapPay\Tap\Resources\Token;
 
+/**
+ * @extends AbstractService<Token>
+ */
 class TokenService extends AbstractService
 {
     /**
@@ -32,8 +35,8 @@ class TokenService extends AbstractService
     /**
      * Create a new token for a saved card
      *
-     * @param array $data Token data
-     * @return Token
+     * @param  array  $data  Token data
+     *
      * @throws AuthenticationException If API authentication fails
      * @throws InvalidRequestException If request parameters are invalid
      * @throws ApiErrorException If API returns an error or network error occurs
@@ -48,8 +51,8 @@ class TokenService extends AbstractService
     /**
      * Retrieve a token by ID
      *
-     * @param string $tokenId Token ID
-     * @return Token
+     * @param  string  $tokenId  Token ID
+     *
      * @throws AuthenticationException If API authentication fails
      * @throws InvalidRequestException If token ID is invalid
      * @throws ApiErrorException If API returns an error or network error occurs

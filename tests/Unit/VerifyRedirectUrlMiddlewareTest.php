@@ -7,7 +7,7 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use TapPay\Tap\Http\Middleware\VerifyRedirectUrl;
 
 test('allows request without redirect parameter', function () {
-    $middleware = new VerifyRedirectUrl();
+    $middleware = new VerifyRedirectUrl;
     $request = Request::create('/callback', 'GET');
 
     $response = $middleware->handle($request, fn ($req) => response('OK'));
@@ -16,7 +16,7 @@ test('allows request without redirect parameter', function () {
 })->group('unit', 'middleware');
 
 test('allows request with relative redirect URL', function () {
-    $middleware = new VerifyRedirectUrl();
+    $middleware = new VerifyRedirectUrl;
     $request = Request::create('/callback', 'GET', ['redirect' => '/dashboard']);
 
     $response = $middleware->handle($request, fn ($req) => response('OK'));
@@ -25,7 +25,7 @@ test('allows request with relative redirect URL', function () {
 })->group('unit', 'middleware');
 
 test('allows request with same host redirect URL', function () {
-    $middleware = new VerifyRedirectUrl();
+    $middleware = new VerifyRedirectUrl;
     $request = Request::create('https://example.com/callback', 'GET', [
         'redirect' => 'https://example.com/dashboard',
     ]);
@@ -36,7 +36,7 @@ test('allows request with same host redirect URL', function () {
 })->group('unit', 'middleware');
 
 test('allows request with same host and different path', function () {
-    $middleware = new VerifyRedirectUrl();
+    $middleware = new VerifyRedirectUrl;
     $request = Request::create('https://myapp.com/callback', 'GET', [
         'redirect' => 'https://myapp.com/orders/123/success',
     ]);
@@ -47,7 +47,7 @@ test('allows request with same host and different path', function () {
 })->group('unit', 'middleware');
 
 test('allows request with same host and query string', function () {
-    $middleware = new VerifyRedirectUrl();
+    $middleware = new VerifyRedirectUrl;
     $request = Request::create('https://myapp.com/callback', 'GET', [
         'redirect' => 'https://myapp.com/dashboard?tab=payments',
     ]);
@@ -58,7 +58,7 @@ test('allows request with same host and query string', function () {
 })->group('unit', 'middleware');
 
 test('denies request with different host redirect URL', function () {
-    $middleware = new VerifyRedirectUrl();
+    $middleware = new VerifyRedirectUrl;
     $request = Request::create('https://myapp.com/callback', 'GET', [
         'redirect' => 'https://malicious.com/steal',
     ]);
@@ -67,7 +67,7 @@ test('denies request with different host redirect URL', function () {
 })->throws(AccessDeniedHttpException::class, 'Invalid redirect URL.')->group('unit', 'middleware');
 
 test('denies request with subdomain redirect URL', function () {
-    $middleware = new VerifyRedirectUrl();
+    $middleware = new VerifyRedirectUrl;
     $request = Request::create('https://myapp.com/callback', 'GET', [
         'redirect' => 'https://evil.myapp.com/steal',
     ]);
@@ -76,7 +76,7 @@ test('denies request with subdomain redirect URL', function () {
 })->throws(AccessDeniedHttpException::class, 'Invalid redirect URL.')->group('unit', 'middleware');
 
 test('denies request with similar looking domain', function () {
-    $middleware = new VerifyRedirectUrl();
+    $middleware = new VerifyRedirectUrl;
     $request = Request::create('https://myapp.com/callback', 'GET', [
         'redirect' => 'https://myapp.com.attacker.com/steal',
     ]);
@@ -85,7 +85,7 @@ test('denies request with similar looking domain', function () {
 })->throws(AccessDeniedHttpException::class, 'Invalid redirect URL.')->group('unit', 'middleware');
 
 test('allows empty redirect parameter', function () {
-    $middleware = new VerifyRedirectUrl();
+    $middleware = new VerifyRedirectUrl;
     $request = Request::create('/callback', 'GET', ['redirect' => '']);
 
     $response = $middleware->handle($request, fn ($req) => response('OK'));
@@ -94,7 +94,7 @@ test('allows empty redirect parameter', function () {
 })->group('unit', 'middleware');
 
 test('allows redirect with path only', function () {
-    $middleware = new VerifyRedirectUrl();
+    $middleware = new VerifyRedirectUrl;
     $request = Request::create('/callback', 'GET', [
         'redirect' => '/checkout/complete',
     ]);
@@ -105,7 +105,7 @@ test('allows redirect with path only', function () {
 })->group('unit', 'middleware');
 
 test('allows redirect with hash fragment', function () {
-    $middleware = new VerifyRedirectUrl();
+    $middleware = new VerifyRedirectUrl;
     $request = Request::create('https://myapp.com/callback', 'GET', [
         'redirect' => 'https://myapp.com/page#section',
     ]);
@@ -116,7 +116,7 @@ test('allows redirect with hash fragment', function () {
 })->group('unit', 'middleware');
 
 test('denies protocol-relative URL with different host', function () {
-    $middleware = new VerifyRedirectUrl();
+    $middleware = new VerifyRedirectUrl;
     $request = Request::create('https://myapp.com/callback', 'GET', [
         'redirect' => '//evil.com/steal',
     ]);
@@ -125,7 +125,7 @@ test('denies protocol-relative URL with different host', function () {
 })->throws(AccessDeniedHttpException::class, 'Invalid redirect URL.')->group('unit', 'middleware');
 
 test('allows request with same host different port', function () {
-    $middleware = new VerifyRedirectUrl();
+    $middleware = new VerifyRedirectUrl;
     $request = Request::create('https://myapp.com/callback', 'GET', [
         'redirect' => 'https://myapp.com:8080/dashboard',
     ]);
@@ -136,7 +136,7 @@ test('allows request with same host different port', function () {
 })->group('unit', 'middleware');
 
 test('allows request with localhost redirect on localhost', function () {
-    $middleware = new VerifyRedirectUrl();
+    $middleware = new VerifyRedirectUrl;
     $request = Request::create('http://localhost/callback', 'GET', [
         'redirect' => 'http://localhost/dashboard',
     ]);
@@ -147,7 +147,7 @@ test('allows request with localhost redirect on localhost', function () {
 })->group('unit', 'middleware');
 
 test('denies localhost redirect on production domain', function () {
-    $middleware = new VerifyRedirectUrl();
+    $middleware = new VerifyRedirectUrl;
     $request = Request::create('https://myapp.com/callback', 'GET', [
         'redirect' => 'http://localhost/steal',
     ]);
@@ -156,7 +156,7 @@ test('denies localhost redirect on production domain', function () {
 })->throws(AccessDeniedHttpException::class, 'Invalid redirect URL.')->group('unit', 'middleware');
 
 test('passes request to next middleware', function () {
-    $middleware = new VerifyRedirectUrl();
+    $middleware = new VerifyRedirectUrl;
     $request = Request::create('/callback', 'GET', ['tap_id' => 'chg_123']);
 
     $nextCalled = false;
@@ -171,7 +171,7 @@ test('passes request to next middleware', function () {
 })->group('unit', 'middleware');
 
 test('blocks javascript protocol URL for XSS protection', function () {
-    $middleware = new VerifyRedirectUrl();
+    $middleware = new VerifyRedirectUrl;
     $request = Request::create('https://myapp.com/callback', 'GET', [
         'redirect' => 'javascript:alert(1)',
     ]);
@@ -180,7 +180,7 @@ test('blocks javascript protocol URL for XSS protection', function () {
 })->throws(AccessDeniedHttpException::class, 'Invalid redirect URL.')->group('unit', 'middleware');
 
 test('denies URL with credentials in different host', function () {
-    $middleware = new VerifyRedirectUrl();
+    $middleware = new VerifyRedirectUrl;
     $request = Request::create('https://myapp.com/callback', 'GET', [
         'redirect' => 'https://user:pass@evil.com/steal',
     ]);
@@ -189,7 +189,7 @@ test('denies URL with credentials in different host', function () {
 })->throws(AccessDeniedHttpException::class, 'Invalid redirect URL.')->group('unit', 'middleware');
 
 test('allows URL with credentials in same host', function () {
-    $middleware = new VerifyRedirectUrl();
+    $middleware = new VerifyRedirectUrl;
     $request = Request::create('https://myapp.com/callback', 'GET', [
         'redirect' => 'https://user:pass@myapp.com/secure',
     ]);
@@ -200,7 +200,7 @@ test('allows URL with credentials in same host', function () {
 })->group('unit', 'middleware');
 
 test('allows malformed URL without valid host', function () {
-    $middleware = new VerifyRedirectUrl();
+    $middleware = new VerifyRedirectUrl;
     $request = Request::create('https://myapp.com/callback', 'GET', [
         'redirect' => 'ht tp://invalid url',
     ]);
@@ -212,7 +212,7 @@ test('allows malformed URL without valid host', function () {
 })->group('unit', 'middleware');
 
 test('allows same host with different case', function () {
-    $middleware = new VerifyRedirectUrl();
+    $middleware = new VerifyRedirectUrl;
     $request = Request::create('https://MyApp.com/callback', 'GET', [
         'redirect' => 'https://myapp.com/dashboard',
     ]);
@@ -224,7 +224,7 @@ test('allows same host with different case', function () {
 })->group('unit', 'middleware');
 
 test('allows IP address redirect when request is from same IP', function () {
-    $middleware = new VerifyRedirectUrl();
+    $middleware = new VerifyRedirectUrl;
     $request = Request::create('http://192.168.1.1/callback', 'GET', [
         'redirect' => 'http://192.168.1.1/dashboard',
     ]);
@@ -235,7 +235,7 @@ test('allows IP address redirect when request is from same IP', function () {
 })->group('unit', 'middleware');
 
 test('denies IP address redirect when request is from different IP', function () {
-    $middleware = new VerifyRedirectUrl();
+    $middleware = new VerifyRedirectUrl;
     $request = Request::create('http://192.168.1.1/callback', 'GET', [
         'redirect' => 'http://10.0.0.1/steal',
     ]);

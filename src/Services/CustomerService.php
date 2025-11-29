@@ -9,6 +9,9 @@ use TapPay\Tap\Exceptions\AuthenticationException;
 use TapPay\Tap\Exceptions\InvalidRequestException;
 use TapPay\Tap\Resources\Customer;
 
+/**
+ * @extends AbstractService<Customer>
+ */
 class CustomerService extends AbstractService
 {
     protected function getEndpoint(): string
@@ -29,8 +32,8 @@ class CustomerService extends AbstractService
     /**
      * Create a new customer
      *
-     * @param array $data Customer data
-     * @return Customer
+     * @param  array  $data  Customer data
+     *
      * @throws AuthenticationException If API authentication fails
      * @throws InvalidRequestException If request parameters are invalid
      * @throws ApiErrorException If API returns an error or network error occurs
@@ -45,8 +48,8 @@ class CustomerService extends AbstractService
     /**
      * Retrieve a customer by ID
      *
-     * @param string $customerId Customer ID
-     * @return Customer
+     * @param  string  $customerId  Customer ID
+     *
      * @throws AuthenticationException If API authentication fails
      * @throws InvalidRequestException If customer ID is invalid
      * @throws ApiErrorException If API returns an error or network error occurs
@@ -61,9 +64,9 @@ class CustomerService extends AbstractService
     /**
      * Update a customer
      *
-     * @param string $customerId Customer ID
-     * @param array $data Update data
-     * @return Customer
+     * @param  string  $customerId  Customer ID
+     * @param  array  $data  Update data
+     *
      * @throws AuthenticationException If API authentication fails
      * @throws InvalidRequestException If request parameters are invalid
      * @throws ApiErrorException If API returns an error or network error occurs
@@ -78,8 +81,9 @@ class CustomerService extends AbstractService
     /**
      * List all customers
      *
-     * @param array $params Query parameters
+     * @param  array  $params  Query parameters
      * @return Customer[]
+     *
      * @throws AuthenticationException If API authentication fails
      * @throws InvalidRequestException If query parameters are invalid
      * @throws ApiErrorException If API returns an error or network error occurs
@@ -94,8 +98,8 @@ class CustomerService extends AbstractService
     /**
      * Delete a customer
      *
-     * @param string $customerId Customer ID
-     * @return void
+     * @param  string  $customerId  Customer ID
+     *
      * @throws AuthenticationException If API authentication fails
      * @throws InvalidRequestException If customer ID is invalid
      * @throws ApiErrorException If API returns an error or network error occurs

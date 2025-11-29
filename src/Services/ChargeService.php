@@ -12,6 +12,9 @@ use TapPay\Tap\Exceptions\InvalidRequestException;
 use TapPay\Tap\Http\Client;
 use TapPay\Tap\Resources\Charge;
 
+/**
+ * @extends AbstractService<Charge>
+ */
 class ChargeService extends AbstractService
 {
     public function __construct(
@@ -47,8 +50,8 @@ class ChargeService extends AbstractService
     /**
      * Create a new charge
      *
-     * @param array $data Charge data
-     * @return Charge
+     * @param  array  $data  Charge data
+     *
      * @throws AuthenticationException If API authentication fails
      * @throws InvalidRequestException If request parameters are invalid
      * @throws ApiErrorException If API returns an error or network error occurs
@@ -63,8 +66,8 @@ class ChargeService extends AbstractService
     /**
      * Retrieve a charge by ID
      *
-     * @param string $chargeId Charge ID
-     * @return Charge
+     * @param  string  $chargeId  Charge ID
+     *
      * @throws AuthenticationException If API authentication fails
      * @throws InvalidRequestException If charge ID is invalid
      * @throws ApiErrorException If API returns an error or network error occurs
@@ -79,9 +82,9 @@ class ChargeService extends AbstractService
     /**
      * Update a charge
      *
-     * @param string $chargeId Charge ID
-     * @param array $data Update data
-     * @return Charge
+     * @param  string  $chargeId  Charge ID
+     * @param  array  $data  Update data
+     *
      * @throws AuthenticationException If API authentication fails
      * @throws InvalidRequestException If request parameters are invalid
      * @throws ApiErrorException If API returns an error or network error occurs
@@ -96,8 +99,9 @@ class ChargeService extends AbstractService
     /**
      * List all charges
      *
-     * @param array $params Query parameters
+     * @param  array  $params  Query parameters
      * @return Charge[]
+     *
      * @throws AuthenticationException If API authentication fails
      * @throws InvalidRequestException If query parameters are invalid
      * @throws ApiErrorException If API returns an error or network error occurs

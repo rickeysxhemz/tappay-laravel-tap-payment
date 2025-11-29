@@ -10,14 +10,16 @@ use Illuminate\Queue\SerializesModels;
 
 class WebhookProcessingFailed
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable;
+    use InteractsWithSockets;
+    use SerializesModels;
 
     /**
      * Create a new event instance
      *
-     * @param \Exception $exception The exception that was thrown
-     * @param string $resource The webhook resource type
-     * @param array $payload The webhook payload
+     * @param  \Exception  $exception  The exception that was thrown
+     * @param  string  $resource  The webhook resource type
+     * @param  array  $payload  The webhook payload
      */
     public function __construct(
         public \Exception $exception,
@@ -27,8 +29,6 @@ class WebhookProcessingFailed
 
     /**
      * Get the webhook ID
-     *
-     * @return string|null
      */
     public function getId(): ?string
     {
@@ -37,8 +37,6 @@ class WebhookProcessingFailed
 
     /**
      * Get error message
-     *
-     * @return string
      */
     public function getErrorMessage(): string
     {

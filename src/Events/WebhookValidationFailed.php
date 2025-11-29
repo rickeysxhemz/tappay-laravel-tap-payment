@@ -11,14 +11,16 @@ use Illuminate\Queue\SerializesModels;
 
 class WebhookValidationFailed
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable;
+    use InteractsWithSockets;
+    use SerializesModels;
 
     /**
      * Create a new event instance
      *
-     * @param string $reason The reason why validation failed
-     * @param string $ip The IP address of the request
-     * @param array $context Additional context about the failure
+     * @param  string  $reason  The reason why validation failed
+     * @param  string  $ip  The IP address of the request
+     * @param  array  $context  Additional context about the failure
      */
     public function __construct(
         public string $reason,
@@ -29,10 +31,9 @@ class WebhookValidationFailed
     /**
      * Create from Request object
      *
-     * @param string $reason The failure reason
-     * @param Request $request The webhook request
-     * @param array $context Additional context
-     * @return self
+     * @param  string  $reason  The failure reason
+     * @param  Request  $request  The webhook request
+     * @param  array  $context  Additional context
      */
     public static function fromRequest(string $reason, Request $request, array $context = []): self
     {

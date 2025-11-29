@@ -27,7 +27,7 @@ describe('ChargeBuilder', function () {
     test('throws exception for invalid amount', function () {
         $this->builder->amount(5)->toArray();
     })->throws(InvalidArgumentException::class, 'Amount must be at least 10 for SAR')
-      ->group('unit');
+        ->group('unit');
 
     test('can set currency', function () {
         $this->builder->currency('KWD');
@@ -74,7 +74,7 @@ describe('ChargeBuilder', function () {
     test('throws exception for invalid token format', function () {
         $this->builder->withToken('invalid_token');
     })->throws(InvalidArgumentException::class, 'Token ID must start with "tok_"')
-      ->group('unit');
+        ->group('unit');
 
     test('can set authorization to capture', function () {
         $this->builder->captureAuthorization('auth_test_123');
@@ -85,7 +85,7 @@ describe('ChargeBuilder', function () {
     test('throws exception for invalid authorization format', function () {
         $this->builder->captureAuthorization('invalid_auth');
     })->throws(InvalidArgumentException::class, 'Authorization ID must start with "auth_"')
-      ->group('unit');
+        ->group('unit');
 
     test('can set customer data', function () {
         $customer = [
