@@ -14,41 +14,37 @@ jobs:
     timeout-minutes: 5
     if: github.event.action == 'opened'
     steps:
-      - name: Label bug reports
-        if: contains(toLower(github.event.issue.title), 'bug')
+      - name: Auto-label based on title
         uses: actions/github-script@v8
         with:
           script: |
-            github.rest.issues.addLabels({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              labels: ['bug']
-            })
+            const title = context.payload.issue.title.toLowerCase();
+            const labels = [];
 
-      - name: Label feature requests
-        if: contains(toLower(github.event.issue.title), 'feature') || contains(toLower(github.event.issue.title), 'enhancement')
-        uses: actions/github-script@v8
-        with:
-          script: |
-            github.rest.issues.addLabels({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              labels: ['enhancement']
-            })
+            // Check for bug reports
+            if (title.includes('bug')) {
+              labels.push('bug');
+            }
 
-      - name: Label questions
-        if: contains(github.event.issue.title, '?') || contains(toLower(github.event.issue.title), 'question')
-        uses: actions/github-script@v8
-        with:
-          script: |
-            github.rest.issues.addLabels({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              labels: ['question']
-            })
+            // Check for feature requests
+            if (title.includes('feature') || title.includes('enhancement')) {
+              labels.push('enhancement');
+            }
+
+            // Check for questions
+            if (title.includes('?') || title.includes('question')) {
+              labels.push('question');
+            }
+
+            // Add labels if any matched
+            if (labels.length > 0) {
+              await github.rest.issues.addLabels({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                labels: labels
+              });
+            }
 
   # Respond to help-wanted label
   help-wanted:
