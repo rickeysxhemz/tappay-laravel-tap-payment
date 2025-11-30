@@ -23,7 +23,9 @@ This creates `config/tap.php` in your application.
 
 ## Database Migration
 
-If you plan to use the Billable trait, add the required column to your users table:
+> **Note:** This package does not include migrations. You must create your own migration if you plan to use the Billable trait.
+
+If you plan to use the Billable trait on your models (e.g., User), add the required column:
 
 ```bash
 php artisan make:migration add_tap_customer_id_to_users_table
@@ -36,6 +38,13 @@ public function up()
         $table->string('tap_customer_id')->nullable()->index();
     });
 }
+
+public function down()
+{
+    Schema::table('users', function (Blueprint $table) {
+        $table->dropColumn('tap_customer_id');
+    });
+}
 ```
 
 Run the migration:
@@ -43,6 +52,8 @@ Run the migration:
 ```bash
 php artisan migrate
 ```
+
+> **Tip:** You can add the `tap_customer_id` column to any model that uses the Billable trait, not just the User model.
 
 ## Verify Installation
 

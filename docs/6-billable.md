@@ -6,7 +6,7 @@ The `Billable` trait adds payment functionality directly to your Eloquent models
 
 ## Setup
 
-### Add Trait to Model
+### 1. Add Trait to Model
 
 ```php
 use TapPay\Tap\Concerns\Billable;
@@ -18,12 +18,32 @@ class User extends Authenticatable implements BillableContract
 }
 ```
 
-### Database Migration
+### 2. Database Migration
+
+> **Important:** This package does not ship with migrations. You must create your own migration to add the required column.
+
+```bash
+php artisan make:migration add_tap_customer_id_to_users_table
+```
 
 ```php
-Schema::table('users', function (Blueprint $table) {
-    $table->string('tap_customer_id')->nullable()->index();
-});
+public function up()
+{
+    Schema::table('users', function (Blueprint $table) {
+        $table->string('tap_customer_id')->nullable()->index();
+    });
+}
+
+public function down()
+{
+    Schema::table('users', function (Blueprint $table) {
+        $table->dropColumn('tap_customer_id');
+    });
+}
+```
+
+```bash
+php artisan migrate
 ```
 
 ## Available Methods
