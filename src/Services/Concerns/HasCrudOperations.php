@@ -11,8 +11,8 @@ namespace TapPay\Tap\Services\Concerns;
 trait HasCrudOperations
 {
     use HasCreateOperation;
+    use HasDeleteOperation;
+    use HasListOperation;
     use HasRetrieveOperation;
     use HasUpdateOperation;
-    use HasListOperation;
-    use HasDeleteOperation;
 }

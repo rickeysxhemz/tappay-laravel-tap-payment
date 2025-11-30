@@ -10,6 +10,6 @@ namespace TapPay\Tap\Services\Concerns;
  */
 trait HasReadOperations
 {
-    use HasRetrieveOperation;
     use HasListOperation;
+    use HasRetrieveOperation;
 }

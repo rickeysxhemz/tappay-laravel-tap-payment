@@ -214,15 +214,15 @@ composer lint
 
 ## Contributing
 
-Thank you for considering contributing to Laravel Tap Payments! The contribution guide can be found in the [CONTRIBUTING.md](CONTRIBUTING.md) file.
+Thank you for considering contributing to Laravel Tap Payments! The contribution guide can be found in the [CONTRIBUTING.md](docs/CONTRIBUTING.md) file.
 
 ## Code of Conduct
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](CODE_OF_CONDUCT.md).
+In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](docs/CODE_OF_CONDUCT.md).
 
 ## Security Vulnerabilities
 
-Please review [our security policy](SECURITY.md) on how to report security vulnerabilities.
+Please review [our security policy](docs/SECURITY.md) on how to report security vulnerabilities.
 
 ## License
 

@@ -11,7 +11,7 @@ namespace TapPay\Tap\Services\Concerns;
 trait HasStandardOperations
 {
     use HasCreateOperation;
+    use HasListOperation;
     use HasRetrieveOperation;
     use HasUpdateOperation;
-    use HasListOperation;
 }
