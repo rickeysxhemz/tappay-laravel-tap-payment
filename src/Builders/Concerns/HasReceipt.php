@@ -9,9 +9,12 @@ namespace TapPay\Tap\Builders\Concerns;
  */
 trait HasReceipt
 {
+    /**
+     * @param  array<string, mixed>  $receipt
+     */
     public function receipt(array $receipt): static
     {
-        $existing = $this->data['receipt'] ?? [];
+        $existing = $this->getExistingReceipt();
         $this->data['receipt'] = array_merge($existing, $receipt);
 
         return $this;
@@ -19,7 +22,7 @@ trait HasReceipt
 
     public function emailReceipt(bool $email = true): static
     {
-        $existing = $this->data['receipt'] ?? [];
+        $existing = $this->getExistingReceipt();
         $this->data['receipt'] = array_merge($existing, ['email' => $email]);
 
         return $this;
@@ -27,7 +30,7 @@ trait HasReceipt
 
     public function smsReceipt(bool $sms = true): static
     {
-        $existing = $this->data['receipt'] ?? [];
+        $existing = $this->getExistingReceipt();
         $this->data['receipt'] = array_merge($existing, ['sms' => $sms]);
 
         return $this;
@@ -36,5 +39,18 @@ trait HasReceipt
     public function withReceipts(): static
     {
         return $this->emailReceipt()->smsReceipt();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function getExistingReceipt(): array
+    {
+        if (isset($this->data['receipt']) && is_array($this->data['receipt'])) {
+            /** @var array<string, mixed> */
+            return $this->data['receipt'];
+        }
+
+        return [];
     }
 }

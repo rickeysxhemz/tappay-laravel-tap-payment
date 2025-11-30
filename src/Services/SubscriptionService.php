@@ -43,6 +43,7 @@ class SubscriptionService extends AbstractService
      */
     public function cancel(string $subscriptionId): Subscription
     {
+        /** @var array<string, mixed> $response */
         $response = $this->client->delete(sprintf('%s/%s', $this->getEndpoint(), $subscriptionId));
 
         return new Subscription($response);

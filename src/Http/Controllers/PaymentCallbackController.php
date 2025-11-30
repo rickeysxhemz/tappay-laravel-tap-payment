@@ -15,6 +15,7 @@ use TapPay\Tap\Exceptions\AuthenticationException;
 use TapPay\Tap\Exceptions\InvalidRequestException;
 use TapPay\Tap\Facades\Tap;
 use TapPay\Tap\Http\Middleware\VerifyRedirectUrl;
+use TapPay\Tap\Resources\Charge;
 
 use function config;
 use function is_string;
@@ -41,7 +42,11 @@ class PaymentCallbackController extends Controller
         }
 
         try {
-            $charge = Tap::charges()->retrieve($chargeId);
+            $chargeResource = Tap::charges()->retrieve($chargeId);
+            if (! $chargeResource instanceof Charge) {
+                return $this->redirectToFailure($redirectUrl, 'Invalid charge response');
+            }
+            $charge = $chargeResource;
         } catch (AuthenticationException $e) {
             PaymentRetrievalFailed::dispatch(
                 $chargeId,
@@ -82,7 +87,9 @@ class PaymentCallbackController extends Controller
 
         PaymentFailed::dispatch($charge, $redirectUrl);
 
-        return $this->redirectToFailure($redirectUrl, $charge->get('response.message') ?? 'Payment failed');
+        $responseMessage = $charge->get('response.message');
+
+        return $this->redirectToFailure($redirectUrl, is_string($responseMessage) ? $responseMessage : 'Payment failed');
     }
 
     protected function redirectToSuccess(?string $redirectUrl, string $chargeId): RedirectResponse
@@ -91,7 +98,7 @@ class PaymentCallbackController extends Controller
             ?? config('tap.redirect.success')
             ?? '/';
 
-        return redirect()->to($successUrl)->with([
+        return redirect()->to($this->ensureString($successUrl))->with([
             'tap_charge_id' => $chargeId,
             'tap_status' => 'success',
         ]);
@@ -103,9 +110,14 @@ class PaymentCallbackController extends Controller
             ?? config('tap.redirect.failure')
             ?? '/';
 
-        return redirect()->to($failureUrl)->with([
+        return redirect()->to($this->ensureString($failureUrl))->with([
             'tap_status' => 'failed',
             'tap_error' => $message,
         ]);
+    }
+
+    private function ensureString(mixed $value): string
+    {
+        return is_string($value) ? $value : '/';
     }
 }

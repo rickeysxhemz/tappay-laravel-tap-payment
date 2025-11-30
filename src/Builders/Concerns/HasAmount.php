@@ -66,7 +66,7 @@ trait HasAmount
             throw new InvalidArgumentException('Amount is not set');
         }
 
-        $currency = $this->data['currency'] ?? config('tap.currency', 'SAR');
+        $currency = $this->getCurrencyForAmount();
 
         return $this->money->toDecimal($this->rawAmount, $currency);
     }
@@ -77,7 +77,7 @@ trait HasAmount
             return;
         }
 
-        $currency = $this->data['currency'] ?? config('tap.currency', 'SAR');
+        $currency = $this->getCurrencyForAmount();
         $minimum = $this->money->getMinimumAmount($currency);
 
         if ($this->rawAmount < $minimum) {
@@ -85,6 +85,20 @@ trait HasAmount
                 "Amount must be at least {$minimum} for {$currency}"
             );
         }
+    }
+
+    /**
+     * Get the currency for amount operations with proper type safety
+     */
+    private function getCurrencyForAmount(): string
+    {
+        if (isset($this->data['currency']) && is_string($this->data['currency'])) {
+            return $this->data['currency'];
+        }
+
+        $configCurrency = config('tap.currency', 'SAR');
+
+        return is_string($configCurrency) ? $configCurrency : 'SAR';
     }
 
     protected function resetAmount(): void

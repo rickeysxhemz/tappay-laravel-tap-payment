@@ -17,6 +17,7 @@ trait HasRetrieveOperation
      * Retrieve a resource by ID
      *
      * @param  string  $id  Resource ID
+     * @return \TapPay\Tap\Resources\Resource
      *
      * @throws AuthenticationException If API authentication fails
      * @throws InvalidRequestException If resource ID is invalid
@@ -24,6 +25,7 @@ trait HasRetrieveOperation
      */
     public function retrieve(string $id): mixed
     {
+        /** @var array<string, mixed> $response */
         $response = $this->client->get(sprintf('%s/%s', $this->getEndpoint(), $id));
         $resourceClass = $this->getResourceClass();
 

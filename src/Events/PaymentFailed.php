@@ -32,11 +32,15 @@ class PaymentFailed
 
     public function getResponseCode(): ?string
     {
-        return $this->charge->get('response.code');
+        $code = $this->charge->get('response.code');
+
+        return is_string($code) ? $code : null;
     }
 
     public function getResponseMessage(): ?string
     {
-        return $this->charge->get('response.message');
+        $message = $this->charge->get('response.message');
+
+        return is_string($message) ? $message : null;
     }
 }

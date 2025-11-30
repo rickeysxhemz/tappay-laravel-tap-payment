@@ -38,8 +38,8 @@ class PayoutService extends AbstractService
      * List payouts for a specific merchant
      *
      * @param  string  $merchantId  Merchant ID
-     * @param  array  $params  Additional query parameters
-     * @return Payout[]
+     * @param  array<string, mixed>  $params  Additional query parameters
+     * @return array<Payout>
      *
      * @throws AuthenticationException If API authentication fails
      * @throws InvalidRequestException If query parameters are invalid
@@ -49,17 +49,18 @@ class PayoutService extends AbstractService
     {
         $params['merchant'] = $merchantId;
 
+        /** @var array<Payout> */
         return $this->list($params);
     }
 
     /**
      * Download payout report
      *
-     * @param  array  $params  Report parameters including:
-     *                         - merchant: string (merchant ID)
-     *                         - period: array with start and end dates
-     *                         - format: string (csv, xlsx)
-     * @return array Report data or download URL
+     * @param  array<string, mixed>  $params  Report parameters including:
+     *                                        - merchant: string (merchant ID)
+     *                                        - period: array with start and end dates
+     *                                        - format: string (csv, xlsx)
+     * @return array<string, mixed> Report data or download URL
      *
      * @throws AuthenticationException If API authentication fails
      * @throws InvalidRequestException If query parameters are invalid
@@ -67,6 +68,7 @@ class PayoutService extends AbstractService
      */
     public function download(array $params = []): array
     {
+        /** @var array<string, mixed> */
         return $this->client->post(sprintf('%s/download', $this->getEndpoint()), $params);
     }
 }

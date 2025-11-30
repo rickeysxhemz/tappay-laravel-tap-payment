@@ -32,7 +32,9 @@ class WebhookReceived
      */
     public function getId(): ?string
     {
-        return $this->payload['id'] ?? null;
+        $id = $this->payload['id'] ?? null;
+
+        return is_string($id) ? $id : null;
     }
 
     /**

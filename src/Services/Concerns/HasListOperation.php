@@ -16,7 +16,8 @@ trait HasListOperation
     /**
      * List all resources
      *
-     * @param  array  $params  Query parameters
+     * @param  array<string, mixed>  $params  Query parameters
+     * @return array<\TapPay\Tap\Resources\Resource>
      *
      * @throws AuthenticationException If API authentication fails
      * @throws InvalidRequestException If query parameters are invalid
@@ -24,6 +25,7 @@ trait HasListOperation
      */
     public function list(array $params = []): array
     {
+        /** @var array<string, mixed> $response */
         $response = $this->client->post(sprintf('%s/list', $this->getEndpoint()), $params);
 
         return $this->mapToResources($response);

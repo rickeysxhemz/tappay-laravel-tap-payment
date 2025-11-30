@@ -20,7 +20,7 @@ final class TapServiceProvider extends ServiceProvider
         $this->app->singleton(Client::class, function (): Client {
             $secret = config('tap.secret');
 
-            if (empty($secret)) {
+            if (! is_string($secret) || $secret === '') {
                 throw new RuntimeException(
                     'Tap secret key is not configured. Set the TAP_SECRET environment variable or publish and configure the tap.php config file using: php artisan vendor:publish --tag=tap-config'
                 );

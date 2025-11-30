@@ -8,6 +8,8 @@ use TapPay\Tap\Enums\AuthorizeStatus;
 use TapPay\Tap\Exceptions\InvalidStatusException;
 use TapPay\Tap\Resources\Concerns\HasPaymentDetails;
 
+use function is_string;
+
 class Authorize extends Resource
 {
     use HasPaymentDetails;
@@ -26,7 +28,7 @@ class Authorize extends Resource
     {
         $status = $this->attributes['status'] ?? null;
 
-        if ($status === null) {
+        if (! is_string($status)) {
             return AuthorizeStatus::UNKNOWN;
         }
 

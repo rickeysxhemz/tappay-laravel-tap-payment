@@ -47,13 +47,17 @@ class Client
         }
 
         if ($this->baseUrl === null || trim($this->baseUrl) === '') {
-            $this->baseUrl = config('tap.base_url', 'https://api.tap.company/v2/');
+            $configBaseUrl = config('tap.base_url', 'https://api.tap.company/v2/');
+            $this->baseUrl = is_string($configBaseUrl) ? $configBaseUrl : 'https://api.tap.company/v2/';
         }
+
+        $timeout = config('tap.timeout', 30);
+        $connectTimeout = config('tap.connect_timeout', 10);
 
         $this->client = new GuzzleClient([
             'base_uri' => $this->baseUrl,
-            'timeout' => config('tap.timeout', 30),
-            'connect_timeout' => config('tap.connect_timeout', 10),
+            'timeout' => is_numeric($timeout) ? (int) $timeout : 30,
+            'connect_timeout' => is_numeric($connectTimeout) ? (int) $connectTimeout : 10,
             'headers' => [
                 'Authorization' => 'Bearer ' . $this->secretKey,
                 'Content-Type' => 'application/json',
@@ -66,8 +70,8 @@ class Client
      * Make a GET request
      *
      * @param  string  $endpoint  API endpoint
-     * @param  array  $query  Query parameters
-     * @return array Response data
+     * @param  array<string, mixed>  $query  Query parameters
+     * @return array<string, mixed> Response data
      *
      * @throws ApiErrorException
      */
@@ -80,8 +84,8 @@ class Client
      * Make a POST request
      *
      * @param  string  $endpoint  API endpoint
-     * @param  array  $data  Request body data
-     * @return array Response data
+     * @param  array<string, mixed>  $data  Request body data
+     * @return array<string, mixed> Response data
      *
      * @throws ApiErrorException
      */
@@ -94,8 +98,8 @@ class Client
      * Make a PUT request
      *
      * @param  string  $endpoint  API endpoint
-     * @param  array  $data  Request body data
-     * @return array Response data
+     * @param  array<string, mixed>  $data  Request body data
+     * @return array<string, mixed> Response data
      *
      * @throws ApiErrorException
      */
@@ -108,7 +112,7 @@ class Client
      * Make a DELETE request
      *
      * @param  string  $endpoint  API endpoint
-     * @return array Response data
+     * @return array<string, mixed> Response data
      *
      * @throws ApiErrorException
      */
@@ -122,8 +126,8 @@ class Client
      *
      * @param  string  $method  HTTP method
      * @param  string  $endpoint  API endpoint
-     * @param  array  $options  Guzzle request options
-     * @return array Response data
+     * @param  array<string, mixed>  $options  Guzzle request options
+     * @return array<string, mixed> Response data
      *
      * @throws ApiErrorException
      */
@@ -146,6 +150,8 @@ class Client
     }
 
     /**
+     * @return array<string, mixed>
+     *
      * @throws ApiErrorException
      */
     protected function decodeResponse(ResponseInterface $response): array
@@ -157,7 +163,10 @@ class Client
         }
 
         try {
-            return json_decode($body, true, 512, JSON_THROW_ON_ERROR) ?? [];
+            $decoded = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
+
+            /** @var array<string, mixed> */
+            return is_array($decoded) ? $decoded : [];
         } catch (JsonException $e) {
             throw new ApiErrorException('Invalid JSON response: ' . $e->getMessage(), 0);
         }
@@ -171,9 +180,12 @@ class Client
      */
     protected function extractErrorDetails(array $response): array
     {
+        $message = $response['message'] ?? $response['error'] ?? 'Unknown API error';
+        $errors = $response['errors'] ?? [];
+
         return [
-            'message' => $response['message'] ?? $response['error'] ?? 'Unknown API error',
-            'errors' => $response['errors'] ?? [],
+            'message' => is_string($message) ? $message : 'Unknown API error',
+            'errors' => is_array($errors) ? $errors : [],
         ];
     }
 

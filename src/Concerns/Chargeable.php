@@ -41,8 +41,14 @@ trait Chargeable
 
     protected function getCurrency(?string $currency = null): string
     {
+        if ($currency !== null) {
+            return $this->money()->normalizeCurrency($currency);
+        }
+
+        $configCurrency = config('tap.currency', 'SAR');
+
         return $this->money()->normalizeCurrency(
-            $currency ?? config('tap.currency', 'SAR')
+            is_string($configCurrency) ? $configCurrency : 'SAR'
         );
     }
 

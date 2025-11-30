@@ -7,6 +7,8 @@ namespace TapPay\Tap\Resources;
 use Carbon\Carbon;
 use TapPay\Tap\Exceptions\InvalidCardException;
 
+use function is_string;
+
 class Card extends Resource
 {
     protected function getIdPrefix(): string
@@ -19,7 +21,9 @@ class Card extends Resource
      */
     public function object(): string
     {
-        return $this->attributes['object'] ?? 'card';
+        $object = $this->attributes['object'] ?? 'card';
+
+        return is_string($object) ? $object : 'card';
     }
 
     /**
@@ -27,7 +31,9 @@ class Card extends Resource
      */
     public function customerId(): string
     {
-        return $this->attributes['customer'] ?? '';
+        $customer = $this->attributes['customer'] ?? '';
+
+        return is_string($customer) ? $customer : '';
     }
 
     /**
@@ -35,7 +41,9 @@ class Card extends Resource
      */
     public function brand(): string
     {
-        return $this->attributes['brand'] ?? '';
+        $brand = $this->attributes['brand'] ?? '';
+
+        return is_string($brand) ? $brand : '';
     }
 
     /**
@@ -43,7 +51,9 @@ class Card extends Resource
      */
     public function funding(): string
     {
-        return $this->attributes['funding'] ?? '';
+        $funding = $this->attributes['funding'] ?? '';
+
+        return is_string($funding) ? $funding : '';
     }
 
     /**
@@ -51,7 +61,9 @@ class Card extends Resource
      */
     public function firstSix(): string
     {
-        return $this->attributes['first_six'] ?? '';
+        $firstSix = $this->attributes['first_six'] ?? '';
+
+        return is_string($firstSix) ? $firstSix : '';
     }
 
     /**
@@ -59,7 +71,9 @@ class Card extends Resource
      */
     public function lastFour(): string
     {
-        return $this->attributes['last_four'] ?? '';
+        $lastFour = $this->attributes['last_four'] ?? '';
+
+        return is_string($lastFour) ? $lastFour : '';
     }
 
     /**
@@ -67,7 +81,7 @@ class Card extends Resource
      */
     public function expiryMonth(): int
     {
-        return (int) ($this->attributes['exp_month'] ?? 0);
+        return $this->getInt('exp_month');
     }
 
     /**
@@ -75,7 +89,7 @@ class Card extends Resource
      */
     public function expiryYear(): int
     {
-        return (int) ($this->attributes['exp_year'] ?? 0);
+        return $this->getInt('exp_year');
     }
 
     /**
@@ -83,7 +97,9 @@ class Card extends Resource
      */
     public function name(): string
     {
-        return $this->attributes['name'] ?? '';
+        $name = $this->attributes['name'] ?? '';
+
+        return is_string($name) ? $name : '';
     }
 
     /**
@@ -91,7 +107,9 @@ class Card extends Resource
      */
     public function fingerprint(): string
     {
-        return $this->attributes['fingerprint'] ?? '';
+        $fingerprint = $this->attributes['fingerprint'] ?? '';
+
+        return is_string($fingerprint) ? $fingerprint : '';
     }
 
     /**
@@ -121,7 +139,9 @@ class Card extends Resource
             InvalidCardException::invalidExpiry($year, $month);
         }
 
-        return Carbon::create($year, $month)->endOfMonth()->isPast();
+        $carbon = Carbon::create($year, $month);
+
+        return $carbon !== null && $carbon->endOfMonth()->isPast();
     }
 
     /**

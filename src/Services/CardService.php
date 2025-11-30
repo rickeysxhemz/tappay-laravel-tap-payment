@@ -41,6 +41,7 @@ class CardService extends AbstractService
      */
     public function retrieve(string $customerId, string $cardId): Card
     {
+        /** @var array<string, mixed> $response */
         $response = $this->client->get(sprintf('%s/%s/%s', $this->getEndpoint(), $customerId, $cardId));
 
         return new Card($response);
@@ -50,8 +51,8 @@ class CardService extends AbstractService
      * List all cards for a customer
      *
      * @param  string  $customerId  Customer ID
-     * @param  array  $params  Query parameters
-     * @return Card[]
+     * @param  array<string, mixed>  $params  Query parameters
+     * @return array<Card>
      *
      * @throws AuthenticationException
      * @throws InvalidRequestException
@@ -59,6 +60,7 @@ class CardService extends AbstractService
      */
     public function list(string $customerId, array $params = []): array
     {
+        /** @var array<string, mixed> $response */
         $response = $this->client->get(sprintf('%s/%s', $this->getEndpoint(), $customerId), $params);
 
         return $this->mapToResources($response);
@@ -82,7 +84,7 @@ class CardService extends AbstractService
     /**
      * Verify a card
      *
-     * @param  array  $data  Verification data
+     * @param  array<string, mixed>  $data  Verification data
      *
      * @throws AuthenticationException
      * @throws InvalidRequestException
@@ -90,6 +92,7 @@ class CardService extends AbstractService
      */
     public function verify(array $data): Card
     {
+        /** @var array<string, mixed> $response */
         $response = $this->client->post(sprintf('%s/verify', $this->getEndpoint()), $data);
 
         return new Card($response);

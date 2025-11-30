@@ -19,6 +19,8 @@ use function strtolower;
 class VerifyRedirectUrl
 {
     /**
+     * @param  Closure(Request): Response  $next
+     *
      * @throws AccessDeniedHttpException
      */
     public function handle(Request $request, Closure $next): Response
@@ -33,6 +35,7 @@ class VerifyRedirectUrl
             throw new AccessDeniedHttpException('Invalid redirect URL.');
         }
 
+        /** @var Response */
         return $next($request);
     }
 

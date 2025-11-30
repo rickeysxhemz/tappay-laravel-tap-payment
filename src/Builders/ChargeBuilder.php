@@ -21,7 +21,8 @@ class ChargeBuilder extends AbstractBuilder
         MoneyContract $money
     ) {
         parent::__construct($money);
-        $this->data['currency'] = config('tap.currency', 'SAR');
+        $currency = config('tap.currency', 'SAR');
+        $this->data['currency'] = is_string($currency) ? $currency : 'SAR';
     }
 
     public function saveCard(bool $save = true): static
@@ -84,6 +85,7 @@ class ChargeBuilder extends AbstractBuilder
     {
         $this->validateRequired(['amount', 'source']);
 
+        /** @var Charge */
         return $this->service->create($this->toArray());
     }
 }

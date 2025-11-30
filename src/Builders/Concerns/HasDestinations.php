@@ -11,12 +11,15 @@ use TapPay\Tap\ValueObjects\Destination;
  */
 trait HasDestinations
 {
+    /**
+     * @param  array<array<string, mixed>|Destination>  $destinations
+     */
     public function destinations(array $destinations): static
     {
-        $mappedDestinations = array_map(
-            static fn (array|Destination $d): array => $d instanceof Destination ? $d->toArray() : $d,
-            $destinations
-        );
+        $mappedDestinations = [];
+        foreach ($destinations as $d) {
+            $mappedDestinations[] = $d instanceof Destination ? $d->toArray() : $d;
+        }
 
         $this->data['destinations'] = ['destination' => $mappedDestinations];
 

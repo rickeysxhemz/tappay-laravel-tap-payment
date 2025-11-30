@@ -57,9 +57,11 @@ class WebhookController extends Controller
             return $this->failureResponse($request, $toleranceResult, 'expired');
         }
 
-        $resource = $payload['object'] ?? 'unknown';
+        $resourceValue = $payload['object'] ?? 'unknown';
+        $resource = is_string($resourceValue) ? $resourceValue : 'unknown';
+        $ip = $request->ip() ?? 'unknown';
 
-        WebhookReceived::dispatch($resource, $payload, $request->ip());
+        WebhookReceived::dispatch($resource, $payload, $ip);
 
         $this->dispatchResourceEvent($resource, $payload);
 
@@ -81,14 +83,17 @@ class WebhookController extends Controller
             return $this->invalidPayloadResponse($request, 'Payload is not an array');
         }
 
+        /** @var array<string, mixed> */
         return $payload;
     }
 
     protected function invalidPayloadResponse(Request $request, string $error): Response
     {
-        WebhookValidationFailed::dispatch('Invalid JSON payload', $request->ip(), ['json_error' => $error]);
+        WebhookValidationFailed::dispatch('Invalid JSON payload', $request->ip() ?? 'unknown', ['json_error' => $error]);
 
-        return response(config('tap.webhook.messages.invalid_payload', 'Invalid JSON payload'), HttpStatus::BAD_REQUEST->value);
+        $message = config('tap.webhook.messages.invalid_payload', 'Invalid JSON payload');
+
+        return response(is_string($message) ? $message : 'Invalid JSON payload', HttpStatus::BAD_REQUEST->value);
     }
 
     protected function failureResponse(
@@ -98,16 +103,20 @@ class WebhookController extends Controller
     ): Response {
         WebhookValidationFailed::dispatch(
             $result->getError() ?? 'Validation failed',
-            $request->ip(),
+            $request->ip() ?? 'unknown',
             $result->getContext()
         );
 
-        return response(config("tap.webhook.messages.{$messageKey}", 'Validation failed'), HttpStatus::BAD_REQUEST->value);
+        $message = config("tap.webhook.messages.{$messageKey}", 'Validation failed');
+
+        return response(is_string($message) ? $message : 'Validation failed', HttpStatus::BAD_REQUEST->value);
     }
 
     protected function successResponse(): Response
     {
-        return response(config('tap.webhook.messages.success', 'Webhook received'), HttpStatus::OK->value);
+        $message = config('tap.webhook.messages.success', 'Webhook received');
+
+        return response(is_string($message) ? $message : 'Webhook received', HttpStatus::OK->value);
     }
 
     /**

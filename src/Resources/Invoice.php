@@ -10,6 +10,9 @@ use TapPay\Tap\Resources\Concerns\HasCustomer;
 use TapPay\Tap\Resources\Concerns\HasMoney;
 use TapPay\Tap\Resources\Concerns\HasPaymentStatus;
 
+use function is_int;
+use function is_string;
+
 class Invoice extends Resource
 {
     use HasCustomer;
@@ -23,38 +26,50 @@ class Invoice extends Resource
 
     public function status(): InvoiceStatus
     {
-        $status = strtoupper($this->attributes['status'] ?? 'FAILED');
+        $status = $this->getString('status', 'FAILED');
 
-        return InvoiceStatus::tryFrom($status) ?? InvoiceStatus::FAILED;
+        return InvoiceStatus::tryFrom(strtoupper($status)) ?? InvoiceStatus::FAILED;
     }
 
     public function description(): ?string
     {
-        return $this->attributes['description'] ?? null;
+        return $this->getNullableString('description');
     }
 
     public function url(): ?string
     {
-        return $this->attributes['url'] ?? $this->attributes['invoice_url'] ?? null;
+        $url = $this->attributes['url'] ?? $this->attributes['invoice_url'] ?? null;
+
+        return is_string($url) ? $url : null;
     }
 
     public function expiresAt(): ?Carbon
     {
         $expiry = $this->attributes['expiry'] ?? $this->attributes['expires_at'] ?? null;
 
-        return $expiry ? $this->parseDateTime($expiry) : null;
+        if ($expiry === null) {
+            return null;
+        }
+
+        return is_string($expiry) || is_int($expiry) ? $this->parseDateTime($expiry) : null;
     }
 
     public function paidAt(): ?Carbon
     {
         $paid = $this->attributes['paid_at'] ?? null;
 
-        return $paid ? $this->parseDateTime($paid) : null;
+        if ($paid === null) {
+            return null;
+        }
+
+        return is_string($paid) || is_int($paid) ? $this->parseDateTime($paid) : null;
     }
 
     public function chargeId(): ?string
     {
-        return $this->attributes['charge_id'] ?? $this->get('charge.id');
+        $chargeId = $this->attributes['charge_id'] ?? $this->get('charge.id');
+
+        return is_string($chargeId) ? $chargeId : null;
     }
 
     public function isExpired(): bool

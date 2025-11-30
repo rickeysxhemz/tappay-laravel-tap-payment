@@ -7,6 +7,10 @@ namespace TapPay\Tap\Resources;
 use TapPay\Tap\Resources\Concerns\HasMoney;
 use TapPay\Tap\ValueObjects\Money;
 
+use function in_array;
+use function is_array;
+use function is_string;
+
 /**
  * Payout resource for merchant settlements
  */
@@ -24,7 +28,9 @@ class Payout extends Resource
      */
     public function merchantId(): ?string
     {
-        return $this->attributes['merchant'] ?? $this->attributes['merchant_id'] ?? null;
+        $merchant = $this->attributes['merchant'] ?? $this->attributes['merchant_id'] ?? null;
+
+        return is_string($merchant) ? $merchant : null;
     }
 
     /**
@@ -32,7 +38,7 @@ class Payout extends Resource
      */
     public function status(): ?string
     {
-        return $this->attributes['status'] ?? null;
+        return $this->getNullableString('status');
     }
 
     /**
@@ -40,7 +46,7 @@ class Payout extends Resource
      */
     public function isPending(): bool
     {
-        return in_array($this->attributes['status'] ?? '', ['PENDING', 'IN_PROGRESS'], true);
+        return in_array($this->getString('status'), ['PENDING', 'IN_PROGRESS'], true);
     }
 
     /**
@@ -48,7 +54,7 @@ class Payout extends Resource
      */
     public function isComplete(): bool
     {
-        return ($this->attributes['status'] ?? '') === 'PAID';
+        return $this->getString('status') === 'PAID';
     }
 
     /**
@@ -56,15 +62,24 @@ class Payout extends Resource
      */
     public function isFailed(): bool
     {
-        return ($this->attributes['status'] ?? '') === 'FAILED';
+        return $this->getString('status') === 'FAILED';
     }
 
     /**
      * Get the bank account details
+     *
+     * @return array<string, mixed>|null
      */
     public function bankAccount(): ?array
     {
-        return $this->attributes['bank_account'] ?? null;
+        $bankAccount = $this->attributes['bank_account'] ?? null;
+
+        if (is_array($bankAccount)) {
+            /** @var array<string, mixed> */
+            return $bankAccount;
+        }
+
+        return null;
     }
 
     /**
@@ -72,7 +87,7 @@ class Payout extends Resource
      */
     public function arrivalDate(): ?string
     {
-        return $this->attributes['arrival_date'] ?? null;
+        return $this->getNullableString('arrival_date');
     }
 
     /**
@@ -80,7 +95,7 @@ class Payout extends Resource
      */
     public function periodStart(): ?string
     {
-        return $this->attributes['period_start'] ?? null;
+        return $this->getNullableString('period_start');
     }
 
     /**
@@ -88,7 +103,7 @@ class Payout extends Resource
      */
     public function periodEnd(): ?string
     {
-        return $this->attributes['period_end'] ?? null;
+        return $this->getNullableString('period_end');
     }
 
     /**
@@ -96,7 +111,7 @@ class Payout extends Resource
      */
     public function transactionCount(): int
     {
-        return (int) ($this->attributes['transaction_count'] ?? 0);
+        return $this->getInt('transaction_count');
     }
 
     /**
@@ -104,9 +119,9 @@ class Payout extends Resource
      */
     public function feeAmount(): Money
     {
-        $fee = $this->attributes['fee'] ?? 0;
+        $fee = $this->getFloat('fee');
 
-        return Money::fromDecimal((float) $fee, $this->currency());
+        return Money::fromDecimal($fee, $this->currency());
     }
 
     /**

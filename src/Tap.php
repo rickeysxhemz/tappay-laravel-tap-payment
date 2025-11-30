@@ -36,7 +36,7 @@ class Tap
      */
     public static function registersRoutes(): bool
     {
-        return config('tap.register_routes', true);
+        return (bool) config('tap.register_routes', true);
     }
 
     public function charges(): ChargeService

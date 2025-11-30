@@ -39,7 +39,7 @@ class WebhookValidationFailed
     {
         return new self(
             reason: $reason,
-            ip: $request->ip(),
+            ip: $request->ip() ?? 'unknown',
             context: array_merge($context, [
                 'url' => $request->fullUrl(),
                 'method' => $request->method(),

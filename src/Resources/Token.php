@@ -16,7 +16,7 @@ class Token extends Resource
      */
     public function cardId(): ?string
     {
-        return $this->attributes['card'] ?? null;
+        return $this->getNullableString('card');
     }
 
     /**
@@ -24,7 +24,7 @@ class Token extends Resource
      */
     public function customerId(): ?string
     {
-        return $this->attributes['customer'] ?? null;
+        return $this->getNullableString('customer');
     }
 
     /**
@@ -32,6 +32,6 @@ class Token extends Resource
      */
     public function created(): ?int
     {
-        return $this->attributes['created'] ?? null;
+        return $this->getNullableInt('created');
     }
 }

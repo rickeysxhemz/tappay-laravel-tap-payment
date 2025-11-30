@@ -9,6 +9,8 @@ use TapPay\Tap\Exceptions\InvalidStatusException;
 use TapPay\Tap\Resources\Concerns\HasMoney;
 use TapPay\Tap\Resources\Concerns\HasPaymentStatus;
 
+use function is_string;
+
 class Refund extends Resource
 {
     use HasMoney;
@@ -28,7 +30,7 @@ class Refund extends Resource
     {
         $status = $this->attributes['status'] ?? null;
 
-        if ($status === null) {
+        if (! is_string($status)) {
             return RefundStatus::FAILED;
         }
 
@@ -41,7 +43,7 @@ class Refund extends Resource
      */
     public function chargeId(): string
     {
-        return $this->attributes['charge_id'] ?? '';
+        return $this->getString('charge_id');
     }
 
     /**
@@ -49,6 +51,6 @@ class Refund extends Resource
      */
     public function reason(): ?string
     {
-        return $this->attributes['reason'] ?? null;
+        return $this->getNullableString('reason');
     }
 }

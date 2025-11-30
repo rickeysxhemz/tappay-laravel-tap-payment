@@ -6,6 +6,8 @@ namespace TapPay\Tap\Resources;
 
 use TapPay\Tap\Resources\Concerns\HasMoney;
 
+use function is_string;
+
 /**
  * Destination resource for payment splits
  */
@@ -23,7 +25,9 @@ class Destination extends Resource
      */
     public function merchantId(): ?string
     {
-        return $this->attributes['merchant'] ?? $this->attributes['merchant_id'] ?? null;
+        $merchant = $this->attributes['merchant'] ?? $this->attributes['merchant_id'] ?? null;
+
+        return is_string($merchant) ? $merchant : null;
     }
 
     /**
@@ -31,7 +35,7 @@ class Destination extends Resource
      */
     public function transferId(): ?string
     {
-        return $this->attributes['transfer'] ?? null;
+        return $this->getNullableString('transfer');
     }
 
     /**
@@ -39,7 +43,7 @@ class Destination extends Resource
      */
     public function status(): ?string
     {
-        return $this->attributes['status'] ?? null;
+        return $this->getNullableString('status');
     }
 
     /**
@@ -47,7 +51,7 @@ class Destination extends Resource
      */
     public function isPending(): bool
     {
-        return ($this->attributes['status'] ?? '') === 'PENDING';
+        return $this->getString('status') === 'PENDING';
     }
 
     /**
@@ -55,7 +59,7 @@ class Destination extends Resource
      */
     public function isComplete(): bool
     {
-        return ($this->attributes['status'] ?? '') === 'TRANSFERRED';
+        return $this->getString('status') === 'TRANSFERRED';
     }
 
     /**
@@ -63,6 +67,8 @@ class Destination extends Resource
      */
     public function chargeId(): ?string
     {
-        return $this->attributes['charge'] ?? $this->attributes['charge_id'] ?? null;
+        $charge = $this->attributes['charge'] ?? $this->attributes['charge_id'] ?? null;
+
+        return is_string($charge) ? $charge : null;
     }
 }

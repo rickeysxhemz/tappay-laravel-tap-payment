@@ -92,8 +92,9 @@ trait HasTapCustomer
         ], $options);
 
         if ($this->phone ?? null) {
+            $countryCode = $this->phone_country_code ?? config('tap.default_country_code', '966');
             $customerData['phone'] = [
-                'country_code' => $this->phone_country_code ?? config('tap.default_country_code', '966'),
+                'country_code' => is_string($countryCode) ? $countryCode : '966',
                 'number' => $this->phone,
             ];
         }

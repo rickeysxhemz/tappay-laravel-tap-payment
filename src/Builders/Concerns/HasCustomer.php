@@ -12,9 +12,12 @@ use TapPay\Tap\ValueObjects\Customer;
  */
 trait HasCustomer
 {
+    /**
+     * @param  array<string, mixed>|Customer  $customer
+     */
     public function customer(array|Customer $customer): static
     {
-        $existing = $this->data['customer'] ?? [];
+        $existing = $this->getExistingCustomerData();
         $newData = $customer instanceof Customer ? $customer->toArray() : $customer;
         $this->data['customer'] = array_merge($existing, $newData);
 
@@ -23,7 +26,7 @@ trait HasCustomer
 
     public function customerId(string $customerId): static
     {
-        $existing = $this->data['customer'] ?? [];
+        $existing = $this->getExistingCustomerData();
         $this->data['customer'] = array_merge($existing, ['id' => $customerId]);
 
         return $this;
@@ -41,7 +44,7 @@ trait HasCustomer
             throw new InvalidArgumentException('First name cannot exceed 100 characters');
         }
 
-        $existing = $this->data['customer'] ?? [];
+        $existing = $this->getExistingCustomerData();
         $this->data['customer'] = array_merge($existing, ['first_name' => $firstName]);
 
         return $this;
@@ -59,7 +62,7 @@ trait HasCustomer
             throw new InvalidArgumentException('Last name cannot exceed 100 characters');
         }
 
-        $existing = $this->data['customer'] ?? [];
+        $existing = $this->getExistingCustomerData();
         $this->data['customer'] = array_merge($existing, ['last_name' => $lastName]);
 
         return $this;
@@ -71,7 +74,7 @@ trait HasCustomer
             throw new InvalidArgumentException('Invalid email format');
         }
 
-        $existing = $this->data['customer'] ?? [];
+        $existing = $this->getExistingCustomerData();
         $this->data['customer'] = array_merge($existing, ['email' => $email]);
 
         return $this;
@@ -87,7 +90,7 @@ trait HasCustomer
             throw new InvalidArgumentException('Phone number must be 6-15 digits');
         }
 
-        $existing = $this->data['customer'] ?? [];
+        $existing = $this->getExistingCustomerData();
         $this->data['customer'] = array_merge($existing, [
             'phone' => [
                 'country_code' => $countryCode,
@@ -96,5 +99,20 @@ trait HasCustomer
         ]);
 
         return $this;
+    }
+
+    /**
+     * Get existing customer data with proper type safety
+     *
+     * @return array<string, mixed>
+     */
+    private function getExistingCustomerData(): array
+    {
+        if (isset($this->data['customer']) && is_array($this->data['customer'])) {
+            /** @var array<string, mixed> */
+            return $this->data['customer'];
+        }
+
+        return [];
     }
 }

@@ -6,6 +6,9 @@ namespace TapPay\Tap\Resources;
 
 use TapPay\Tap\Resources\Concerns\HasContactInfo;
 
+use function is_array;
+use function is_string;
+
 /**
  * Merchant resource for marketplace sub-merchants
  */
@@ -23,7 +26,7 @@ class Merchant extends Resource
      */
     public function name(): ?string
     {
-        return $this->attributes['name'] ?? null;
+        return $this->getNullableString('name');
     }
 
     /**
@@ -31,7 +34,7 @@ class Merchant extends Resource
      */
     public function countryCode(): ?string
     {
-        return $this->attributes['country_code'] ?? null;
+        return $this->getNullableString('country_code');
     }
 
     /**
@@ -39,23 +42,41 @@ class Merchant extends Resource
      */
     public function type(): ?string
     {
-        return $this->attributes['type'] ?? null;
+        return $this->getNullableString('type');
     }
 
     /**
      * Get the merchant's business details
+     *
+     * @return array<string, mixed>|null
      */
     public function business(): ?array
     {
-        return $this->attributes['business'] ?? null;
+        $business = $this->attributes['business'] ?? null;
+
+        if (is_array($business)) {
+            /** @var array<string, mixed> */
+            return $business;
+        }
+
+        return null;
     }
 
     /**
      * Get the merchant's bank account details
+     *
+     * @return array<string, mixed>|null
      */
     public function bankAccount(): ?array
     {
-        return $this->attributes['bank_account'] ?? null;
+        $bankAccount = $this->attributes['bank_account'] ?? null;
+
+        if (is_array($bankAccount)) {
+            /** @var array<string, mixed> */
+            return $bankAccount;
+        }
+
+        return null;
     }
 
     /**
@@ -63,7 +84,7 @@ class Merchant extends Resource
      */
     public function isActive(): bool
     {
-        return ($this->attributes['status'] ?? '') === 'ACTIVE';
+        return $this->getString('status') === 'ACTIVE';
     }
 
     /**
@@ -71,7 +92,15 @@ class Merchant extends Resource
      */
     public function isVerified(): bool
     {
-        return ($this->attributes['verification']['status'] ?? '') === 'VERIFIED';
+        $verification = $this->attributes['verification'] ?? null;
+
+        if (is_array($verification)) {
+            $status = $verification['status'] ?? '';
+
+            return is_string($status) && $status === 'VERIFIED';
+        }
+
+        return false;
     }
 
     /**
@@ -79,6 +108,6 @@ class Merchant extends Resource
      */
     public function payoutSchedule(): ?string
     {
-        return $this->attributes['payout_schedule'] ?? null;
+        return $this->getNullableString('payout_schedule');
     }
 }

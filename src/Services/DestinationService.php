@@ -38,8 +38,8 @@ class DestinationService extends AbstractService
      * List destinations for a specific merchant
      *
      * @param  string  $merchantId  Merchant ID
-     * @param  array  $params  Additional query parameters
-     * @return Destination[]
+     * @param  array<string, mixed>  $params  Additional query parameters
+     * @return array<Destination>
      *
      * @throws AuthenticationException If API authentication fails
      * @throws InvalidRequestException If query parameters are invalid
@@ -49,6 +49,7 @@ class DestinationService extends AbstractService
     {
         $params['merchant'] = $merchantId;
 
+        /** @var array<Destination> */
         return $this->list($params);
     }
 
@@ -56,8 +57,8 @@ class DestinationService extends AbstractService
      * List destinations for a specific charge
      *
      * @param  string  $chargeId  Charge ID
-     * @param  array  $params  Additional query parameters
-     * @return Destination[]
+     * @param  array<string, mixed>  $params  Additional query parameters
+     * @return array<Destination>
      *
      * @throws AuthenticationException If API authentication fails
      * @throws InvalidRequestException If query parameters are invalid
@@ -67,6 +68,7 @@ class DestinationService extends AbstractService
     {
         $params['charge'] = $chargeId;
 
+        /** @var array<Destination> */
         return $this->list($params);
     }
 }

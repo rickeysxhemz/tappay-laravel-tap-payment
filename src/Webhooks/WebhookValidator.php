@@ -5,24 +5,31 @@ declare(strict_types=1);
 namespace TapPay\Tap\Webhooks;
 
 use Illuminate\Http\Request;
+use InvalidArgumentException;
+use RuntimeException;
 
 class WebhookValidator
 {
+    protected string $secret;
+
     /**
      * Create a new webhook validator instance
      *
-     * @param  string|null  $secret  Webhook secret key (uses config if not provided)
+     * @param  string|null  $secretKey  Webhook secret key (uses config if not provided)
      *
-     * @throws \RuntimeException If secret key is not configured
+     * @throws RuntimeException If secret key is not configured
      */
-    public function __construct(
-        protected ?string $secret = null
-    ) {
-        $this->secret = $secret ?? config('tap.webhook.secret') ?? config('tap.secret');
+    public function __construct(?string $secretKey = null)
+    {
+        $secret = $secretKey
+            ?? config('tap.webhook.secret')
+            ?? config('tap.secret');
 
-        if (empty($this->secret)) {
-            throw new \RuntimeException('Webhook secret key is not configured. Please set tap.webhook.secret or tap.secret in config.');
+        if (! is_string($secret) || $secret === '') {
+            throw new RuntimeException('Webhook secret key is not configured. Please set tap.webhook.secret or tap.secret in config.');
         }
+
+        $this->secret = $secret;
     }
 
     /**
@@ -68,9 +75,12 @@ class WebhookValidator
             );
         }
 
+        /** @var array<string, mixed> $typedData */
+        $typedData = $data;
+
         try {
-            $hashString = $this->buildHashString($data);
-        } catch (\InvalidArgumentException $e) {
+            $hashString = $this->buildHashString($typedData);
+        } catch (InvalidArgumentException $e) {
             return WebhookValidationResult::failed($e->getMessage());
         }
 
@@ -92,7 +102,7 @@ class WebhookValidator
     /**
      * Validate webhook payload directly (without Request object)
      *
-     * @param  array  $payload  The decoded webhook payload
+     * @param  array<string, mixed>  $payload  The decoded webhook payload
      * @param  string  $signature  The signature from x-tap-signature header
      * @return WebhookValidationResult Validation result with error details if failed
      */
@@ -111,7 +121,7 @@ class WebhookValidator
 
         try {
             $hashString = $this->buildHashString($payload);
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
             return WebhookValidationResult::failed($e->getMessage());
         }
 
@@ -128,10 +138,10 @@ class WebhookValidator
      * Build the hash string from webhook payload
      * Concatenates specific values from the webhook payload according to Tap's signature algorithm
      *
-     * @param  array  $data  The webhook payload
+     * @param  array<string, mixed>  $data  The webhook payload
      * @return string The concatenated hash string
      *
-     * @throws \InvalidArgumentException If required fields are missing
+     * @throws InvalidArgumentException If required fields are missing
      */
     protected function buildHashString(array $data): string
     {
@@ -146,30 +156,34 @@ class WebhookValidator
         }
 
         if (! empty($missingFields)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing required webhook fields: ' . implode(', ', $missingFields)
             );
         }
 
-        return implode('', array_map(fn ($key) => (string) $data[$key], $fieldKeys));
+        return implode('', array_map(
+            fn (string $key): string => is_scalar($data[$key]) ? (string) $data[$key] : '',
+            $fieldKeys
+        ));
     }
 
     /**
      * Check if the webhook is within tolerance time (prevents replay attacks)
      *
-     * @param  array  $data  The webhook payload
+     * @param  array<string, mixed>  $data  The webhook payload
      * @return WebhookValidationResult Validation result with error details if failed
      */
     public function checkTolerance(array $data): WebhookValidationResult
     {
-        $tolerance = config('tap.webhook.tolerance', 300); // 5 minutes default
+        $configTolerance = config('tap.webhook.tolerance', 300);
+        $tolerance = is_numeric($configTolerance) ? (int) $configTolerance : 300; // 5 minutes default
         $clockSkew = 30; // Allow 30 seconds for clock differences
 
         if (! isset($data['created'])) {
             return WebhookValidationResult::failed('Missing created timestamp');
         }
 
-        $created = (int) $data['created'];
+        $created = is_numeric($data['created']) ? (int) $data['created'] : 0;
         $now = time();
         $diff = $now - $created;
 

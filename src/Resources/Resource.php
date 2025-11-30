@@ -8,6 +8,9 @@ use Carbon\Carbon;
 use Exception;
 use TapPay\Tap\Exceptions\InvalidDateTimeException;
 
+use function is_array;
+use function is_numeric;
+use function is_string;
 use function str_starts_with;
 
 /**
@@ -18,7 +21,7 @@ abstract class Resource
     /**
      * Create a new resource instance
      *
-     * @param  array  $attributes  Resource attributes from API
+     * @param  array<string, mixed>  $attributes  Resource attributes from API
      */
     public function __construct(
         protected array $attributes
@@ -29,7 +32,9 @@ abstract class Resource
      */
     public function id(): string
     {
-        return $this->attributes['id'] ?? '';
+        $id = $this->attributes['id'] ?? '';
+
+        return is_string($id) ? $id : '';
     }
 
     /**
@@ -49,14 +54,25 @@ abstract class Resource
 
     /**
      * Get metadata
+     *
+     * @return array<string, mixed>
      */
     public function metadata(): array
     {
-        return $this->attributes['metadata'] ?? [];
+        $metadata = $this->attributes['metadata'] ?? [];
+
+        if (is_array($metadata)) {
+            /** @var array<string, mixed> */
+            return $metadata;
+        }
+
+        return [];
     }
 
     /**
      * Get all attributes
+     *
+     * @return array<string, mixed>
      */
     public function toArray(): array
     {
@@ -68,7 +84,58 @@ abstract class Resource
      */
     public function get(string $key, string|int|float|bool|array|null $default = null): string|int|float|bool|array|null
     {
+        /** @var string|int|float|bool|array<mixed>|null */
         return data_get($this->attributes, $key, $default);
+    }
+
+    /**
+     * Get a string attribute with type safety
+     */
+    protected function getString(string $key, string $default = ''): string
+    {
+        $value = $this->attributes[$key] ?? $default;
+
+        return is_string($value) ? $value : $default;
+    }
+
+    /**
+     * Get a float attribute with type safety
+     */
+    protected function getFloat(string $key, float $default = 0.0): float
+    {
+        $value = $this->attributes[$key] ?? $default;
+
+        return is_numeric($value) ? (float) $value : $default;
+    }
+
+    /**
+     * Get an int attribute with type safety
+     */
+    protected function getInt(string $key, int $default = 0): int
+    {
+        $value = $this->attributes[$key] ?? $default;
+
+        return is_numeric($value) ? (int) $value : $default;
+    }
+
+    /**
+     * Get a nullable string attribute with type safety
+     */
+    protected function getNullableString(string $key): ?string
+    {
+        $value = $this->attributes[$key] ?? null;
+
+        return is_string($value) ? $value : null;
+    }
+
+    /**
+     * Get a nullable int attribute with type safety
+     */
+    protected function getNullableInt(string $key): ?int
+    {
+        $value = $this->attributes[$key] ?? null;
+
+        return is_numeric($value) ? (int) $value : null;
     }
 
     /**

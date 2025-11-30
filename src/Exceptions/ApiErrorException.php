@@ -43,7 +43,13 @@ class ApiErrorException extends Exception
         $firstKey = array_key_first($this->errors);
         $firstError = $this->errors[$firstKey];
 
-        return is_array($firstError) ? ($firstError[0] ?? null) : $firstError;
+        if (is_array($firstError)) {
+            $first = $firstError[0] ?? null;
+
+            return is_string($first) ? $first : null;
+        }
+
+        return is_string($firstError) ? $firstError : null;
     }
 
     public function toArray(): array

@@ -43,6 +43,7 @@ class InvoiceService extends AbstractService
      */
     public function finalize(string $invoiceId): Invoice
     {
+        /** @var array<string, mixed> $response */
         $response = $this->client->post(sprintf('%s/%s/finalize', $this->getEndpoint(), $invoiceId), []);
 
         return new Invoice($response);

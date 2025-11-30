@@ -16,7 +16,7 @@ trait HasPaymentAgreement
         string $agreementId,
         string|AgreementType $type = AgreementType::UNSCHEDULED
     ): static {
-        $existing = $this->data['payment_agreement'] ?? [];
+        $existing = $this->getExistingPaymentAgreement();
         $this->data['payment_agreement'] = array_merge($existing, [
             'id' => $agreementId,
             'type' => $type instanceof AgreementType ? $type->value : $type,
@@ -29,7 +29,7 @@ trait HasPaymentAgreement
         string $contractId,
         string|ContractType $type = ContractType::UNSCHEDULED
     ): static {
-        $existing = $this->data['payment_agreement'] ?? [];
+        $existing = $this->getExistingPaymentAgreement();
         $this->data['payment_agreement'] = array_merge($existing, [
             'contract' => [
                 'id' => $contractId,
@@ -42,10 +42,25 @@ trait HasPaymentAgreement
 
     public function totalPaymentsCount(int $count): static
     {
-        $existing = $this->data['payment_agreement'] ?? [];
+        $existing = $this->getExistingPaymentAgreement();
         $this->data['payment_agreement'] = array_merge($existing, ['total_payments_count' => $count]);
 
         return $this;
+    }
+
+    /**
+     * Get existing payment agreement data with proper type safety
+     *
+     * @return array<string, mixed>
+     */
+    private function getExistingPaymentAgreement(): array
+    {
+        if (isset($this->data['payment_agreement']) && is_array($this->data['payment_agreement'])) {
+            /** @var array<string, mixed> */
+            return $this->data['payment_agreement'];
+        }
+
+        return [];
     }
 
     public function customerInitiated(bool $initiated = true): static

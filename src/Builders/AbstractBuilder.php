@@ -52,9 +52,15 @@ abstract class AbstractBuilder implements Arrayable, Jsonable
             if (! $this->hasAmount()) {
                 return $default;
             }
-            $currency = $this->data['currency'] ?? config('tap.currency', 'SAR');
+            $rawAmount = $this->getRawAmount();
+            if ($rawAmount === null) {
+                return $default;
+            }
+            $currency = isset($this->data['currency']) && is_string($this->data['currency'])
+                ? $this->data['currency']
+                : (is_string($cfg = config('tap.currency', 'SAR')) ? $cfg : 'SAR');
 
-            return $this->money->toDecimal($this->getRawAmount(), $currency);
+            return $this->money->toDecimal($rawAmount, $currency);
         }
 
         return $this->data[$key] ?? $default;

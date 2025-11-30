@@ -16,7 +16,8 @@ trait HasCreateOperation
     /**
      * Create a new resource
      *
-     * @param  array  $data  Resource data
+     * @param  array<string, mixed>  $data  Resource data
+     * @return \TapPay\Tap\Resources\Resource
      *
      * @throws AuthenticationException If API authentication fails
      * @throws InvalidRequestException If request parameters are invalid
@@ -24,6 +25,7 @@ trait HasCreateOperation
      */
     public function create(array $data): mixed
     {
+        /** @var array<string, mixed> $response */
         $response = $this->client->post($this->getEndpoint(), $data);
         $resourceClass = $this->getResourceClass();
 

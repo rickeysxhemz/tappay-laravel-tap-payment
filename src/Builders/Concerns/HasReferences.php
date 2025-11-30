@@ -16,9 +16,12 @@ trait HasReferences
         return $this;
     }
 
+    /**
+     * @param  string|array<string, mixed>  $reference
+     */
     public function reference(string|array $reference): static
     {
-        $existing = $this->data['reference'] ?? [];
+        $existing = $this->getExistingReference();
 
         if (is_array($reference)) {
             $this->data['reference'] = array_merge($existing, $reference);
@@ -31,9 +34,22 @@ trait HasReferences
 
     public function orderReference(string $orderId): static
     {
-        $existing = $this->data['reference'] ?? [];
+        $existing = $this->getExistingReference();
         $this->data['reference'] = array_merge($existing, ['order' => $orderId]);
 
         return $this;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function getExistingReference(): array
+    {
+        if (isset($this->data['reference']) && is_array($this->data['reference'])) {
+            /** @var array<string, mixed> */
+            return $this->data['reference'];
+        }
+
+        return [];
     }
 }

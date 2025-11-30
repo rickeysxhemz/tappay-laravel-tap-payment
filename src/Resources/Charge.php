@@ -8,6 +8,8 @@ use TapPay\Tap\Enums\ChargeStatus;
 use TapPay\Tap\Exceptions\InvalidStatusException;
 use TapPay\Tap\Resources\Concerns\HasPaymentDetails;
 
+use function is_string;
+
 class Charge extends Resource
 {
     use HasPaymentDetails;
@@ -26,7 +28,7 @@ class Charge extends Resource
     {
         $status = $this->attributes['status'] ?? null;
 
-        if ($status === null) {
+        if (! is_string($status)) {
             return ChargeStatus::UNKNOWN;
         }
 
@@ -39,7 +41,7 @@ class Charge extends Resource
      */
     public function description(): ?string
     {
-        return $this->attributes['description'] ?? null;
+        return $this->getNullableString('description');
     }
 
     /**
@@ -47,6 +49,8 @@ class Charge extends Resource
      */
     public function cardId(): ?string
     {
-        return $this->get('card.id');
+        $cardId = $this->get('card.id');
+
+        return is_string($cardId) ? $cardId : null;
     }
 }

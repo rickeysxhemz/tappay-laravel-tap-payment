@@ -17,7 +17,8 @@ trait HasUpdateOperation
      * Update a resource
      *
      * @param  string  $id  Resource ID
-     * @param  array  $data  Update data
+     * @param  array<string, mixed>  $data  Update data
+     * @return \TapPay\Tap\Resources\Resource
      *
      * @throws AuthenticationException If API authentication fails
      * @throws InvalidRequestException If request parameters are invalid
@@ -25,6 +26,7 @@ trait HasUpdateOperation
      */
     public function update(string $id, array $data): mixed
     {
+        /** @var array<string, mixed> $response */
         $response = $this->client->put(sprintf('%s/%s', $this->getEndpoint(), $id), $data);
         $resourceClass = $this->getResourceClass();
 

@@ -20,7 +20,7 @@ class Customer extends Resource
      */
     public function firstName(): string
     {
-        return $this->attributes['first_name'] ?? '';
+        return $this->getString('first_name');
     }
 
     /**
@@ -28,7 +28,7 @@ class Customer extends Resource
      */
     public function lastName(): ?string
     {
-        return $this->attributes['last_name'] ?? null;
+        return $this->getNullableString('last_name');
     }
 
     /**
