@@ -1,19 +1,36 @@
 /vendor/
 /node_modules/
+
+# Environment files
 .env
 .env.backup
 .env.production
 .env.testing
+
+# Config files (use .dist versions for defaults)
+phpunit.xml
+phpstan.neon
+
+# Cache directories
 .phpunit.result.cache
 .phpunit.cache
-composer.lock
-phpunit.xml
 coverage/
+
+# Dependencies lock file
+composer.lock
+
+# OS files
 .DS_Store
 Thumbs.db
+
+# Logs
 *.log
+
+# IDE directories
 /.idea
 /.vscode
 /.fleet
+
+# Claude AI files
 CLAUDE.md
 claude.md

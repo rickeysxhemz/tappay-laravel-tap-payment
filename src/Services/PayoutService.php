@@ -8,6 +8,7 @@ use TapPay\Tap\Exceptions\ApiErrorException;
 use TapPay\Tap\Exceptions\AuthenticationException;
 use TapPay\Tap\Exceptions\InvalidRequestException;
 use TapPay\Tap\Resources\Payout;
+use TapPay\Tap\Services\Concerns\HasReadOperations;
 
 /**
  * Service for tracking merchant settlements/payouts
@@ -16,6 +17,8 @@ use TapPay\Tap\Resources\Payout;
  */
 class PayoutService extends AbstractService
 {
+    use HasReadOperations;
+
     protected function getEndpoint(): string
     {
         return 'payouts';
@@ -29,44 +32,6 @@ class PayoutService extends AbstractService
     protected function getResourceClass(): string
     {
         return Payout::class;
-    }
-
-    /**
-     * Retrieve a payout by ID
-     *
-     * @param  string  $payoutId  Payout ID
-     *
-     * @throws AuthenticationException If API authentication fails
-     * @throws InvalidRequestException If payout ID is invalid
-     * @throws ApiErrorException If API returns an error or network error occurs
-     */
-    public function retrieve(string $payoutId): Payout
-    {
-        $response = $this->client->get(sprintf('%s/%s', $this->getEndpoint(), $payoutId));
-
-        return new Payout($response);
-    }
-
-    /**
-     * List all payouts
-     *
-     * @param  array  $params  Query parameters including:
-     *                         - limit: int (max results)
-     *                         - starting_after: string (pagination cursor)
-     *                         - merchant: string (filter by merchant ID)
-     *                         - status: string (filter by status: PENDING, IN_PROGRESS, PAID, FAILED)
-     *                         - arrival_date: array with gte/lte for date range
-     * @return Payout[]
-     *
-     * @throws AuthenticationException If API authentication fails
-     * @throws InvalidRequestException If query parameters are invalid
-     * @throws ApiErrorException If API returns an error or network error occurs
-     */
-    public function list(array $params = []): array
-    {
-        $response = $this->client->post(sprintf('%s/list', $this->getEndpoint()), $params);
-
-        return $this->mapToResources($response);
     }
 
     /**

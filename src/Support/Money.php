@@ -43,7 +43,7 @@ final class Money implements MoneyContract
         $currency = trim($currency);
 
         if ($currency === '') {
-            throw InvalidCurrencyException::empty();
+            InvalidCurrencyException::empty();
         }
 
         $currency = strtoupper($currency);
@@ -149,7 +149,7 @@ final class Money implements MoneyContract
     private function assertSupportedCurrency(string $currency): void
     {
         if (! isset(self::CURRENCY_DECIMALS[$currency])) {
-            throw InvalidCurrencyException::unsupported(
+            InvalidCurrencyException::unsupported(
                 $currency,
                 array_keys(self::CURRENCY_DECIMALS)
             );

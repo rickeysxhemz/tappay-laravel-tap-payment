@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use TapPay\Tap\Events\PaymentFailed;
+use TapPay\Tap\Events\PaymentRetrievalFailed;
 use TapPay\Tap\Events\PaymentSucceeded;
 use TapPay\Tap\Exceptions\ApiErrorException;
 use TapPay\Tap\Exceptions\AuthenticationException;
@@ -41,11 +42,35 @@ class PaymentCallbackController extends Controller
 
         try {
             $charge = Tap::charges()->retrieve($chargeId);
-        } catch (AuthenticationException) {
+        } catch (AuthenticationException $e) {
+            PaymentRetrievalFailed::dispatch(
+                $chargeId,
+                PaymentRetrievalFailed::ERROR_TYPE_AUTHENTICATION,
+                'Authentication failed',
+                $e,
+                $redirectUrl
+            );
+
             return $this->redirectToFailure($redirectUrl, 'Authentication failed');
-        } catch (InvalidRequestException) {
+        } catch (InvalidRequestException $e) {
+            PaymentRetrievalFailed::dispatch(
+                $chargeId,
+                PaymentRetrievalFailed::ERROR_TYPE_INVALID_REQUEST,
+                'Invalid charge ID',
+                $e,
+                $redirectUrl
+            );
+
             return $this->redirectToFailure($redirectUrl, 'Invalid charge ID');
-        } catch (ApiErrorException) {
+        } catch (ApiErrorException $e) {
+            PaymentRetrievalFailed::dispatch(
+                $chargeId,
+                PaymentRetrievalFailed::ERROR_TYPE_API_ERROR,
+                'Failed to retrieve charge',
+                $e,
+                $redirectUrl
+            );
+
             return $this->redirectToFailure($redirectUrl, 'Failed to retrieve charge');
         }
 

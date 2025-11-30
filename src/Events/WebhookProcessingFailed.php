@@ -7,6 +7,7 @@ namespace TapPay\Tap\Events;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use Throwable;
 
 class WebhookProcessingFailed
 {
@@ -17,12 +18,12 @@ class WebhookProcessingFailed
     /**
      * Create a new event instance
      *
-     * @param  \Exception  $exception  The exception that was thrown
+     * @param  Throwable  $exception  The exception that was thrown
      * @param  string  $resource  The webhook resource type
      * @param  array  $payload  The webhook payload
      */
     public function __construct(
-        public \Exception $exception,
+        public Throwable $exception,
         public string $resource,
         public array $payload
     ) {}

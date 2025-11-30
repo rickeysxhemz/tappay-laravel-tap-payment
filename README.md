@@ -47,8 +47,8 @@ TAP_CURRENCY=SAR
 use TapPay\Tap\Facades\Tap;
 
 // Create a charge
-$charge = Tap::charges()
-    ->amount(10000)           // Amount in smallest currency unit (100.00 SAR)
+$charge = Tap::charges()->newBuilder()
+    ->amount(100.00)              // Amount in currency units (100.00 SAR)
     ->currency('SAR')
     ->withCard()
     ->customer([
@@ -85,6 +85,22 @@ $user->charge(10000, 'SAR', [
 ]);
 ```
 
+### Available Services
+
+| Service | Description |
+|---------|-------------|
+| `Tap::charges()` | Create, retrieve, update, and list charges |
+| `Tap::customers()` | Full CRUD operations for customers |
+| `Tap::refunds()` | Process and manage refunds |
+| `Tap::authorizations()` | Handle authorization and capture flows |
+| `Tap::tokens()` | Create and manage payment tokens |
+| `Tap::cards()` | Manage saved cards for customers |
+| `Tap::invoices()` | Create and manage invoices |
+| `Tap::subscriptions()` | Handle recurring subscriptions |
+| `Tap::merchants()` | Marketplace sub-merchant management |
+| `Tap::destinations()` | Payment split destinations |
+| `Tap::payouts()` | Track merchant settlements |
+
 ### Supported Payment Methods
 
 | Region | Methods |
@@ -107,12 +123,12 @@ use TapPay\Tap\Facades\Tap;
 use TapPay\Tap\ValueObjects\Destination;
 
 // Create a charge with payment splits
-$charge = Tap::charges()
-    ->amount(10000)
+$charge = Tap::charges()->newBuilder()
+    ->amount(100.00)
     ->withCard()
     ->destinations([
-        Destination::make('merchant_123', 7000),  // 70% to vendor
-        Destination::make('merchant_456', 3000),  // 30% platform fee
+        Destination::make('merchant_123', 70.00),  // 70% to vendor
+        Destination::make('merchant_456', 30.00),  // 30% platform fee
     ])
     ->redirectUrl('https://example.com/callback')
     ->create();
@@ -128,13 +144,81 @@ $merchant = Tap::merchants()->create([
 $payouts = Tap::payouts()->listByMerchant('merchant_123');
 ```
 
+### Events
+
+The package dispatches events you can listen to:
+
+| Event | Description |
+|-------|-------------|
+| `PaymentSucceeded` | Dispatched when a payment is successful |
+| `PaymentFailed` | Dispatched when a payment fails |
+| `PaymentRetrievalFailed` | Dispatched when charge retrieval fails (API errors) |
+| `WebhookReceived` | Dispatched when a valid webhook is received |
+| `WebhookValidationFailed` | Dispatched when webhook validation fails |
+| `WebhookProcessingFailed` | Dispatched when webhook processing throws an exception |
+
+Example listener:
+
+```php
+use TapPay\Tap\Events\PaymentSucceeded;
+use TapPay\Tap\Events\PaymentFailed;
+
+// In EventServiceProvider
+protected $listen = [
+    PaymentSucceeded::class => [
+        SendPaymentConfirmation::class,
+    ],
+    PaymentFailed::class => [
+        NotifyPaymentFailure::class,
+    ],
+];
+```
+
+### Webhooks
+
+Configure webhook handling in your `config/tap.php`:
+
+```php
+'webhook' => [
+    'secret' => env('TAP_WEBHOOK_SECRET'),
+    'tolerance' => 300, // 5 minutes
+    'allowed_resources' => ['charge', 'refund', 'customer'],
+],
+```
+
+The package automatically:
+- Validates webhook signatures using HMAC-SHA256
+- Prevents replay attacks with timestamp tolerance
+- Dispatches events for each webhook type
+
+### Security Features
+
+- HMAC-SHA256 webhook signature validation
+- Timing-safe signature comparison
+- Open redirect protection on callbacks
+- Input validation on all builder methods
+- Sensitive parameter protection for API keys
+
+## Testing
+
+```bash
+# Run tests
+composer test
+
+# Run static analysis
+composer analyse
+
+# Run code style checks
+composer lint
+```
+
 ## Contributing
 
-Thank you for considering contributing to Laravel Tap Payments! The contribution guide can be found in the [CONTRIBUTING.md](.github/CONTRIBUTING.md) file.
+Thank you for considering contributing to Laravel Tap Payments! The contribution guide can be found in the [CONTRIBUTING.md](CONTRIBUTING.md) file.
 
 ## Code of Conduct
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](.github/CODE_OF_CONDUCT.md).
+In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Security Vulnerabilities
 
