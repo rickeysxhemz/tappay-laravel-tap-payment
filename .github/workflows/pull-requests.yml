@@ -12,6 +12,7 @@ jobs:
   # Welcome first-time contributors
   welcome:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     if: github.event.action == 'opened'
     steps:
       - name: Check if first-time contributor
@@ -46,6 +47,7 @@ jobs:
   # Auto-label PRs based on files changed
   auto-label:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     if: github.event.action == 'opened' || github.event.action == 'synchronize'
     steps:
       - name: Get changed files
@@ -110,6 +112,7 @@ jobs:
   # Size labeling
   size-label:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Label PR size
         uses: actions/github-script@v8
@@ -171,6 +174,7 @@ jobs:
   # Check PR title follows conventional commits (only on open, not every sync)
   conventional-title:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     if: github.event.action == 'opened'
     steps:
       - name: Check PR title

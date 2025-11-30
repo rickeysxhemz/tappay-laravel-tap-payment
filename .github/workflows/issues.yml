@@ -11,6 +11,7 @@ jobs:
   # Auto-label issues based on title/content
   auto-label:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     if: github.event.action == 'opened'
     steps:
       - name: Label bug reports
@@ -52,6 +53,7 @@ jobs:
   # Respond to help-wanted label
   help-wanted:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     if: github.event.action == 'labeled' && github.event.label.name == 'help wanted'
     steps:
       - name: Add comment for help wanted
@@ -68,6 +70,7 @@ jobs:
   # Auto-close issues with wontfix label
   wontfix:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     if: github.event.action == 'labeled' && github.event.label.name == 'wontfix'
     steps:
       - name: Comment and close issue
@@ -92,6 +95,7 @@ jobs:
   # Auto-close duplicate issues
   duplicate:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     if: github.event.action == 'labeled' && github.event.label.name == 'duplicate'
     steps:
       - name: Close and comment on duplicate

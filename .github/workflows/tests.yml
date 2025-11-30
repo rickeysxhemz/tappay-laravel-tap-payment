@@ -2,9 +2,8 @@ name: Tests
 
 on:
   push:
-    branches: [main]
+    branches: [main, '*.x']
   pull_request:
-    branches: [main]
   schedule:
     - cron: '0 0 * * 0'  # Weekly on Sunday at midnight (for integration tests)
 
@@ -13,23 +12,21 @@ permissions:
 
 jobs:
   test:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     timeout-minutes: 15
 
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
         php: [8.2, 8.3, 8.4]
         laravel: [11.*, 12.*]
-        stability: [prefer-lowest, prefer-stable]
         include:
           - laravel: 11.*
             testbench: ^9.0
           - laravel: 12.*
             testbench: ^10.0
 
-    name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }}
+    name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
 
     steps:
       - name: Checkout code
@@ -41,33 +38,24 @@ jobs:
           php-version: ${{ matrix.php }}
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath
           coverage: pcov
-
-      - name: Get composer cache directory
-        id: composer-cache
-        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
-
-      - name: Cache composer dependencies
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-php${{ matrix.php }}-composer-${{ hashFiles('**/composer.json') }}
-          restore-keys: ${{ runner.os }}-php${{ matrix.php }}-composer-
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
         run: |
           composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
-          composer update --${{ matrix.stability }} --prefer-dist --no-interaction
+          composer update --prefer-stable --prefer-dist --no-interaction
 
       - name: Execute tests
-        if: "!(matrix.php == '8.3' && matrix.laravel == '12.*' && matrix.stability == 'prefer-stable')"
+        if: "!(matrix.php == '8.3' && matrix.laravel == '12.*')"
         run: vendor/bin/pest --colors=always
 
       - name: Execute tests with coverage
-        if: matrix.php == '8.3' && matrix.laravel == '12.*' && matrix.stability == 'prefer-stable'
+        if: matrix.php == '8.3' && matrix.laravel == '12.*'
         run: vendor/bin/pest --coverage --min=70 --colors=always --coverage-clover coverage.xml
 
       - name: Upload coverage to Codecov
-        if: matrix.php == '8.3' && matrix.laravel == '12.*' && matrix.stability == 'prefer-stable'
+        if: matrix.php == '8.3' && matrix.laravel == '12.*'
         uses: codecov/codecov-action@v5
         with:
           files: ./coverage.xml
@@ -92,17 +80,8 @@ jobs:
           php-version: 8.3
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath
           coverage: none
-
-      - name: Get composer cache directory
-        id: composer-cache
-        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
-
-      - name: Cache composer dependencies
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-php8.3-composer-${{ hashFiles('**/composer.json') }}
-          restore-keys: ${{ runner.os }}-php8.3-composer-
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-interaction

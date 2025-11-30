@@ -18,6 +18,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     name: Pre-Release Tests
+    timeout-minutes: 15
 
     steps:
       - name: Checkout code
@@ -43,6 +44,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     name: Create Release
+    timeout-minutes: 15
     needs: test
     # environment: production  # Uncomment when repo is public to enable required reviewers
     steps:
@@ -213,6 +215,7 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     name: Verify Installation
+    timeout-minutes: 15
     needs: release
 
     steps:
@@ -314,6 +317,7 @@ jobs:
   rollback:
     runs-on: ubuntu-latest
     name: Rollback on Failure
+    timeout-minutes: 10
     needs: [release, verify]
     if: failure() && needs.release.result == 'success'
 
