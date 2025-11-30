@@ -5,7 +5,7 @@ A fluent Laravel integration for Tap Payments API
 </p>
 
 <p align="center">
-<a href="https://github.com/rickeysxhemz/laravel-tap-payment/actions"><img src="https://github.com/rickeysxhemz/laravel-tap-payment/actions/workflows/tests.yml/badge.svg" alt="Build Status"></a>
+<a href="https://github.com/rickeysxhemz/tappay-laravel-tap-payment/actions"><img src="https://github.com/rickeysxhemz/tappay-laravel-tap-payment/actions/workflows/tests.yml/badge.svg" alt="Build Status"></a>
 <a href="https://packagist.org/packages/tappay/laravel-tap-payment"><img src="https://img.shields.io/packagist/dt/tappay/laravel-tap-payment" alt="Total Downloads"></a>
 <a href="https://packagist.org/packages/tappay/laravel-tap-payment"><img src="https://img.shields.io/packagist/v/tappay/laravel-tap-payment" alt="Latest Stable Version"></a>
 <a href="https://packagist.org/packages/tappay/laravel-tap-payment"><img src="https://img.shields.io/packagist/l/tappay/laravel-tap-payment" alt="License"></a>
@@ -17,7 +17,16 @@ Laravel Tap Payments provides an expressive, fluent interface to [Tap Payments](
 
 ## Official Documentation
 
-Documentation for the package can be found on the [GitHub Wiki](https://github.com/rickeysxhemz/laravel-tap-payment/wiki).
+Documentation for the package can be found in the [docs](docs/) folder:
+
+- [Installation](docs/1-installation.md)
+- [Configuration](docs/2-configuration.md)
+- [Charges](docs/3-charges.md)
+- [Webhooks](docs/4-webhooks.md)
+- [Saved Cards](docs/5-saved-cards.md)
+- [Billable Trait](docs/6-billable.md)
+- [Testing](docs/7-testing.md)
+- [Marketplace](docs/8-marketplace.md)
 
 ## Quick Start
 
