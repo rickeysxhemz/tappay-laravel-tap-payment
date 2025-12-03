@@ -126,6 +126,7 @@ $charge = Tap::charges()
 |--------|-------------|
 | `reference(string)` | Transaction reference |
 | `orderReference(string)` | Order reference |
+| `idempotent(string)` | Idempotent key to prevent duplicate charges |
 | `metadata(array)` | Custom metadata |
 | `addMetadata(key, value)` | Add single metadata item |
 
@@ -189,6 +190,58 @@ $charge->cardId();          // If card was saved
 | `ABANDONED` | Customer didn't complete |
 | `TIMEDOUT` | Transaction expired |
 
+## Idempotency (Preventing Double Charges)
+
+Use the `idempotent()` method to prevent duplicate charges when customers click "Pay" multiple times or when network issues cause retries.
+
+### How It Works
+
+- If the same idempotent key is sent within **24 hours**, Tap returns the original response
+- No new charge is created for duplicate requests
+- Works with charges, authorizations, and refunds
+
+### Basic Usage
+
+```php
+$charge = Tap::charges()
+    ->amount(10000)
+    ->withCard()
+    ->idempotent($order->id)        // Use order ID as idempotent key
+    ->redirectUrl($callbackUrl)
+    ->create();
+```
+
+### Recommended Patterns
+
+```php
+// Pattern 1: Use order ID directly
+->idempotent($order->id)
+
+// Pattern 2: Prefix with type for clarity
+->idempotent("order_{$order->id}")
+
+// Pattern 3: Combine with all references
+->reference("txn_{$order->id}")
+->orderReference($order->id)
+->idempotent($order->id)
+```
+
+### Use Cases
+
+| Scenario | Solution |
+|----------|----------|
+| Double-click on Pay button | Same idempotent key returns original charge |
+| Network timeout + retry | Same idempotent key prevents second charge |
+| Abandoned 3DS flow | Same key redirects to original 3DS page (within 30 min) |
+| Subscription renewal retry | Same key prevents duplicate renewal charge |
+
+### Best Practices
+
+1. **Always use idempotent keys** for production charges
+2. **Tie to your order ID** - ensures consistency across retries
+3. **Use the same key** when retrying failed network requests
+4. **Don't generate random keys** for the same payment intent
+
 ## Complete Example
 
 ```php
@@ -214,6 +267,7 @@ class PaymentController extends Controller
                 ])
                 ->description('Order #' . $orderId)
                 ->reference('order_' . $orderId)
+                ->idempotent($orderId)              // Prevent double charges
                 ->redirectUrl(route('payment.callback'))
                 ->postUrl(route('webhook.tap'))
                 ->saveCard()

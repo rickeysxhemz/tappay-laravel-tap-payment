@@ -308,6 +308,25 @@ describe('ChargeBuilder', function () {
         ]);
     })->group('unit');
 
+    test('can set idempotent key', function () {
+        $this->builder->idempotent('order_12345');
+
+        expect($this->builder->get('reference'))->toBe(['idempotent' => 'order_12345']);
+    })->group('unit');
+
+    test('can set idempotent key with transaction and order reference', function () {
+        $this->builder
+            ->reference('txn_12345')
+            ->orderReference('order_12345')
+            ->idempotent('order_12345');
+
+        expect($this->builder->get('reference'))->toBe([
+            'transaction' => 'txn_12345',
+            'order' => 'order_12345',
+            'idempotent' => 'order_12345',
+        ]);
+    })->group('unit');
+
     test('can build merchant initiated transaction', function () {
         $this->builder
             ->amount(5000)

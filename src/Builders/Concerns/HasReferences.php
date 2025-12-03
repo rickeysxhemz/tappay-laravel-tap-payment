@@ -40,6 +40,14 @@ trait HasReferences
         return $this;
     }
 
+    public function idempotent(string $key): static
+    {
+        $existing = $this->getExistingReference();
+        $this->data['reference'] = array_merge($existing, ['idempotent' => $key]);
+
+        return $this;
+    }
+
     /**
      * @return array<string, mixed>
      */
