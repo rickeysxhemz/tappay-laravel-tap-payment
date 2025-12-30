@@ -8,6 +8,7 @@ use TapPay\Tap\Builders\ChargeBuilder;
 use TapPay\Tap\Contracts\MoneyContract;
 use TapPay\Tap\Http\Client;
 use TapPay\Tap\Resources\Charge;
+use TapPay\Tap\Services\Concerns\HasDownloadOperation;
 use TapPay\Tap\Services\Concerns\HasStandardOperations;
 
 /**
@@ -15,6 +16,7 @@ use TapPay\Tap\Services\Concerns\HasStandardOperations;
  */
 class ChargeService extends AbstractService
 {
+    use HasDownloadOperation;
     use HasStandardOperations;
 
     public function __construct(

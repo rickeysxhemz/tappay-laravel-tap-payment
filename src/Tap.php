@@ -56,7 +56,7 @@ class Tap
 
     public function authorizations(): AuthorizeService
     {
-        return new AuthorizeService($this->client);
+        return new AuthorizeService($this->client, $this->money);
     }
 
     public function tokens(): TokenService

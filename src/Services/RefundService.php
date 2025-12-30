@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TapPay\Tap\Services;
 
 use TapPay\Tap\Resources\Refund;
+use TapPay\Tap\Services\Concerns\HasDownloadOperation;
 use TapPay\Tap\Services\Concerns\HasStandardOperations;
 
 /**
@@ -12,6 +13,7 @@ use TapPay\Tap\Services\Concerns\HasStandardOperations;
  */
 class RefundService extends AbstractService
 {
+    use HasDownloadOperation;
     use HasStandardOperations;
 
     protected function getEndpoint(): string

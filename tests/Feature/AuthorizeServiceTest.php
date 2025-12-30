@@ -6,6 +6,7 @@ namespace TapPay\Tap\Tests\Feature;
 
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\Attributes\Test;
+use TapPay\Tap\Contracts\MoneyContract;
 use TapPay\Tap\Enums\AuthorizeStatus;
 use TapPay\Tap\Exceptions\ApiErrorException;
 use TapPay\Tap\Exceptions\AuthenticationException;
@@ -17,11 +18,14 @@ class AuthorizeServiceTest extends TestCase
 {
     protected AuthorizeService $authorizeService;
 
+    protected MoneyContract $money;
+
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->authorizeService = new AuthorizeService($this->mockHttpClient());
+        $this->money = app(MoneyContract::class);
+        $this->authorizeService = new AuthorizeService($this->mockHttpClient(), $this->money);
     }
 
     #[Test]
@@ -402,5 +406,73 @@ class AuthorizeServiceTest extends TestCase
         $this->authorizeService->create([
             'amount' => 50.00,
         ]);
+    }
+
+    #[Test]
+    public function it_can_void_an_authorization(): void
+    {
+        $this->mockHandler->append(new Response(200, [], json_encode([
+            'id' => 'auth_test_123456',
+            'amount' => 50.00,
+            'currency' => 'USD',
+            'status' => 'VOID',
+        ])));
+
+        $authorization = $this->authorizeService->void('auth_test_123456');
+
+        $this->assertSame('auth_test_123456', $authorization->id());
+        $this->assertSame(AuthorizeStatus::VOID, $authorization->status());
+        $this->assertTrue($authorization->hasFailed());
+    }
+
+    #[Test]
+    public function it_throws_exception_for_invalid_void_id(): void
+    {
+        $this->expectException(InvalidRequestException::class);
+        $this->expectExceptionMessage('Authorization ID must start with "auth_"');
+
+        $this->authorizeService->void('invalid_id');
+    }
+
+    #[Test]
+    public function it_can_download_authorizations(): void
+    {
+        $this->mockHandler->append(new Response(200, [], json_encode([
+            'url' => 'https://api.tap.company/v2/exports/auth_export_123.csv',
+            'status' => 'ready',
+        ])));
+
+        $result = $this->authorizeService->download(['status' => 'AUTHORIZED']);
+
+        $this->assertArrayHasKey('url', $result);
+        $this->assertArrayHasKey('status', $result);
+    }
+
+    #[Test]
+    public function it_can_create_authorization_builder(): void
+    {
+        $builder = $this->authorizeService->newBuilder();
+
+        $this->assertInstanceOf(\TapPay\Tap\Builders\AuthorizationBuilder::class, $builder);
+    }
+
+    #[Test]
+    public function it_can_create_authorization_with_idempotent_reference(): void
+    {
+        $this->mockHandler->append(new Response(200, [], json_encode([
+            'id' => 'auth_test_idempotent',
+            'amount' => 50.00,
+            'currency' => 'USD',
+            'status' => 'INITIATED',
+        ])));
+
+        $authorization = $this->authorizeService->create([
+            'amount' => 50.00,
+            'currency' => 'USD',
+            'source' => ['id' => 'src_card'],
+            'reference' => ['idempotent' => 'unique-idempotent-key-123'],
+        ]);
+
+        $this->assertSame('auth_test_idempotent', $authorization->id());
     }
 }

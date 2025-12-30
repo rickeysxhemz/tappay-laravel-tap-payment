@@ -146,7 +146,9 @@ $charge = Tap::charges()
 | `paymentAgreement(id, type)` | For recurring payments |
 | `contract(id, type)` | Payment agreement contract |
 | `totalPaymentsCount(int)` | Expected payment count |
-| `expiresIn(minutes)` | Transaction expiry |
+| `expiresIn(minutes)` | Transaction link expiry (1-43200 minutes) |
+| `transactionExpiry(minutes)` | Payment session expiry (5-60 minutes) |
+| `customerInitiated(bool)` | Mark as customer-initiated transaction (for saved cards) |
 
 ### Marketplace Methods
 
@@ -241,6 +243,27 @@ $charge = Tap::charges()
 2. **Tie to your order ID** - ensures consistency across retries
 3. **Use the same key** when retrying failed network requests
 4. **Don't generate random keys** for the same payment intent
+
+## Bulk Export
+
+Export charges for reporting or reconciliation:
+
+```php
+// Download all charges with filters
+$result = Tap::charges()->download([
+    'status' => 'CAPTURED',
+    'period' => [
+        'date' => [
+            'from' => '2024-01-01',
+            'to' => '2024-12-31',
+        ],
+    ],
+]);
+
+// Returns download URL and status
+$downloadUrl = $result['url'];
+$status = $result['status'];  // 'ready' or 'processing'
+```
 
 ## Complete Example
 

@@ -265,4 +265,43 @@ class TokenServiceTest extends TestCase
         $this->assertSame(1670000000, $token->created());
         $this->assertIsInt($token->created());
     }
+
+    #[Test]
+    public function it_can_list_tokens(): void
+    {
+        $this->mockHandler->append(new Response(200, [], json_encode([
+            'tokens' => [
+                [
+                    'id' => 'tok_test_1',
+                    'card' => 'card_test_1',
+                    'customer' => 'cus_test_1',
+                    'created' => 1640000000,
+                ],
+                [
+                    'id' => 'tok_test_2',
+                    'card' => 'card_test_2',
+                    'customer' => 'cus_test_2',
+                    'created' => 1650000000,
+                ],
+            ],
+        ])));
+
+        $tokens = $this->tokenService->list(['limit' => 10]);
+
+        $this->assertCount(2, $tokens);
+        $this->assertSame('tok_test_1', $tokens[0]->id());
+        $this->assertSame('tok_test_2', $tokens[1]->id());
+    }
+
+    #[Test]
+    public function it_handles_empty_token_list(): void
+    {
+        $this->mockHandler->append(new Response(200, [], json_encode([
+            'tokens' => [],
+        ])));
+
+        $tokens = $this->tokenService->list([]);
+
+        $this->assertCount(0, $tokens);
+    }
 }

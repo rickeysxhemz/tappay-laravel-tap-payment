@@ -98,13 +98,13 @@ $user->charge(10000, 'SAR', [
 
 | Service | Description |
 |---------|-------------|
-| `Tap::charges()` | Create, retrieve, update, and list charges |
+| `Tap::charges()` | Create, retrieve, list, and bulk export charges |
 | `Tap::customers()` | Full CRUD operations for customers |
-| `Tap::refunds()` | Process and manage refunds |
-| `Tap::authorizations()` | Handle authorization and capture flows |
+| `Tap::refunds()` | Process, manage, and bulk export refunds |
+| `Tap::authorizations()` | Authorization, capture, void, and bulk export |
 | `Tap::tokens()` | Create and manage payment tokens |
 | `Tap::cards()` | Manage saved cards for customers |
-| `Tap::invoices()` | Create and manage invoices |
+| `Tap::invoices()` | Create, finalize, remind, and cancel invoices |
 | `Tap::subscriptions()` | Handle recurring subscriptions |
 | `Tap::merchants()` | Marketplace sub-merchant management |
 | `Tap::destinations()` | Payment split destinations |
@@ -152,6 +152,76 @@ $merchant = Tap::merchants()->create([
 // Track payouts
 $payouts = Tap::payouts()->listByMerchant('merchant_123');
 ```
+
+### Authorizations (Two-Step Payments)
+
+Hold funds without capturing immediately:
+
+```php
+use TapPay\Tap\Facades\Tap;
+
+// Create authorization with auto-capture after 24 hours
+$auth = Tap::authorizations()->newBuilder()
+    ->amount(5000)
+    ->currency('SAR')
+    ->source('src_card')
+    ->autoCapture(24)                    // Auto-capture after 24 hours
+    ->idempotent($order->id)             // Prevent duplicate authorizations
+    ->redirectUrl('https://example.com/callback')
+    ->create();
+
+// Or auto-void if not captured
+$auth = Tap::authorizations()->newBuilder()
+    ->amount(5000)
+    ->source('src_card')
+    ->autoVoid(48)                       // Auto-void after 48 hours
+    ->create();
+
+// Manually void an authorization
+Tap::authorizations()->void('auth_xxxxx');
+
+// Bulk export authorizations
+Tap::authorizations()->download(['status' => 'AUTHORIZED']);
+```
+
+### Invoices
+
+Create and manage payment invoices:
+
+```php
+use TapPay\Tap\Facades\Tap;
+
+// Create an invoice
+$invoice = Tap::invoices()->create([
+    'amount' => 100.00,
+    'currency' => 'SAR',
+    'customer' => ['id' => 'cus_xxxxx'],
+]);
+
+// Finalize a draft invoice
+Tap::invoices()->finalize('inv_xxxxx');
+
+// Send payment reminder
+Tap::invoices()->remind('inv_xxxxx');
+
+// Cancel an invoice
+Tap::invoices()->cancel('inv_xxxxx');
+```
+
+### Idempotency
+
+Prevent duplicate charges with idempotent keys:
+
+```php
+$charge = Tap::charges()->newBuilder()
+    ->amount(10000)
+    ->withCard()
+    ->idempotent($order->id)             // Same key = same response within 24h
+    ->redirectUrl($callbackUrl)
+    ->create();
+```
+
+Works with charges, authorizations, and refunds. See [Charges documentation](docs/3-charges.md#idempotency-preventing-double-charges) for details.
 
 ### Events
 

@@ -505,4 +505,104 @@ class ChargeBuilderTest extends TestCase
         $this->assertTrue($data['receipt']['sms']);
         $this->assertSame('VOID', $data['auto']['type']);
     }
+
+    #[Test]
+    public function it_can_set_customer_initiated(): void
+    {
+        $builder = $this->createBuilder();
+        $data = $builder
+            ->amount(1000)
+            ->customerInitiated(true)
+            ->toArray();
+
+        $this->assertTrue($data['customer_initiated']);
+    }
+
+    #[Test]
+    public function it_can_disable_customer_initiated(): void
+    {
+        $builder = $this->createBuilder();
+        $data = $builder
+            ->amount(1000)
+            ->customerInitiated(false)
+            ->toArray();
+
+        $this->assertFalse($data['customer_initiated']);
+    }
+
+    #[Test]
+    public function it_can_set_transaction_expiry(): void
+    {
+        $builder = $this->createBuilder();
+        $data = $builder
+            ->amount(1000)
+            ->transactionExpiry(30)
+            ->toArray();
+
+        $this->assertSame(30, $data['transaction']['expiry']['period']);
+        $this->assertSame('MINUTE', $data['transaction']['expiry']['type']);
+    }
+
+    #[Test]
+    public function it_throws_exception_for_too_short_transaction_expiry(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Transaction expiry must be between 5 and 60 minutes');
+
+        $builder = $this->createBuilder();
+        $builder->transactionExpiry(4);
+    }
+
+    #[Test]
+    public function it_throws_exception_for_too_long_transaction_expiry(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Transaction expiry must be between 5 and 60 minutes');
+
+        $builder = $this->createBuilder();
+        $builder->transactionExpiry(61);
+    }
+
+    #[Test]
+    public function it_can_set_idempotent_key_in_reference(): void
+    {
+        $builder = $this->createBuilder();
+        $data = $builder
+            ->amount(1000)
+            ->idempotent('unique-key-123')
+            ->toArray();
+
+        $this->assertSame('unique-key-123', $data['reference']['idempotent']);
+    }
+
+    #[Test]
+    public function it_creates_charge_with_idempotent_key(): void
+    {
+        $this->mockHandler->append(new Response(200, [], json_encode([
+            'id' => 'chg_test_idempotent',
+            'amount' => 25.00,
+            'currency' => 'USD',
+            'status' => 'INITIATED',
+        ])));
+
+        $charge = $this->createBuilder()
+            ->amount(2500)
+            ->withCard()
+            ->idempotent('my-unique-key')
+            ->create();
+
+        $this->assertSame('chg_test_idempotent', $charge->id());
+    }
+
+    #[Test]
+    public function it_can_set_three_d_secure(): void
+    {
+        $builder = $this->createBuilder();
+        $data = $builder
+            ->amount(1000)
+            ->threeDSecure(true)
+            ->toArray();
+
+        $this->assertTrue($data['threeDSecure']);
+    }
 }

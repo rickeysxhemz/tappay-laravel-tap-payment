@@ -35,17 +35,58 @@ class InvoiceService extends AbstractService
     /**
      * Finalize an invoice
      *
-     * @param  string  $invoiceId  Invoice ID
-     *
-     * @throws AuthenticationException If API authentication fails
-     * @throws InvalidRequestException If invoice ID is invalid
-     * @throws ApiErrorException If API returns an error or network error occurs
+     * @throws AuthenticationException
+     * @throws InvalidRequestException
+     * @throws ApiErrorException
      */
     public function finalize(string $invoiceId): Invoice
     {
+        $this->validateInvoiceId($invoiceId);
+
         /** @var array<string, mixed> $response */
         $response = $this->client->post(sprintf('%s/%s/finalize', $this->getEndpoint(), $invoiceId), []);
 
         return new Invoice($response);
+    }
+
+    /**
+     * Send a payment reminder for an invoice
+     *
+     * @throws AuthenticationException
+     * @throws InvalidRequestException
+     * @throws ApiErrorException
+     */
+    public function remind(string $invoiceId): Invoice
+    {
+        $this->validateInvoiceId($invoiceId);
+
+        /** @var array<string, mixed> $response */
+        $response = $this->client->post(sprintf('%s/%s/remind', $this->getEndpoint(), $invoiceId), []);
+
+        return new Invoice($response);
+    }
+
+    /**
+     * Cancel an invoice
+     *
+     * @throws AuthenticationException
+     * @throws InvalidRequestException
+     * @throws ApiErrorException
+     */
+    public function cancel(string $invoiceId): void
+    {
+        $this->validateInvoiceId($invoiceId);
+
+        $this->client->delete(sprintf('%s/%s', $this->getEndpoint(), $invoiceId));
+    }
+
+    /**
+     * @throws InvalidRequestException
+     */
+    private function validateInvoiceId(string $invoiceId): void
+    {
+        if (! str_starts_with($invoiceId, 'inv_')) {
+            throw new InvalidRequestException('Invoice ID must start with "inv_"');
+        }
     }
 }
