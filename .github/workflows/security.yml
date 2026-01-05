@@ -92,7 +92,7 @@ jobs:
 
       - name: TruffleHog scan
         id: trufflehog
-        uses: trufflesecurity/trufflehog@v3.92.3
+        uses: trufflesecurity/trufflehog@v3.92.4
         with:
           extra_args: --only-verified
 
