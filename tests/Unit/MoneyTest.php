@@ -221,4 +221,44 @@ describe('Money', function () {
         expect($currencies)->toContain('KWD', 'BHD', 'OMR', 'JOD', 'SAR', 'AED', 'QAR', 'EGP', 'LBP', 'USD', 'EUR', 'GBP')
             ->and(count($currencies))->toBe(12);
     })->group('unit');
+
+    test('format uses default currency when not specified', function () {
+        $money = new Money('KWD');
+        expect($money->format(1050))->toBe('1.050 KWD');
+
+        $money2 = new Money('SAR');
+        expect($money2->format(1050))->toBe('10.50 SAR');
+    })->group('unit');
+
+    test('getDecimalPlaces uses default currency when not specified', function () {
+        $money = new Money('KWD');
+        expect($money->getDecimalPlaces())->toBe(3);
+
+        $money2 = new Money('SAR');
+        expect($money2->getDecimalPlaces())->toBe(2);
+    })->group('unit');
+
+    test('toDecimal uses default currency when not specified', function () {
+        $money = new Money('KWD');
+        expect($money->toDecimal(1050))->toBe(1.05);
+
+        $money2 = new Money('SAR');
+        expect($money2->toDecimal(1050))->toBe(10.5);
+    })->group('unit');
+
+    test('getMinimumAmount uses default currency when not specified', function () {
+        $money = new Money('KWD');
+        expect($money->getMinimumAmount())->toBe(100);
+
+        $money2 = new Money('SAR');
+        expect($money2->getMinimumAmount())->toBe(10);
+    })->group('unit');
+
+    test('getDivisor uses default currency when not specified', function () {
+        $money = new Money('KWD');
+        expect($money->getDivisor())->toBe(1000);
+
+        $money2 = new Money('SAR');
+        expect($money2->getDivisor())->toBe(100);
+    })->group('unit');
 });

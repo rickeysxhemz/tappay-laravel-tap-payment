@@ -425,4 +425,24 @@ class ResourceAccessorTest extends TestCase
         // Verify it's an array
         $this->assertIsArray($metadata);
     }
+
+    #[Test]
+    public function metadata_returns_empty_array_for_non_array_value(): void
+    {
+        $charge = new Charge([
+            'metadata' => 'not-an-array',
+        ]);
+
+        $this->assertSame([], $charge->metadata());
+    }
+
+    #[Test]
+    public function metadata_returns_empty_array_for_integer_value(): void
+    {
+        $charge = new Charge([
+            'metadata' => 12345,
+        ]);
+
+        $this->assertSame([], $charge->metadata());
+    }
 }

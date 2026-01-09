@@ -260,3 +260,40 @@ test('isEmpty returns true with no data', function () {
 
     expect($subscription->isEmpty())->toBeTrue();
 })->group('unit');
+
+// Edge cases for date parsing with invalid types
+test('currentPeriodStart returns null for non-string non-int value', function () {
+    $subscription = new Subscription(['current_period_start' => ['invalid' => 'array']]);
+
+    expect($subscription->currentPeriodStart())->toBeNull();
+})->group('unit');
+
+test('currentPeriodEnd returns null for non-string non-int value', function () {
+    $subscription = new Subscription(['current_period_end' => (object) ['invalid' => 'object']]);
+
+    expect($subscription->currentPeriodEnd())->toBeNull();
+})->group('unit');
+
+test('startDate returns null for non-string non-int value', function () {
+    $subscription = new Subscription(['start_date' => false]);
+
+    expect($subscription->startDate())->toBeNull();
+})->group('unit');
+
+test('cancelledAt returns null for non-string non-int value', function () {
+    $subscription = new Subscription(['cancelled_at' => ['not', 'valid']]);
+
+    expect($subscription->cancelledAt())->toBeNull();
+})->group('unit');
+
+test('currentPeriodStart returns null when missing', function () {
+    $subscription = new Subscription([]);
+
+    expect($subscription->currentPeriodStart())->toBeNull();
+})->group('unit');
+
+test('currentPeriodEnd returns null when missing', function () {
+    $subscription = new Subscription([]);
+
+    expect($subscription->currentPeriodEnd())->toBeNull();
+})->group('unit');

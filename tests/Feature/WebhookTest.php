@@ -282,6 +282,205 @@ class WebhookTest extends TestCase
         });
     }
 
+    #[Test]
+    public function it_rejects_webhook_with_invalid_payload_structure(): void
+    {
+        $signature = str_repeat('a', 64);
+
+        $request = Request::create('/webhook', 'POST', [], [], [], [
+            'HTTP_X_TAP_SIGNATURE' => $signature,
+        ], 'null');
+
+        $result = $this->validator->validate($request);
+        $this->assertFalse($result->isValid());
+        $this->assertSame('Invalid payload structure', $result->getError());
+    }
+
+    #[Test]
+    public function it_rejects_webhook_with_missing_required_fields(): void
+    {
+        $payload = [
+            'id' => 'chg_test_123',
+            // missing: amount, currency, status, created
+        ];
+
+        $signature = str_repeat('a', 64);
+
+        $request = Request::create('/webhook', 'POST', [], [], [], [
+            'HTTP_X_TAP_SIGNATURE' => $signature,
+        ], json_encode($payload));
+
+        $result = $this->validator->validate($request);
+        $this->assertFalse($result->isValid());
+        $this->assertStringContainsString('Missing required webhook fields', $result->getError());
+    }
+
+    #[Test]
+    public function it_rejects_payload_with_empty_signature(): void
+    {
+        $payload = [
+            'id' => 'chg_test_123',
+            'amount' => 10.50,
+            'currency' => 'USD',
+            'status' => 'CAPTURED',
+            'created' => time(),
+        ];
+
+        $result = $this->validator->validatePayload($payload, '');
+        $this->assertFalse($result->isValid());
+        $this->assertSame('Invalid signature', $result->getError());
+    }
+
+    #[Test]
+    public function it_rejects_payload_with_short_signature(): void
+    {
+        $payload = [
+            'id' => 'chg_test_123',
+            'amount' => 10.50,
+            'currency' => 'USD',
+            'status' => 'CAPTURED',
+            'created' => time(),
+        ];
+
+        $result = $this->validator->validatePayload($payload, 'short');
+        $this->assertFalse($result->isValid());
+        $this->assertSame('Invalid signature', $result->getError());
+    }
+
+    #[Test]
+    public function it_rejects_payload_with_empty_payload(): void
+    {
+        $signature = str_repeat('a', 64);
+        $result = $this->validator->validatePayload([], $signature);
+
+        $this->assertFalse($result->isValid());
+        $this->assertSame('Empty payload', $result->getError());
+    }
+
+    #[Test]
+    public function it_rejects_payload_with_missing_fields(): void
+    {
+        $payload = ['id' => 'chg_123']; // missing required fields
+        $signature = str_repeat('a', 64);
+
+        $result = $this->validator->validatePayload($payload, $signature);
+        $this->assertFalse($result->isValid());
+        $this->assertStringContainsString('Missing required webhook fields', $result->getError());
+    }
+
+    #[Test]
+    public function it_rejects_payload_with_wrong_signature(): void
+    {
+        $payload = [
+            'id' => 'chg_test_123',
+            'amount' => 10.50,
+            'currency' => 'USD',
+            'status' => 'CAPTURED',
+            'created' => time(),
+        ];
+
+        $result = $this->validator->validatePayload($payload, str_repeat('b', 64));
+        $this->assertFalse($result->isValid());
+        $this->assertSame('Signature mismatch', $result->getError());
+    }
+
+    #[Test]
+    public function it_rejects_future_webhook_timestamps(): void
+    {
+        $futurePayload = ['created' => time() + 3600]; // 1 hour in future
+        $result = $this->validator->checkTolerance($futurePayload);
+
+        $this->assertFalse($result->isValid());
+        $this->assertSame('Webhook timestamp is in the future', $result->getError());
+        $this->assertArrayHasKey('created', $result->getContext());
+        $this->assertArrayHasKey('now', $result->getContext());
+        $this->assertArrayHasKey('diff', $result->getContext());
+    }
+
+    #[Test]
+    public function it_returns_context_from_validation_result(): void
+    {
+        $payload = [
+            'id' => 'chg_test_123',
+            'amount' => 10.50,
+            'currency' => 'USD',
+            'status' => 'CAPTURED',
+            'created' => time(),
+        ];
+
+        $request = Request::create('/webhook', 'POST', [], [], [], [
+            'HTTP_X_TAP_SIGNATURE' => str_repeat('x', 64),
+        ], json_encode($payload));
+
+        $result = $this->validator->validate($request);
+        $this->assertFalse($result->isValid());
+        $context = $result->getContext();
+        $this->assertIsArray($context);
+    }
+
+    #[Test]
+    public function it_handles_non_scalar_values_in_hash_string(): void
+    {
+        $payload = [
+            'id' => 'chg_test_123',
+            'amount' => ['nested' => 'value'], // non-scalar
+            'currency' => 'USD',
+            'status' => 'CAPTURED',
+            'created' => time(),
+        ];
+
+        $signature = $this->generateSignatureWithNonScalar($payload);
+        $result = $this->validator->validatePayload($payload, $signature);
+
+        // Should still work - non-scalar becomes empty string
+        $this->assertTrue($result->isValid());
+    }
+
+    #[Test]
+    public function it_handles_non_numeric_created_in_tolerance_check(): void
+    {
+        $payload = ['created' => 'not-a-number'];
+        $result = $this->validator->checkTolerance($payload);
+
+        // created=0 means old timestamp, so should be expired
+        $this->assertFalse($result->isValid());
+        $this->assertSame('Webhook expired', $result->getError());
+    }
+
+    #[Test]
+    public function it_throws_exception_without_secret_key(): void
+    {
+        config(['tap.secret' => null, 'tap.webhook.secret' => null]);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Webhook secret key is not configured');
+        new WebhookValidator(null);
+    }
+
+    #[Test]
+    public function it_throws_exception_with_empty_secret_key(): void
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Webhook secret key is not configured');
+        new WebhookValidator('');
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    protected function generateSignatureWithNonScalar(array $payload): string
+    {
+        $fields = [];
+
+        foreach (['id', 'amount', 'currency', 'status', 'created'] as $key) {
+            if (isset($payload[$key])) {
+                $fields[] = is_scalar($payload[$key]) ? $payload[$key] : '';
+            }
+        }
+
+        return hash_hmac('sha256', implode('', $fields), $this->secretKey);
+    }
+
     /**
      * @param  array<string, mixed>  $payload
      */
