@@ -7,10 +7,8 @@ namespace TapPay\Tap\Services\Concerns;
 use TapPay\Tap\Exceptions\ApiErrorException;
 use TapPay\Tap\Exceptions\AuthenticationException;
 use TapPay\Tap\Exceptions\InvalidRequestException;
+use TapPay\Tap\Resources\Resource;
 
-/**
- * Provides standard update operation for services
- */
 trait HasUpdateOperation
 {
     /**
@@ -18,7 +16,7 @@ trait HasUpdateOperation
      *
      * @param  string  $id  Resource ID
      * @param  array<string, mixed>  $data  Update data
-     * @return \TapPay\Tap\Resources\Resource
+     * @return resource
      *
      * @throws AuthenticationException If API authentication fails
      * @throws InvalidRequestException If request parameters are invalid

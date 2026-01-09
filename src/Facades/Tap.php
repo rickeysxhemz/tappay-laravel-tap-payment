@@ -5,19 +5,34 @@ declare(strict_types=1);
 namespace TapPay\Tap\Facades;
 
 use Illuminate\Support\Facades\Facade;
+use TapPay\Tap\Services\AuthorizeService;
+use TapPay\Tap\Services\CardService;
+use TapPay\Tap\Services\ChargeService;
+use TapPay\Tap\Services\CustomerService;
+use TapPay\Tap\Services\DestinationService;
+use TapPay\Tap\Services\InvoiceService;
+use TapPay\Tap\Services\MerchantService;
+use TapPay\Tap\Services\PayoutService;
+use TapPay\Tap\Services\RefundService;
+use TapPay\Tap\Services\SubscriptionService;
+use TapPay\Tap\Services\TokenService;
+use TapPay\Tap\Tap as TapService;
 
 /**
- * @method static \TapPay\Tap\Services\ChargeService charges()
- * @method static \TapPay\Tap\Services\CustomerService customers()
- * @method static \TapPay\Tap\Services\RefundService refunds()
- * @method static \TapPay\Tap\Services\AuthorizeService authorizations()
- * @method static \TapPay\Tap\Services\TokenService tokens()
- * @method static \TapPay\Tap\Services\CardService cards()
- * @method static \TapPay\Tap\Services\InvoiceService invoices()
- * @method static \TapPay\Tap\Services\SubscriptionService subscriptions()
+ * @method static ChargeService charges()
+ * @method static CustomerService customers()
+ * @method static RefundService refunds()
+ * @method static AuthorizeService authorizations()
+ * @method static TokenService tokens()
+ * @method static CardService cards()
+ * @method static InvoiceService invoices()
+ * @method static SubscriptionService subscriptions()
+ * @method static MerchantService merchants()
+ * @method static DestinationService destinations()
+ * @method static PayoutService payouts()
  * @method static bool registersRoutes()
  *
- * @see \TapPay\Tap\Tap
+ * @see TapService
  */
 class Tap extends Facade
 {

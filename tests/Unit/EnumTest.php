@@ -177,7 +177,7 @@ class EnumTest extends TestCase
     {
         $source = SourceObject::SRC_CARD;
 
-        $this->assertTrue($source->requiresRedirect());
+        $this->assertTrue(SourceObject::sourceRequiresRedirect($source->value));
         $this->assertFalse($source->isRegionalMethod());
         $this->assertFalse($source->isDigitalWallet());
         $this->assertFalse($source->isBNPL());
@@ -192,7 +192,7 @@ class EnumTest extends TestCase
     {
         $source = SourceObject::SRC_ALL;
 
-        $this->assertTrue($source->requiresRedirect());
+        $this->assertTrue(SourceObject::sourceRequiresRedirect($source->value));
         $this->assertSame('All Payment Methods', $source->label());
     }
 
@@ -201,7 +201,7 @@ class EnumTest extends TestCase
     {
         $source = SourceObject::SRC_KNET;
 
-        $this->assertTrue($source->requiresRedirect());
+        $this->assertTrue(SourceObject::sourceRequiresRedirect($source->value));
         $this->assertTrue($source->isRegionalMethod());
         $this->assertFalse($source->isDigitalWallet());
         $this->assertFalse($source->isBNPL());
@@ -214,7 +214,7 @@ class EnumTest extends TestCase
     {
         $source = SourceObject::SRC_KFAST;
 
-        $this->assertTrue($source->requiresRedirect());
+        $this->assertTrue(SourceObject::sourceRequiresRedirect($source->value));
         $this->assertTrue($source->isRegionalMethod());
         $this->assertSame('KW', $source->getCountry());
         $this->assertSame('KFAST', $source->label());
@@ -225,7 +225,7 @@ class EnumTest extends TestCase
     {
         $source = SourceObject::SRC_MADA;
 
-        $this->assertTrue($source->requiresRedirect());
+        $this->assertTrue(SourceObject::sourceRequiresRedirect($source->value));
         $this->assertTrue($source->isRegionalMethod());
         $this->assertSame('SA', $source->getCountry());
         $this->assertSame('Mada', $source->label());
@@ -236,7 +236,7 @@ class EnumTest extends TestCase
     {
         $source = SourceObject::SRC_BENEFIT;
 
-        $this->assertTrue($source->requiresRedirect());
+        $this->assertTrue(SourceObject::sourceRequiresRedirect($source->value));
         $this->assertTrue($source->isRegionalMethod());
         $this->assertSame('BH', $source->getCountry());
         $this->assertSame('Benefit', $source->label());
@@ -247,7 +247,7 @@ class EnumTest extends TestCase
     {
         $source = SourceObject::SRC_OMANNET;
 
-        $this->assertTrue($source->requiresRedirect());
+        $this->assertTrue(SourceObject::sourceRequiresRedirect($source->value));
         $this->assertTrue($source->isRegionalMethod());
         $this->assertSame('OM', $source->getCountry());
         $this->assertSame('OmanNet', $source->label());
@@ -258,7 +258,7 @@ class EnumTest extends TestCase
     {
         $source = SourceObject::SRC_NAPS;
 
-        $this->assertTrue($source->requiresRedirect());
+        $this->assertTrue(SourceObject::sourceRequiresRedirect($source->value));
         $this->assertTrue($source->isRegionalMethod());
         $this->assertSame('QA', $source->getCountry());
         $this->assertSame('NAPS', $source->label());
@@ -269,7 +269,7 @@ class EnumTest extends TestCase
     {
         $source = SourceObject::SRC_FAWRY;
 
-        $this->assertTrue($source->requiresRedirect());
+        $this->assertTrue(SourceObject::sourceRequiresRedirect($source->value));
         $this->assertTrue($source->isRegionalMethod());
         $this->assertSame('EG', $source->getCountry());
         $this->assertSame('Fawry', $source->label());
@@ -280,7 +280,7 @@ class EnumTest extends TestCase
     {
         $source = SourceObject::SRC_STC_PAY;
 
-        $this->assertTrue($source->requiresRedirect());
+        $this->assertTrue(SourceObject::sourceRequiresRedirect($source->value));
         $this->assertFalse($source->isRegionalMethod());
         $this->assertTrue($source->isDigitalWallet());
         $this->assertFalse($source->isBNPL());
@@ -293,7 +293,7 @@ class EnumTest extends TestCase
     {
         $source = SourceObject::SRC_TABBY;
 
-        $this->assertTrue($source->requiresRedirect());
+        $this->assertTrue(SourceObject::sourceRequiresRedirect($source->value));
         $this->assertFalse($source->isRegionalMethod());
         $this->assertFalse($source->isDigitalWallet());
         $this->assertTrue($source->isBNPL());
@@ -306,7 +306,7 @@ class EnumTest extends TestCase
     {
         $source = SourceObject::SRC_DEEMA;
 
-        $this->assertTrue($source->requiresRedirect());
+        $this->assertTrue(SourceObject::sourceRequiresRedirect($source->value));
         $this->assertFalse($source->isRegionalMethod());
         $this->assertFalse($source->isDigitalWallet());
         $this->assertTrue($source->isBNPL());

@@ -8,9 +8,6 @@ use TapPay\Tap\Exceptions\ApiErrorException;
 use TapPay\Tap\Exceptions\AuthenticationException;
 use TapPay\Tap\Exceptions\InvalidRequestException;
 
-/**
- * Provides standard list operation for services
- */
 trait HasListOperation
 {
     /**

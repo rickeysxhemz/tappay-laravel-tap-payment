@@ -228,7 +228,7 @@ All pull requests are automatically tested using GitHub Actions:
 
 ## Questions?
 
-Feel free to open an issue for any questions about contributing.
+Feel free to open an issue or contact the maintainer at **dev@waqasmajeed.dev** for any questions about contributing.
 
 ## License
 

@@ -5,100 +5,43 @@ declare(strict_types=1);
 namespace TapPay\Tap\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use TapPay\Tap\Events\PaymentFailed;
-use TapPay\Tap\Events\PaymentRetrievalFailed;
-use TapPay\Tap\Events\PaymentSucceeded;
-use TapPay\Tap\Exceptions\ApiErrorException;
-use TapPay\Tap\Exceptions\AuthenticationException;
-use TapPay\Tap\Exceptions\InvalidRequestException;
-use TapPay\Tap\Facades\Tap;
+use TapPay\Tap\Http\Handlers\PaymentCallbackHandler;
 use TapPay\Tap\Http\Middleware\VerifyRedirectUrl;
-use TapPay\Tap\Resources\Charge;
+use TapPay\Tap\Http\Requests\PaymentCallbackRequest;
 
 use function config;
 use function is_string;
 use function redirect;
 
-/**
- * Handles payment callback redirects from Tap Payments
- */
 class PaymentCallbackController extends Controller
 {
-    public function __construct()
-    {
+    public function __construct(
+        protected PaymentCallbackHandler $handler
+    ) {
         $this->middleware(VerifyRedirectUrl::class);
     }
 
-    public function __invoke(Request $request): RedirectResponse
+    public function __invoke(PaymentCallbackRequest $request): RedirectResponse
     {
-        $chargeId = $request->query('tap_id');
-        $redirect = $request->query('redirect');
-        $redirectUrl = is_string($redirect) ? $redirect : null;
+        $tapId = $request->tapId();
 
-        if (! is_string($chargeId) || $chargeId === '') {
-            return $this->redirectToFailure($redirectUrl, 'Missing or invalid tap_id');
+        if ($tapId === null) {
+            return $this->redirectToFailure($request->redirectUrl(), 'Missing or invalid tap_id');
         }
 
-        try {
-            $chargeResource = Tap::charges()->retrieve($chargeId);
-            if (! $chargeResource instanceof Charge) {
-                return $this->redirectToFailure($redirectUrl, 'Invalid charge response');
-            }
-            $charge = $chargeResource;
-        } catch (AuthenticationException $e) {
-            PaymentRetrievalFailed::dispatch(
-                $chargeId,
-                PaymentRetrievalFailed::ERROR_TYPE_AUTHENTICATION,
-                'Authentication failed',
-                $e,
-                $redirectUrl
-            );
+        $result = $this->handler->handle($tapId, $request->redirectUrl());
 
-            return $this->redirectToFailure($redirectUrl, 'Authentication failed');
-        } catch (InvalidRequestException $e) {
-            PaymentRetrievalFailed::dispatch(
-                $chargeId,
-                PaymentRetrievalFailed::ERROR_TYPE_INVALID_REQUEST,
-                'Invalid charge ID',
-                $e,
-                $redirectUrl
-            );
-
-            return $this->redirectToFailure($redirectUrl, 'Invalid charge ID');
-        } catch (ApiErrorException $e) {
-            PaymentRetrievalFailed::dispatch(
-                $chargeId,
-                PaymentRetrievalFailed::ERROR_TYPE_API_ERROR,
-                'Failed to retrieve charge',
-                $e,
-                $redirectUrl
-            );
-
-            return $this->redirectToFailure($redirectUrl, 'Failed to retrieve charge');
-        }
-
-        if ($charge->isSuccessful()) {
-            PaymentSucceeded::dispatch($charge, $redirectUrl);
-
-            return $this->redirectToSuccess($redirectUrl, $charge->id());
-        }
-
-        PaymentFailed::dispatch($charge, $redirectUrl);
-
-        $responseMessage = $charge->get('response.message');
-
-        return $this->redirectToFailure($redirectUrl, is_string($responseMessage) ? $responseMessage : 'Payment failed');
+        return $result->success
+            ? $this->redirectToSuccess($request->redirectUrl(), $result->charge?->id() ?? '')
+            : $this->redirectToFailure($request->redirectUrl(), $result->error ?? 'Payment failed');
     }
 
     protected function redirectToSuccess(?string $redirectUrl, string $chargeId): RedirectResponse
     {
-        $successUrl = $redirectUrl
-            ?? config('tap.redirect.success')
-            ?? '/';
+        $url = $redirectUrl ?? config('tap.redirect.success') ?? '/';
 
-        return redirect()->to($this->ensureString($successUrl))->with([
+        return redirect()->to($this->ensureString($url))->with([
             'tap_charge_id' => $chargeId,
             'tap_status' => 'success',
         ]);
@@ -106,11 +49,9 @@ class PaymentCallbackController extends Controller
 
     protected function redirectToFailure(?string $redirectUrl, string $message): RedirectResponse
     {
-        $failureUrl = $redirectUrl
-            ?? config('tap.redirect.failure')
-            ?? '/';
+        $url = $redirectUrl ?? config('tap.redirect.failure') ?? '/';
 
-        return redirect()->to($this->ensureString($failureUrl))->with([
+        return redirect()->to($this->ensureString($url))->with([
             'tap_status' => 'failed',
             'tap_error' => $message,
         ]);

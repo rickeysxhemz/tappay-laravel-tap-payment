@@ -38,41 +38,26 @@ class PaymentRetrievalFailed
         public ?string $redirectUrl = null
     ) {}
 
-    /**
-     * Check if this is an authentication error
-     */
     public function isAuthenticationError(): bool
     {
         return $this->errorType === self::ERROR_TYPE_AUTHENTICATION;
     }
 
-    /**
-     * Check if this is an invalid request error
-     */
     public function isInvalidRequestError(): bool
     {
         return $this->errorType === self::ERROR_TYPE_INVALID_REQUEST;
     }
 
-    /**
-     * Check if this is an API error
-     */
     public function isApiError(): bool
     {
         return $this->errorType === self::ERROR_TYPE_API_ERROR;
     }
 
-    /**
-     * Check if the error is a configuration issue (authentication)
-     */
     public function isConfigurationIssue(): bool
     {
         return $this->isAuthenticationError();
     }
 
-    /**
-     * Check if the error is an infrastructure issue (API down, network error)
-     */
     public function isInfrastructureIssue(): bool
     {
         return $this->isApiError();

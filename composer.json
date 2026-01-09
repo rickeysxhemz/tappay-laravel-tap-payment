@@ -2,11 +2,27 @@
     "name": "tappay/laravel-tap-payment",
     "description": "A modern, fluent Laravel SDK for the Tap Payments v2 API.",
     "type": "library",
-    "keywords": ["laravel", "tap", "payments", "sdk", "gateway", "tap-payments"],
+    "keywords": [
+        "laravel",
+        "tap",
+        "tap-payments",
+        "payments",
+        "payment-gateway",
+        "sdk",
+        "gateway",
+        "billing",
+        "checkout",
+        "mada",
+        "knet",
+        "stcpay",
+        "middle-east",
+        "gcc"
+    ],
     "license": "MIT",
     "authors": [
         {
-            "name": "Waqas Majeed"
+            "name": "Waqas Majeed",
+            "email": "dev@waqasmajeed.dev"
         }
     ],
     "require": {

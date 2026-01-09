@@ -71,4 +71,4 @@ Tap has minimum charge amounts per currency:
 
 ## Professional Support
 
-For professional support or custom development, please contact the maintainer directly.
+For professional support or custom development, please contact the maintainer at **dev@waqasmajeed.dev**.

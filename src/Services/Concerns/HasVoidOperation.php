@@ -9,16 +9,6 @@ use TapPay\Tap\Exceptions\AuthenticationException;
 use TapPay\Tap\Exceptions\InvalidRequestException;
 use TapPay\Tap\Resources\Authorize;
 
-/**
- * Provides void operation for authorization services
- *
- * @example
- * // Void an authorization
- * $authorization = $authorizeService->void('auth_abc123');
- *
- * @method string getEndpoint()
- * @method string getResourceClass()
- */
 trait HasVoidOperation
 {
     /**

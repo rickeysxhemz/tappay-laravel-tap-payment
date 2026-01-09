@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2025-01-09
+
+### Added
+- Multi-tenant webhook support
+- Marketplace methods: `merchants()`, `destinations()`, `payouts()`
+
+### Improved
+- Webhook security hardening
+- Laravel Octane compatibility
+
+## [1.2.0] - 2024-12-30
+
 ### Added
 - Initial release of the Laravel Tap Payment package
 - **Services**

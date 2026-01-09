@@ -8,14 +8,21 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use RuntimeException;
 use TapPay\Tap\Contracts\MoneyContract;
+use TapPay\Tap\Contracts\WebhookSecretResolverInterface;
 use TapPay\Tap\Http\Client;
 use TapPay\Tap\Support\Money;
+use TapPay\Tap\Webhooks\ConfigWebhookSecretResolver;
 
 final class TapServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__ . '/../config/tap.php', 'tap');
+
+        $this->app->bind(
+            WebhookSecretResolverInterface::class,
+            ConfigWebhookSecretResolver::class
+        );
 
         $this->app->singleton(Client::class, function (): Client {
             $secret = config('tap.secret');

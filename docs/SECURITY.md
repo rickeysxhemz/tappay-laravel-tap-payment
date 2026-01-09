@@ -10,7 +10,7 @@
 
 **Please do not report security vulnerabilities through public GitHub issues.**
 
-If you discover a security vulnerability within this package, please send an email to the maintainer. All security vulnerabilities will be promptly addressed.
+If you discover a security vulnerability within this package, please send an email to **dev@waqasmajeed.dev**. All security vulnerabilities will be promptly addressed.
 
 ### What to Include
 

@@ -59,7 +59,7 @@ representative at an online or offline event.
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported to the community leaders responsible for enforcement via GitHub Issues.
+reported to the community leaders responsible for enforcement at **dev@waqasmajeed.dev** or via GitHub Issues.
 
 All complaints will be reviewed and investigated promptly and fairly.
 

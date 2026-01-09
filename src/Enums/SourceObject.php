@@ -37,15 +37,6 @@ enum SourceObject: string
     case SRC_DEEMA = 'src_deema';
 
     /**
-     * Check if this source requires redirect flow
-     */
-    public function requiresRedirect(): bool
-    {
-        // All standard source objects require redirect
-        return true;
-    }
-
-    /**
      * Check if a source ID is a token
      */
     public static function isToken(string $sourceId): bool
