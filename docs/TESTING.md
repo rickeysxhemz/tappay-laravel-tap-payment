@@ -271,20 +271,19 @@ $this->expectException(ApiErrorException::class);
 
 ### Signature Generation
 
-Webhooks are validated using HMAC-SHA256 signatures. Tests must generate valid signatures to verify the validation logic.
+Webhooks are validated using HMAC-SHA256 signatures with the `hashstring` header. Tests must generate valid signatures matching Tap's format.
 
 ```php
 protected function generateSignature(array $payload): string
 {
-    $fields = [];
+    $hashString = 'x_id' . ($payload['id'] ?? '')
+                . 'x_amount' . ($payload['amount'] ?? '')
+                . 'x_currency' . ($payload['currency'] ?? '')
+                . 'x_gateway_reference' . ($payload['gateway']['reference'] ?? $payload['reference']['gateway'] ?? '')
+                . 'x_payment_reference' . ($payload['reference']['payment'] ?? '')
+                . 'x_status' . ($payload['status'] ?? '')
+                . 'x_created' . ($payload['created'] ?? '');
 
-    if (isset($payload['id'])) $fields[] = $payload['id'];
-    if (isset($payload['amount'])) $fields[] = $payload['amount'];
-    if (isset($payload['currency'])) $fields[] = $payload['currency'];
-    if (isset($payload['status'])) $fields[] = $payload['status'];
-    if (isset($payload['created'])) $fields[] = $payload['created'];
-
-    $hashString = implode('', $fields);
     return hash_hmac('sha256', $hashString, $this->secretKey);
 }
 ```
@@ -307,7 +306,7 @@ public function it_validates_webhook_signature(): void
     $signature = $this->generateSignature($payload);
 
     $request = Request::create('/webhook', 'POST', [], [], [], [
-        'HTTP_X_TAP_SIGNATURE' => $signature,
+        'HTTP_HASHSTRING' => $signature,
     ], json_encode($payload));
 
     $controller = new WebhookController($this->validator);

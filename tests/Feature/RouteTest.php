@@ -190,7 +190,7 @@ test('webhook route returns 400 for invalid signature', function () {
         'object' => 'charge',
         'created' => time(),
     ], [
-        'x-tap-signature' => 'invalid_signature',
+        'hashstring' => 'invalid_signature',
     ]);
 
     $response->assertStatus(400);
@@ -212,7 +212,7 @@ test('webhook route returns 400 for expired webhook', function () {
 
     $response = $this->call('POST', route('tap.webhook'), [], [], [], [
         'HTTP_CONTENT_TYPE' => 'application/json',
-        'HTTP_X_TAP_SIGNATURE' => $signature,
+        'HTTP_HASHSTRING' => $signature,
     ], $jsonPayload);
 
     $response->assertStatus(400);
@@ -236,7 +236,7 @@ test('webhook route returns 200 for valid webhook', function () {
 
     $response = $this->call('POST', route('tap.webhook'), [], [], [], [
         'HTTP_CONTENT_TYPE' => 'application/json',
-        'HTTP_X_TAP_SIGNATURE' => $signature,
+        'HTTP_HASHSTRING' => $signature,
     ], $jsonPayload);
 
     $response->assertStatus(200);
@@ -265,7 +265,7 @@ test('webhook route dispatches resource-specific events', function () {
 
     $response = $this->call('POST', route('tap.webhook'), [], [], [], [
         'HTTP_CONTENT_TYPE' => 'application/json',
-        'HTTP_X_TAP_SIGNATURE' => $signature,
+        'HTTP_HASHSTRING' => $signature,
     ], $jsonPayload);
 
     $response->assertStatus(200);
@@ -291,7 +291,7 @@ test('webhook route does not dispatch events for unknown resources', function ()
 
     $response = $this->call('POST', route('tap.webhook'), [], [], [], [
         'HTTP_CONTENT_TYPE' => 'application/json',
-        'HTTP_X_TAP_SIGNATURE' => $signature,
+        'HTTP_HASHSTRING' => $signature,
     ], $jsonPayload);
 
     $response->assertStatus(200);
@@ -437,22 +437,23 @@ test('callback route does not dispatch PaymentRetrievalFailed on failed charge',
 })->group('feature', 'routes', 'callback', 'payment-retrieval-failed');
 
 /**
- * Generate webhook signature from JSON string (matching exact decoding)
+ * Generate webhook signature from JSON string (matching Tap's format)
  */
 function generateWebhookSignatureFromJson(string $jsonPayload): string
 {
     $secretKey = 'sk_test_XKokBfNWv6FIYuTMg5sLPjhJ';
     $payload = json_decode($jsonPayload, true);
-    $fieldKeys = ['id', 'amount', 'currency', 'status', 'created'];
 
-    $fields = [];
-    foreach ($fieldKeys as $key) {
-        if (isset($payload[$key])) {
-            $fields[] = $payload[$key];
-        }
-    }
+    $gatewayRef = $payload['gateway']['reference'] ?? $payload['reference']['gateway'] ?? '';
+    $paymentRef = $payload['reference']['payment'] ?? '';
 
-    $hashString = implode('', $fields);
+    $hashString = 'x_id' . ($payload['id'] ?? '')
+                . 'x_amount' . ($payload['amount'] ?? '')
+                . 'x_currency' . ($payload['currency'] ?? '')
+                . 'x_gateway_reference' . (is_scalar($gatewayRef) ? $gatewayRef : '')
+                . 'x_payment_reference' . (is_scalar($paymentRef) ? $paymentRef : '')
+                . 'x_status' . ($payload['status'] ?? '')
+                . 'x_created' . ($payload['created'] ?? '');
 
     return hash_hmac('sha256', $hashString, $secretKey);
 }

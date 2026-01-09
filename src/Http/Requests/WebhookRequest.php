@@ -38,6 +38,8 @@ class WebhookRequest extends FormRequest
             'currency' => ['required', 'string'],
             'status' => ['required', 'string'],
             'created' => ['required', 'numeric'],
+            'gateway' => ['sometimes', 'array'],
+            'reference' => ['sometimes', 'array'],
         ];
     }
 
@@ -66,7 +68,7 @@ class WebhookRequest extends FormRequest
     protected function validateSignature(): void
     {
         $validator = $this->resolveValidator();
-        $signature = $this->header('x-tap-signature') ?? '';
+        $signature = $this->header('hashstring') ?? '';
 
         $result = $validator->validatePayload($this->decodedPayload, $signature);
 

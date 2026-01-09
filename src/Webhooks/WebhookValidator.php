@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace TapPay\Tap\Webhooks;
 
 use Illuminate\Http\Request;
-use InvalidArgumentException;
 use RuntimeException;
 
 class WebhookValidator
@@ -40,7 +39,7 @@ class WebhookValidator
      */
     public function validate(Request $request): WebhookValidationResult
     {
-        $signature = $request->header('x-tap-signature');
+        $signature = $request->header('hashstring');
 
         // Validate signature exists and has correct length (SHA256 = 64 hex chars)
         if (! $signature || strlen($signature) !== 64) {
@@ -78,12 +77,15 @@ class WebhookValidator
         /** @var array<string, mixed> $typedData */
         $typedData = $data;
 
-        try {
-            $hashString = $this->buildHashString($typedData);
-        } catch (InvalidArgumentException $e) {
-            return WebhookValidationResult::failed($e->getMessage());
+        $missingFields = $this->getMissingRequiredFields($typedData);
+        if (! empty($missingFields)) {
+            return WebhookValidationResult::failed(
+                'Missing required webhook fields: ' . implode(', ', $missingFields),
+                ['missing_fields' => $missingFields]
+            );
         }
 
+        $hashString = $this->buildHashString($typedData);
         $computedSignature = hash_hmac('sha256', $hashString, $this->secret);
 
         if (! hash_equals($computedSignature, $signature)) {
@@ -103,7 +105,7 @@ class WebhookValidator
      * Validate webhook payload directly (without Request object)
      *
      * @param  array<string, mixed>  $payload  The decoded webhook payload
-     * @param  string  $signature  The signature from x-tap-signature header
+     * @param  string  $signature  The signature from hashstring header
      * @return WebhookValidationResult Validation result with error details if failed
      */
     public function validatePayload(array $payload, string $signature): WebhookValidationResult
@@ -119,12 +121,15 @@ class WebhookValidator
             return WebhookValidationResult::failed('Empty payload');
         }
 
-        try {
-            $hashString = $this->buildHashString($payload);
-        } catch (InvalidArgumentException $e) {
-            return WebhookValidationResult::failed($e->getMessage());
+        $missingFields = $this->getMissingRequiredFields($payload);
+        if (! empty($missingFields)) {
+            return WebhookValidationResult::failed(
+                'Missing required webhook fields: ' . implode(', ', $missingFields),
+                ['missing_fields' => $missingFields]
+            );
         }
 
+        $hashString = $this->buildHashString($payload);
         $computedSignature = hash_hmac('sha256', $hashString, $this->secret);
 
         if (! hash_equals($computedSignature, $signature)) {
@@ -135,36 +140,55 @@ class WebhookValidator
     }
 
     /**
-     * Build the hash string from webhook payload
-     * Concatenates specific values from the webhook payload according to Tap's signature algorithm
+     * Get list of missing required fields from payload
      *
      * @param  array<string, mixed>  $data  The webhook payload
-     * @return string The concatenated hash string
-     *
-     * @throws InvalidArgumentException If required fields are missing
+     * @return array<int, string> List of missing field names
      */
-    protected function buildHashString(array $data): string
+    private function getMissingRequiredFields(array $data): array
     {
-        $fieldKeys = ['id', 'amount', 'currency', 'status', 'created'];
+        $requiredFields = ['id', 'amount', 'currency', 'status', 'created'];
+        $missing = [];
 
-        // Validate all required fields exist
-        $missingFields = [];
-        foreach ($fieldKeys as $key) {
-            if (! isset($data[$key])) {
-                $missingFields[] = $key;
+        foreach ($requiredFields as $field) {
+            if (! isset($data[$field])) {
+                $missing[] = $field;
             }
         }
 
-        if (! empty($missingFields)) {
-            throw new InvalidArgumentException(
-                'Missing required webhook fields: ' . implode(', ', $missingFields)
-            );
-        }
+        return $missing;
+    }
 
-        return implode('', array_map(
-            fn (string $key): string => is_scalar($data[$key]) ? (string) $data[$key] : '',
-            $fieldKeys
-        ));
+    /**
+     * Build the hash string from webhook payload according to Tap's signature algorithm
+     *
+     * @param  array<string, mixed>  $data  The webhook payload
+     * @return string The concatenated hash string with field prefixes
+     */
+    protected function buildHashString(array $data): string
+    {
+        $id = $this->getScalarValue($data, 'id');
+        $amount = $this->getScalarValue($data, 'amount');
+        $currency = $this->getScalarValue($data, 'currency');
+        $gatewayRef = $data['gateway']['reference'] ?? $data['reference']['gateway'] ?? '';
+        $paymentRef = $data['reference']['payment'] ?? '';
+        $status = $this->getScalarValue($data, 'status');
+        $created = $this->getScalarValue($data, 'created');
+
+        return 'x_id' . $id
+             . 'x_amount' . $amount
+             . 'x_currency' . $currency
+             . 'x_gateway_reference' . (is_scalar($gatewayRef) ? $gatewayRef : '')
+             . 'x_payment_reference' . (is_scalar($paymentRef) ? $paymentRef : '')
+             . 'x_status' . $status
+             . 'x_created' . $created;
+    }
+
+    private function getScalarValue(array $data, string $key): string
+    {
+        $value = $data[$key] ?? '';
+
+        return is_scalar($value) ? (string) $value : '';
     }
 
     /**

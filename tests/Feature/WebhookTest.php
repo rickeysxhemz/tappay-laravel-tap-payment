@@ -44,7 +44,7 @@ class WebhookTest extends TestCase
         $signature = $this->generateSignature($payload);
 
         $request = Request::create('/webhook', 'POST', [], [], [], [
-            'HTTP_X_TAP_SIGNATURE' => $signature,
+            'HTTP_HASHSTRING' => $signature,
         ], json_encode($payload));
 
         $result = $this->validator->validate($request);
@@ -63,7 +63,7 @@ class WebhookTest extends TestCase
         ];
 
         $request = Request::create('/webhook', 'POST', [], [], [], [
-            'HTTP_X_TAP_SIGNATURE' => str_repeat('a', 64),
+            'HTTP_HASHSTRING' => str_repeat('a', 64),
         ], json_encode($payload));
 
         $result = $this->validator->validate($request);
@@ -99,7 +99,7 @@ class WebhookTest extends TestCase
         ];
 
         $request = Request::create('/webhook', 'POST', [], [], [], [
-            'HTTP_X_TAP_SIGNATURE' => 'invalid_short_signature',
+            'HTTP_HASHSTRING' => 'invalid_short_signature',
         ], json_encode($payload));
 
         $result = $this->validator->validate($request);
@@ -113,7 +113,7 @@ class WebhookTest extends TestCase
         $signature = str_repeat('a', 64);
 
         $request = Request::create('/webhook', 'POST', [], [], [], [
-            'HTTP_X_TAP_SIGNATURE' => $signature,
+            'HTTP_HASHSTRING' => $signature,
         ], '');
 
         $result = $this->validator->validate($request);
@@ -127,7 +127,7 @@ class WebhookTest extends TestCase
         $signature = str_repeat('a', 64);
 
         $request = Request::create('/webhook', 'POST', [], [], [], [
-            'HTTP_X_TAP_SIGNATURE' => $signature,
+            'HTTP_HASHSTRING' => $signature,
         ], '{invalid json}');
 
         $result = $this->validator->validate($request);
@@ -288,7 +288,7 @@ class WebhookTest extends TestCase
         $signature = str_repeat('a', 64);
 
         $request = Request::create('/webhook', 'POST', [], [], [], [
-            'HTTP_X_TAP_SIGNATURE' => $signature,
+            'HTTP_HASHSTRING' => $signature,
         ], 'null');
 
         $result = $this->validator->validate($request);
@@ -307,7 +307,7 @@ class WebhookTest extends TestCase
         $signature = str_repeat('a', 64);
 
         $request = Request::create('/webhook', 'POST', [], [], [], [
-            'HTTP_X_TAP_SIGNATURE' => $signature,
+            'HTTP_HASHSTRING' => $signature,
         ], json_encode($payload));
 
         $result = $this->validator->validate($request);
@@ -409,7 +409,7 @@ class WebhookTest extends TestCase
         ];
 
         $request = Request::create('/webhook', 'POST', [], [], [], [
-            'HTTP_X_TAP_SIGNATURE' => str_repeat('x', 64),
+            'HTTP_HASHSTRING' => str_repeat('x', 64),
         ], json_encode($payload));
 
         $result = $this->validator->validate($request);
@@ -470,15 +470,23 @@ class WebhookTest extends TestCase
      */
     protected function generateSignatureWithNonScalar(array $payload): string
     {
-        $fields = [];
+        $id = isset($payload['id']) && is_scalar($payload['id']) ? $payload['id'] : '';
+        $amount = isset($payload['amount']) && is_scalar($payload['amount']) ? $payload['amount'] : '';
+        $currency = isset($payload['currency']) && is_scalar($payload['currency']) ? $payload['currency'] : '';
+        $gatewayRef = $payload['gateway']['reference'] ?? $payload['reference']['gateway'] ?? '';
+        $paymentRef = $payload['reference']['payment'] ?? '';
+        $status = isset($payload['status']) && is_scalar($payload['status']) ? $payload['status'] : '';
+        $created = isset($payload['created']) && is_scalar($payload['created']) ? $payload['created'] : '';
 
-        foreach (['id', 'amount', 'currency', 'status', 'created'] as $key) {
-            if (isset($payload[$key])) {
-                $fields[] = is_scalar($payload[$key]) ? $payload[$key] : '';
-            }
-        }
+        $hashString = 'x_id' . $id
+                    . 'x_amount' . $amount
+                    . 'x_currency' . $currency
+                    . 'x_gateway_reference' . (is_scalar($gatewayRef) ? $gatewayRef : '')
+                    . 'x_payment_reference' . (is_scalar($paymentRef) ? $paymentRef : '')
+                    . 'x_status' . $status
+                    . 'x_created' . $created;
 
-        return hash_hmac('sha256', implode('', $fields), $this->secretKey);
+        return hash_hmac('sha256', $hashString, $this->secretKey);
     }
 
     /**
@@ -486,25 +494,16 @@ class WebhookTest extends TestCase
      */
     protected function generateSignature(array $payload): string
     {
-        $fields = [];
+        $gatewayRef = $payload['gateway']['reference'] ?? $payload['reference']['gateway'] ?? '';
+        $paymentRef = $payload['reference']['payment'] ?? '';
 
-        if (isset($payload['id'])) {
-            $fields[] = $payload['id'];
-        }
-        if (isset($payload['amount'])) {
-            $fields[] = $payload['amount'];
-        }
-        if (isset($payload['currency'])) {
-            $fields[] = $payload['currency'];
-        }
-        if (isset($payload['status'])) {
-            $fields[] = $payload['status'];
-        }
-        if (isset($payload['created'])) {
-            $fields[] = $payload['created'];
-        }
-
-        $hashString = implode('', $fields);
+        $hashString = 'x_id' . ($payload['id'] ?? '')
+                    . 'x_amount' . ($payload['amount'] ?? '')
+                    . 'x_currency' . ($payload['currency'] ?? '')
+                    . 'x_gateway_reference' . (is_scalar($gatewayRef) ? $gatewayRef : '')
+                    . 'x_payment_reference' . (is_scalar($paymentRef) ? $paymentRef : '')
+                    . 'x_status' . ($payload['status'] ?? '')
+                    . 'x_created' . ($payload['created'] ?? '');
 
         return hash_hmac('sha256', $hashString, $this->secretKey);
     }

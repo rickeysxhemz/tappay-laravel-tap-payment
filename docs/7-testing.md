@@ -81,7 +81,7 @@ public function test_webhook_updates_order()
     ];
 
     $this->postJson('/tap/webhook', $payload, [
-        'x-tap-signature' => $this->generateSignature($payload),
+        'hashstring' => $this->generateSignature($payload),
     ])->assertOk();
 
     Event::assertDispatched(WebhookReceived::class);
@@ -91,11 +91,15 @@ public function test_webhook_updates_order()
 
 private function generateSignature(array $payload): string
 {
-    return hash_hmac(
-        'sha256',
-        json_encode($payload),
-        config('tap.webhook.secret')
-    );
+    $hashString = 'x_id' . ($payload['id'] ?? '')
+                . 'x_amount' . ($payload['amount'] ?? '')
+                . 'x_currency' . ($payload['currency'] ?? '')
+                . 'x_gateway_reference' . ($payload['gateway']['reference'] ?? $payload['reference']['gateway'] ?? '')
+                . 'x_payment_reference' . ($payload['reference']['payment'] ?? '')
+                . 'x_status' . ($payload['status'] ?? '')
+                . 'x_created' . ($payload['created'] ?? '');
+
+    return hash_hmac('sha256', $hashString, config('tap.webhook.secret'));
 }
 ```
 

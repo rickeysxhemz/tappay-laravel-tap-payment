@@ -39,7 +39,7 @@ When reporting a vulnerability, please include:
 When using this package, please ensure:
 
 1. **Never commit API keys** - Use environment variables
-2. **Validate webhook signatures** - Always verify `x-tap-signature` header
+2. **Validate webhook signatures** - Always verify `hashstring` header
 3. **Use HTTPS** - Ensure your redirect URLs use HTTPS
 4. **Keep dependencies updated** - Regularly run `composer update`
 5. **Use test keys in development** - Never use production keys for testing
@@ -52,7 +52,7 @@ This package validates webhook signatures using HMAC-SHA256. Always ensure:
 
 ```php
 // Webhook validation is automatic when using WebhookController
-// The package validates x-tap-signature header
+// The package validates hashstring header using HMAC-SHA256
 ```
 
 ### API Key Storage
