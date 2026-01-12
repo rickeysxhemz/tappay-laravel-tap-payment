@@ -7,15 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.3.1] - 2025-01-12
+## [1.3.2] - 2025-01-12
 
 ### Fixed
-- Webhook `created` field now reads from correct path per webhook type
-  - Charge/Authorize: `transaction.created`
-  - Invoice/Refund: root `created`
+- Webhook `created` field path per type (Charge/Authorize use `transaction.created`, Invoice/Refund use root `created`)
 - Millisecond timestamps converted to seconds for tolerance checks
 - Invoice webhook hash string now uses `updated` field
-- WebhookRequest now resets payload between requests (Octane fix)
+- WebhookRequest payload reset between requests (Octane compatibility)
+
+## [1.3.1] - 2025-01-09
+
+### Fixed
+- Webhook validator issue resolved
 
 ## [1.3.0] - 2025-01-09
 
