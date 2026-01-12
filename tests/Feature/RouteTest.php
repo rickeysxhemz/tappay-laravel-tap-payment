@@ -204,7 +204,9 @@ test('webhook route returns 400 for expired webhook', function () {
         'amount' => 10.5,
         'currency' => 'USD',
         'status' => 'CAPTURED',
-        'created' => time() - 400, // 6+ minutes ago
+        'transaction' => [
+            'created' => (string) ((time() - 400) * 1000), // 6+ minutes ago in ms
+        ],
     ];
 
     $jsonPayload = json_encode($payload);
@@ -228,7 +230,9 @@ test('webhook route returns 200 for valid webhook', function () {
         'amount' => 10.5,
         'currency' => 'USD',
         'status' => 'CAPTURED',
-        'created' => time(),
+        'transaction' => [
+            'created' => (string) (time() * 1000),
+        ],
     ];
 
     $jsonPayload = json_encode($payload);
@@ -444,6 +448,27 @@ function generateWebhookSignatureFromJson(string $jsonPayload): string
     $secretKey = 'sk_test_XKokBfNWv6FIYuTMg5sLPjhJ';
     $payload = json_decode($jsonPayload, true);
 
+    $type = strtolower($payload['object'] ?? 'refund');
+
+    // Extract created from correct location
+    if (in_array($type, ['charge', 'authorize'], true)) {
+        $created = $payload['transaction']['created'] ?? '';
+    } else {
+        $created = $payload['created'] ?? '';
+    }
+
+    // Invoice uses 'updated' instead of gateway/payment reference
+    if ($type === 'invoice') {
+        $hashString = 'x_id' . ($payload['id'] ?? '')
+                    . 'x_amount' . ($payload['amount'] ?? '')
+                    . 'x_currency' . ($payload['currency'] ?? '')
+                    . 'x_updated' . ($payload['updated'] ?? '')
+                    . 'x_status' . ($payload['status'] ?? '')
+                    . 'x_created' . $created;
+
+        return hash_hmac('sha256', $hashString, $secretKey);
+    }
+
     $gatewayRef = $payload['gateway']['reference'] ?? $payload['reference']['gateway'] ?? '';
     $paymentRef = $payload['reference']['payment'] ?? '';
 
@@ -453,7 +478,7 @@ function generateWebhookSignatureFromJson(string $jsonPayload): string
                 . 'x_gateway_reference' . (is_scalar($gatewayRef) ? $gatewayRef : '')
                 . 'x_payment_reference' . (is_scalar($paymentRef) ? $paymentRef : '')
                 . 'x_status' . ($payload['status'] ?? '')
-                . 'x_created' . ($payload['created'] ?? '');
+                . 'x_created' . $created;
 
     return hash_hmac('sha256', $hashString, $secretKey);
 }

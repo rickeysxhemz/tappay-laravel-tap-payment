@@ -35,10 +35,13 @@ class WebhookTest extends TestCase
     {
         $payload = [
             'id' => 'chg_test_123',
+            'object' => 'charge',
             'amount' => 10.50,
             'currency' => 'USD',
             'status' => 'CAPTURED',
-            'created' => time(),
+            'transaction' => [
+                'created' => (string) (time() * 1000),
+            ],
         ];
 
         $signature = $this->generateSignature($payload);
@@ -56,10 +59,13 @@ class WebhookTest extends TestCase
     {
         $payload = [
             'id' => 'chg_test_123',
+            'object' => 'charge',
             'amount' => 10.50,
             'currency' => 'USD',
             'status' => 'CAPTURED',
-            'created' => time(),
+            'transaction' => [
+                'created' => (string) (time() * 1000),
+            ],
         ];
 
         $request = Request::create('/webhook', 'POST', [], [], [], [
@@ -139,10 +145,11 @@ class WebhookTest extends TestCase
     public function it_validates_payload_directly(): void
     {
         $payload = [
-            'id' => 'chg_test_123',
+            'id' => 'ref_test_123',
+            'object' => 'refund',
             'amount' => 10.50,
             'currency' => 'USD',
-            'status' => 'CAPTURED',
+            'status' => 'SUCCEEDED',
             'created' => time(),
         ];
 
@@ -167,17 +174,19 @@ class WebhookTest extends TestCase
     #[Test]
     public function it_checks_webhook_tolerance(): void
     {
-        $recentPayload = ['created' => time() - 60];
+        // Refund uses root created (seconds)
+        $recentPayload = ['object' => 'refund', 'created' => time() - 60];
         $this->assertTrue($this->validator->checkTolerance($recentPayload)->isValid());
 
-        $oldPayload = ['created' => time() - 400];
+        $oldPayload = ['object' => 'refund', 'created' => time() - 400];
         $this->assertFalse($this->validator->checkTolerance($oldPayload)->isValid());
     }
 
     #[Test]
     public function it_rejects_webhook_without_timestamp(): void
     {
-        $noTimestampPayload = ['id' => 'test'];
+        // Refund without created field
+        $noTimestampPayload = ['object' => 'refund', 'id' => 'test'];
         $result = $this->validator->checkTolerance($noTimestampPayload);
 
         $this->assertFalse($result->isValid());
@@ -319,10 +328,11 @@ class WebhookTest extends TestCase
     public function it_rejects_payload_with_empty_signature(): void
     {
         $payload = [
-            'id' => 'chg_test_123',
+            'id' => 'ref_test_123',
+            'object' => 'refund',
             'amount' => 10.50,
             'currency' => 'USD',
-            'status' => 'CAPTURED',
+            'status' => 'SUCCEEDED',
             'created' => time(),
         ];
 
@@ -335,10 +345,11 @@ class WebhookTest extends TestCase
     public function it_rejects_payload_with_short_signature(): void
     {
         $payload = [
-            'id' => 'chg_test_123',
+            'id' => 'ref_test_123',
+            'object' => 'refund',
             'amount' => 10.50,
             'currency' => 'USD',
-            'status' => 'CAPTURED',
+            'status' => 'SUCCEEDED',
             'created' => time(),
         ];
 
@@ -372,10 +383,11 @@ class WebhookTest extends TestCase
     public function it_rejects_payload_with_wrong_signature(): void
     {
         $payload = [
-            'id' => 'chg_test_123',
+            'id' => 'ref_test_123',
+            'object' => 'refund',
             'amount' => 10.50,
             'currency' => 'USD',
-            'status' => 'CAPTURED',
+            'status' => 'SUCCEEDED',
             'created' => time(),
         ];
 
@@ -387,7 +399,7 @@ class WebhookTest extends TestCase
     #[Test]
     public function it_rejects_future_webhook_timestamps(): void
     {
-        $futurePayload = ['created' => time() + 3600]; // 1 hour in future
+        $futurePayload = ['object' => 'refund', 'created' => time() + 3600];
         $result = $this->validator->checkTolerance($futurePayload);
 
         $this->assertFalse($result->isValid());
@@ -402,10 +414,13 @@ class WebhookTest extends TestCase
     {
         $payload = [
             'id' => 'chg_test_123',
+            'object' => 'charge',
             'amount' => 10.50,
             'currency' => 'USD',
             'status' => 'CAPTURED',
-            'created' => time(),
+            'transaction' => [
+                'created' => (string) (time() * 1000),
+            ],
         ];
 
         $request = Request::create('/webhook', 'POST', [], [], [], [
@@ -422,10 +437,11 @@ class WebhookTest extends TestCase
     public function it_handles_non_scalar_values_in_hash_string(): void
     {
         $payload = [
-            'id' => 'chg_test_123',
+            'id' => 'ref_test_123',
+            'object' => 'refund',
             'amount' => ['nested' => 'value'], // non-scalar
             'currency' => 'USD',
-            'status' => 'CAPTURED',
+            'status' => 'SUCCEEDED',
             'created' => time(),
         ];
 
@@ -439,12 +455,12 @@ class WebhookTest extends TestCase
     #[Test]
     public function it_handles_non_numeric_created_in_tolerance_check(): void
     {
-        $payload = ['created' => 'not-a-number'];
+        $payload = ['object' => 'refund', 'created' => 'not-a-number'];
         $result = $this->validator->checkTolerance($payload);
 
-        // created=0 means old timestamp, so should be expired
+        // created=0 means invalid timestamp
         $this->assertFalse($result->isValid());
-        $this->assertSame('Webhook expired', $result->getError());
+        $this->assertSame('Invalid created timestamp', $result->getError());
     }
 
     #[Test]
@@ -465,6 +481,103 @@ class WebhookTest extends TestCase
         new WebhookValidator('');
     }
 
+    #[Test]
+    public function it_validates_charge_webhook_with_transaction_created(): void
+    {
+        $payload = [
+            'id' => 'chg_test_123',
+            'object' => 'charge',
+            'amount' => 10.50,
+            'currency' => 'USD',
+            'status' => 'CAPTURED',
+            'transaction' => [
+                'created' => (string) (time() * 1000),
+            ],
+            'reference' => [
+                'gateway' => 'gw_ref_123',
+                'payment' => 'pay_ref_456',
+            ],
+        ];
+
+        $signature = $this->generateSignature($payload);
+        $result = $this->validator->validatePayload($payload, $signature);
+        $this->assertTrue($result->isValid());
+    }
+
+    #[Test]
+    public function it_validates_invoice_webhook_with_updated_field(): void
+    {
+        $payload = [
+            'id' => 'inv_test_789',
+            'object' => 'invoice',
+            'amount' => 100.00,
+            'currency' => 'SAR',
+            'status' => 'PAID',
+            'created' => time(),
+            'updated' => time(),
+        ];
+
+        $signature = $this->generateSignature($payload);
+        $result = $this->validator->validatePayload($payload, $signature);
+        $this->assertTrue($result->isValid());
+    }
+
+    #[Test]
+    public function it_handles_millisecond_timestamps_in_tolerance_check(): void
+    {
+        $milliseconds = time() * 1000 - 60000; // 60 seconds ago in ms
+        $payload = [
+            'object' => 'charge',
+            'transaction' => ['created' => (string) $milliseconds],
+        ];
+
+        $result = $this->validator->checkTolerance($payload);
+        $this->assertTrue($result->isValid());
+    }
+
+    #[Test]
+    public function it_rejects_expired_millisecond_timestamps(): void
+    {
+        $milliseconds = (time() - 400) * 1000; // 400 seconds ago
+        $payload = [
+            'object' => 'charge',
+            'transaction' => ['created' => (string) $milliseconds],
+        ];
+
+        $result = $this->validator->checkTolerance($payload);
+        $this->assertFalse($result->isValid());
+    }
+
+    #[Test]
+    public function it_handles_root_created_for_refund_webhook(): void
+    {
+        $payload = [
+            'object' => 'refund',
+            'created' => time() - 60,
+        ];
+
+        $result = $this->validator->checkTolerance($payload);
+        $this->assertTrue($result->isValid());
+    }
+
+    #[Test]
+    public function it_rejects_charge_webhook_without_transaction_created(): void
+    {
+        $payload = [
+            'id' => 'chg_test_123',
+            'object' => 'charge',
+            'amount' => 10.50,
+            'currency' => 'USD',
+            'status' => 'CAPTURED',
+            'created' => time(), // Wrong location - should be at transaction.created
+        ];
+
+        $signature = str_repeat('a', 64);
+        $result = $this->validator->validatePayload($payload, $signature);
+        $this->assertFalse($result->isValid());
+        $this->assertStringContainsString('created', $result->getError());
+    }
+
     /**
      * @param  array<string, mixed>  $payload
      */
@@ -476,7 +589,7 @@ class WebhookTest extends TestCase
         $gatewayRef = $payload['gateway']['reference'] ?? $payload['reference']['gateway'] ?? '';
         $paymentRef = $payload['reference']['payment'] ?? '';
         $status = isset($payload['status']) && is_scalar($payload['status']) ? $payload['status'] : '';
-        $created = isset($payload['created']) && is_scalar($payload['created']) ? $payload['created'] : '';
+        $created = $this->extractCreatedForSignature($payload);
 
         $hashString = 'x_id' . $id
                     . 'x_amount' . $amount
@@ -494,6 +607,21 @@ class WebhookTest extends TestCase
      */
     protected function generateSignature(array $payload): string
     {
+        $type = strtolower($payload['object'] ?? 'refund');
+        $created = $this->extractCreatedForSignature($payload);
+
+        // Invoice uses 'updated' instead of gateway/payment reference
+        if ($type === 'invoice') {
+            $hashString = 'x_id' . ($payload['id'] ?? '')
+                        . 'x_amount' . ($payload['amount'] ?? '')
+                        . 'x_currency' . ($payload['currency'] ?? '')
+                        . 'x_updated' . ($payload['updated'] ?? '')
+                        . 'x_status' . ($payload['status'] ?? '')
+                        . 'x_created' . $created;
+
+            return hash_hmac('sha256', $hashString, $this->secretKey);
+        }
+
         $gatewayRef = $payload['gateway']['reference'] ?? $payload['reference']['gateway'] ?? '';
         $paymentRef = $payload['reference']['payment'] ?? '';
 
@@ -503,8 +631,26 @@ class WebhookTest extends TestCase
                     . 'x_gateway_reference' . (is_scalar($gatewayRef) ? $gatewayRef : '')
                     . 'x_payment_reference' . (is_scalar($paymentRef) ? $paymentRef : '')
                     . 'x_status' . ($payload['status'] ?? '')
-                    . 'x_created' . ($payload['created'] ?? '');
+                    . 'x_created' . $created;
 
         return hash_hmac('sha256', $hashString, $this->secretKey);
+    }
+
+    /**
+     * Extract created from correct location based on webhook type.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    protected function extractCreatedForSignature(array $payload): string
+    {
+        $type = strtolower($payload['object'] ?? 'refund');
+
+        if (in_array($type, ['charge', 'authorize'], true)) {
+            $created = $payload['transaction']['created'] ?? '';
+        } else {
+            $created = $payload['created'] ?? '';
+        }
+
+        return is_scalar($created) ? (string) $created : '';
     }
 }

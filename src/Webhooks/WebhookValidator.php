@@ -7,17 +7,12 @@ namespace TapPay\Tap\Webhooks;
 use Illuminate\Http\Request;
 use RuntimeException;
 
+use function in_array;
+
 class WebhookValidator
 {
     protected string $secret;
 
-    /**
-     * Create a new webhook validator instance
-     *
-     * @param  string|null  $secretKey  Webhook secret key (uses config if not provided)
-     *
-     * @throws RuntimeException If secret key is not configured
-     */
     public function __construct(?string $secretKey = null)
     {
         $secret = $secretKey
@@ -31,17 +26,10 @@ class WebhookValidator
         $this->secret = $secret;
     }
 
-    /**
-     * Validate the webhook signature using HMAC-SHA256
-     *
-     * @param  Request  $request  The incoming webhook request
-     * @return WebhookValidationResult Validation result with error details if failed
-     */
     public function validate(Request $request): WebhookValidationResult
     {
         $signature = $request->header('hashstring');
 
-        // Validate signature exists and has correct length (SHA256 = 64 hex chars)
         if (! $signature || strlen($signature) !== 64) {
             return WebhookValidationResult::failed(
                 'Missing or invalid signature length',
@@ -101,13 +89,7 @@ class WebhookValidator
         return WebhookValidationResult::success();
     }
 
-    /**
-     * Validate webhook payload directly (without Request object)
-     *
-     * @param  array<string, mixed>  $payload  The decoded webhook payload
-     * @param  string  $signature  The signature from hashstring header
-     * @return WebhookValidationResult Validation result with error details if failed
-     */
+    /** @param array<string, mixed> $payload */
     public function validatePayload(array $payload, string $signature): WebhookValidationResult
     {
         if (empty($signature) || strlen($signature) !== 64) {
@@ -139,41 +121,63 @@ class WebhookValidator
         return WebhookValidationResult::success();
     }
 
-    /**
-     * Get list of missing required fields from payload
-     *
-     * @param  array<string, mixed>  $data  The webhook payload
-     * @return array<int, string> List of missing field names
-     */
+    /** @param array<string, mixed> $data @return array<int, string> */
     private function getMissingRequiredFields(array $data): array
     {
-        $requiredFields = ['id', 'amount', 'currency', 'status', 'created'];
+        $rootFields = ['id', 'amount', 'currency', 'status'];
         $missing = [];
 
-        foreach ($requiredFields as $field) {
+        foreach ($rootFields as $field) {
             if (! isset($data[$field])) {
                 $missing[] = $field;
+            }
+        }
+
+        $type = $this->getWebhookType($data);
+
+        if ($this->usesTransactionCreated($type)) {
+            $transaction = $data['transaction'] ?? null;
+            if (! is_array($transaction) || ! isset($transaction['created'])) {
+                $missing[] = 'created (transaction.created)';
+            }
+        } else {
+            if (! isset($data['created'])) {
+                $missing[] = 'created';
             }
         }
 
         return $missing;
     }
 
-    /**
-     * Build the hash string from webhook payload according to Tap's signature algorithm
-     *
-     * @param  array<string, mixed>  $data  The webhook payload
-     * @return string The concatenated hash string with field prefixes
-     */
+    /** @param array<string, mixed> $data */
     protected function buildHashString(array $data): string
     {
         $id = $this->getScalarValue($data, 'id');
         $amount = $this->getScalarValue($data, 'amount');
         $currency = $this->getScalarValue($data, 'currency');
-        $gatewayRef = $data['gateway']['reference'] ?? $data['reference']['gateway'] ?? '';
-        $paymentRef = $data['reference']['payment'] ?? '';
         $status = $this->getScalarValue($data, 'status');
-        $created = $this->getScalarValue($data, 'created');
+
+        $createdValue = $this->extractCreatedTimestamp($data);
+        $created = is_scalar($createdValue) ? (string) $createdValue : '';
+
+        $type = $this->getWebhookType($data);
+
+        if ($type === 'invoice') {
+            $updated = $this->getScalarValue($data, 'updated');
+
+            return 'x_id' . $id
+                 . 'x_amount' . $amount
+                 . 'x_currency' . $currency
+                 . 'x_updated' . $updated
+                 . 'x_status' . $status
+                 . 'x_created' . $created;
+        }
+
+        $gateway = $data['gateway'] ?? null;
+        $reference = $data['reference'] ?? null;
+        $gatewayRef = (is_array($gateway) ? ($gateway['reference'] ?? '') : '')
+                    ?: (is_array($reference) ? ($reference['gateway'] ?? '') : '');
+        $paymentRef = is_array($reference) ? ($reference['payment'] ?? '') : '';
 
         return 'x_id' . $id
              . 'x_amount' . $amount
@@ -191,27 +195,72 @@ class WebhookValidator
         return is_scalar($value) ? (string) $value : '';
     }
 
-    /**
-     * Check if the webhook is within tolerance time (prevents replay attacks)
-     *
-     * @param  array<string, mixed>  $data  The webhook payload
-     * @return WebhookValidationResult Validation result with error details if failed
-     */
+    /** @param array<string, mixed> $data */
+    protected function getWebhookType(array $data): string
+    {
+        $object = $data['object'] ?? '';
+
+        return is_string($object) ? strtolower($object) : 'unknown';
+    }
+
+    protected function usesTransactionCreated(string $type): bool
+    {
+        return in_array($type, ['charge', 'authorize'], true);
+    }
+
+    /** @param array<string, mixed> $data */
+    protected function extractCreatedTimestamp(array $data): string|int|null
+    {
+        $type = $this->getWebhookType($data);
+
+        if ($this->usesTransactionCreated($type)) {
+            $transaction = $data['transaction'] ?? null;
+            if (! is_array($transaction)) {
+                return null;
+            }
+            $created = $transaction['created'] ?? null;
+
+            return is_string($created) || is_int($created) ? $created : null;
+        }
+
+        $created = $data['created'] ?? null;
+
+        return is_string($created) || is_int($created) ? $created : null;
+    }
+
+    protected function normalizeTimestamp(string|int $timestamp): int
+    {
+        $ts = is_numeric($timestamp) ? (int) $timestamp : 0;
+
+        if ($ts > 9999999999) {
+            return (int) ($ts / 1000);
+        }
+
+        return $ts;
+    }
+
+    /** @param array<string, mixed> $data */
     public function checkTolerance(array $data): WebhookValidationResult
     {
         $configTolerance = config('tap.webhook.tolerance', 300);
-        $tolerance = is_numeric($configTolerance) ? (int) $configTolerance : 300; // 5 minutes default
-        $clockSkew = 30; // Allow 30 seconds for clock differences
+        $tolerance = is_numeric($configTolerance) ? (int) $configTolerance : 300;
+        $clockSkew = 30;
 
-        if (! isset($data['created'])) {
+        $createdValue = $this->extractCreatedTimestamp($data);
+
+        if ($createdValue === null) {
             return WebhookValidationResult::failed('Missing created timestamp');
         }
 
-        $created = is_numeric($data['created']) ? (int) $data['created'] : 0;
+        $created = $this->normalizeTimestamp($createdValue);
+
+        if ($created === 0) {
+            return WebhookValidationResult::failed('Invalid created timestamp');
+        }
+
         $now = time();
         $diff = $now - $created;
 
-        // Reject future timestamps (with small allowance for clock skew)
         if ($diff < -$clockSkew) {
             return WebhookValidationResult::failed(
                 'Webhook timestamp is in the future',
@@ -219,7 +268,6 @@ class WebhookValidator
             );
         }
 
-        // Reject expired webhooks
         if ($diff > $tolerance) {
             return WebhookValidationResult::failed(
                 'Webhook expired',

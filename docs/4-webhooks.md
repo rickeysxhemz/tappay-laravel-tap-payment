@@ -38,6 +38,19 @@ Webhooks older than 5 minutes are rejected by default:
 TAP_WEBHOOK_TOLERANCE=300  # seconds
 ```
 
+## Webhook Payload Structure
+
+Different webhook types have different payload structures:
+
+| Type | `created` Location | Format |
+|------|-------------------|--------|
+| Charge | `transaction.created` | Milliseconds (string) |
+| Authorize | `transaction.created` | Milliseconds (string) |
+| Invoice | `created` | Seconds (integer) |
+| Refund | `created` | Seconds (integer) |
+
+The package handles these differences automatically.
+
 ## Listening to Webhooks
 
 ### Option 1: Event Classes (Recommended)

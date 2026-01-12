@@ -20,8 +20,6 @@ class WebhookRequest extends FormRequest
     /** @var array<string, mixed> */
     protected array $decodedPayload = [];
 
-    protected ?WebhookValidator $cachedValidator = null;
-
     public function authorize(): bool
     {
         return true;
@@ -34,17 +32,21 @@ class WebhookRequest extends FormRequest
     {
         return [
             'id' => ['required', 'string'],
+            'object' => ['required', 'string'],
             'amount' => ['required', 'numeric'],
             'currency' => ['required', 'string'],
             'status' => ['required', 'string'],
-            'created' => ['required', 'numeric'],
             'gateway' => ['sometimes', 'array'],
             'reference' => ['sometimes', 'array'],
+            'transaction' => ['sometimes', 'array'],
+            'updated' => ['sometimes'],
         ];
     }
 
     protected function prepareForValidation(): void
     {
+        $this->decodedPayload = [];
+
         $content = $this->getContent();
 
         if ($content === '') {
@@ -89,19 +91,13 @@ class WebhookRequest extends FormRequest
 
     protected function resolveValidator(): WebhookValidator
     {
-        if ($this->cachedValidator !== null) {
-            return $this->cachedValidator;
-        }
-
         /** @var WebhookSecretResolverInterface $resolver */
         $resolver = app(WebhookSecretResolverInterface::class);
         $customSecret = $resolver->resolve($this->decodedPayload);
 
-        if ($customSecret !== null && $customSecret !== '') {
-            return $this->cachedValidator = new WebhookValidator($customSecret);
-        }
-
-        return $this->cachedValidator = app(WebhookValidator::class);
+        return $customSecret !== null && $customSecret !== ''
+            ? new WebhookValidator($customSecret)
+            : app(WebhookValidator::class);
     }
 
     /**
