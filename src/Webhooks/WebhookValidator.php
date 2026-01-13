@@ -17,10 +17,10 @@ class WebhookValidator
     {
         $secret = $secretKey
             ?? config('tap.webhook.secret')
-            ?? config('tap.secret');
+            ?? config('tap.secret_key');
 
         if (! is_string($secret) || $secret === '') {
-            throw new RuntimeException('Webhook secret key is not configured. Please set tap.webhook.secret or tap.secret in config.');
+            throw new RuntimeException('Webhook secret key is not configured. Please set tap.webhook.secret or tap.secret_key in config.');
         }
 
         $this->secret = $secret;

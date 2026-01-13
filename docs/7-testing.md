@@ -173,15 +173,15 @@ Use these test card numbers in sandbox:
 ### Using Sandbox
 
 ```env
-TAP_KEY=pk_test_xxxxx
-TAP_SECRET=sk_test_xxxxx
+TAP_PUBLISHABLE_KEY=pk_test_xxxxx
+TAP_SECRET_KEY=sk_test_xxxxx
 ```
 
 ### Using Production
 
 ```env
-TAP_KEY=pk_live_xxxxx
-TAP_SECRET=sk_live_xxxxx
+TAP_PUBLISHABLE_KEY=pk_live_xxxxx
+TAP_SECRET_KEY=sk_live_xxxxx
 ```
 
 No code changes needed - just environment variables.
@@ -193,7 +193,7 @@ To run tests against the real Tap API:
 ```xml
 <!-- phpunit.xml -->
 <env name="TAP_REAL_API_TESTING" value="true"/>
-<env name="TAP_SECRET" value="sk_test_YOUR_KEY"/>
+<env name="TAP_SECRET_KEY" value="sk_test_YOUR_KEY"/>
 ```
 
 ```bash

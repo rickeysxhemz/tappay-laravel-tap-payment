@@ -24,25 +24,25 @@ final class TapServiceProvider extends ServiceProvider
             ConfigWebhookSecretResolver::class
         );
 
-        $this->app->singleton(Client::class, function (): Client {
-            $secret = config('tap.secret');
+        $this->app->scoped(Client::class, function (): Client {
+            $secret = config('tap.secret_key');
 
             if (! is_string($secret) || $secret === '') {
                 throw new RuntimeException(
-                    'Tap secret key is not configured. Set the TAP_SECRET environment variable or publish and configure the tap.php config file using: php artisan vendor:publish --tag=tap-config'
+                    'Tap secret key is not configured. Set the TAP_SECRET_KEY environment variable or publish and configure the tap.php config file using: php artisan vendor:publish --tag=tap-config'
                 );
             }
 
             return new Client($secret);
         });
 
-        $this->app->singleton(MoneyContract::class, function (): Money {
+        $this->app->scoped(MoneyContract::class, function (): Money {
             $currency = config('tap.currency', 'SAR');
 
             return new Money(is_string($currency) ? $currency : 'SAR');
         });
 
-        $this->app->singleton(Tap::class, fn (): Tap => new Tap(
+        $this->app->scoped(Tap::class, fn (): Tap => new Tap(
             $this->app->make(Client::class),
             $this->app->make(MoneyContract::class)
         ));

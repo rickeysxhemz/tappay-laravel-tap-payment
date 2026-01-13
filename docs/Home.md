@@ -43,8 +43,8 @@ php artisan vendor:publish --tag=tap-config
 ```
 
 ```env
-TAP_KEY=pk_test_your_publishable_key
-TAP_SECRET=sk_test_your_secret_key
+TAP_PUBLISHABLE_KEY=pk_test_your_publishable_key
+TAP_SECRET_KEY=sk_test_your_secret_key
 TAP_CURRENCY=SAR
 ```
 

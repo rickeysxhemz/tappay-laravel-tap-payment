@@ -17,8 +17,8 @@ return [
     |
     */
 
-    'key' => env('TAP_KEY'),
-    'secret' => env('TAP_SECRET'),
+    'publishable_key' => env('TAP_PUBLISHABLE_KEY'),
+    'secret_key' => env('TAP_SECRET_KEY'),
 
     /*
     |--------------------------------------------------------------------------

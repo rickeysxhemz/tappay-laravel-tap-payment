@@ -25,7 +25,7 @@ class WebhookTest extends TestCase
     {
         parent::setUp();
 
-        config(['tap.secret' => $this->secretKey]);
+        config(['tap.secret_key' => $this->secretKey]);
         $this->validator = new WebhookValidator($this->secretKey);
         $this->handler = new WebhookHandler;
     }
@@ -466,7 +466,7 @@ class WebhookTest extends TestCase
     #[Test]
     public function it_throws_exception_without_secret_key(): void
     {
-        config(['tap.secret' => null, 'tap.webhook.secret' => null]);
+        config(['tap.secret_key' => null, 'tap.webhook.secret' => null]);
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Webhook secret key is not configured');

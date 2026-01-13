@@ -27,7 +27,7 @@ All incoming webhooks are validated using HMAC-SHA256:
 
 ```php
 // Validation happens automatically
-// Uses TAP_WEBHOOK_SECRET or TAP_SECRET
+// Uses TAP_WEBHOOK_SECRET or TAP_SECRET_KEY
 ```
 
 ### Replay Attack Prevention

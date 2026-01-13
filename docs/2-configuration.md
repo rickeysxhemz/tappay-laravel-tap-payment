@@ -6,13 +6,13 @@ Add your Tap API credentials to `.env`:
 
 ```env
 # API Keys
-TAP_KEY=pk_test_your_publishable_key
-TAP_SECRET=sk_test_your_secret_key
+TAP_PUBLISHABLE_KEY=pk_test_your_publishable_key
+TAP_SECRET_KEY=sk_test_your_secret_key
 
 # Default currency
 TAP_CURRENCY=SAR
 
-# Webhook (optional - uses TAP_SECRET if not set)
+# Webhook (optional - uses TAP_SECRET_KEY if not set)
 TAP_WEBHOOK_SECRET=your_webhook_secret
 
 # Route path (default: tap)
@@ -46,8 +46,8 @@ The full configuration file (`config/tap.php`):
 ```php
 return [
     // API Keys
-    'key' => env('TAP_KEY'),              // Publishable key (frontend)
-    'secret' => env('TAP_SECRET'),        // Secret key (backend)
+    'publishable_key' => env('TAP_PUBLISHABLE_KEY'),  // Publishable key (frontend)
+    'secret_key' => env('TAP_SECRET_KEY'),            // Secret key (backend)
 
     // API Settings
     'base_url' => env('TAP_BASE_URL', 'https://api.tap.company/v2/'),
@@ -91,7 +91,7 @@ return [
 ```php
 // Using config helper
 $currency = config('tap.currency');
-$secret = config('tap.secret');
+$secret = config('tap.secret_key');
 
 // Using Tap helper methods
 use TapPay\Tap\Tap;

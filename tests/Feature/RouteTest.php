@@ -15,7 +15,7 @@ use TapPay\Tap\Facades\Tap;
 use TapPay\Tap\Resources\Charge;
 
 beforeEach(function () {
-    config(['tap.secret' => 'sk_test_XKokBfNWv6FIYuTMg5sLPjhJ']);
+    config(['tap.secret_key' => 'sk_test_XKokBfNWv6FIYuTMg5sLPjhJ']);
     config(['tap.webhook.secret' => 'sk_test_XKokBfNWv6FIYuTMg5sLPjhJ']);
 });
 
