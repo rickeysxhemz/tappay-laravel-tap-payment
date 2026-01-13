@@ -174,22 +174,36 @@ test('webhook route returns 400 for invalid json', function () {
 })->group('feature', 'routes', 'webhook');
 
 test('webhook route returns 400 for missing signature', function () {
-    $response = $this->postJson(route('tap.webhook'), [
+    $payload = [
         'id' => 'chg_123',
         'object' => 'charge',
-        'created' => time(),
-    ]);
+        'amount' => 10.5,
+        'currency' => 'USD',
+        'status' => 'CAPTURED',
+        'transaction' => [
+            'created' => (string) (time() * 1000),
+        ],
+    ];
+
+    $response = $this->postJson(route('tap.webhook'), $payload);
 
     $response->assertStatus(400);
     $response->assertSee('Invalid signature');
 })->group('feature', 'routes', 'webhook');
 
 test('webhook route returns 400 for invalid signature', function () {
-    $response = $this->postJson(route('tap.webhook'), [
+    $payload = [
         'id' => 'chg_123',
         'object' => 'charge',
-        'created' => time(),
-    ], [
+        'amount' => 10.5,
+        'currency' => 'USD',
+        'status' => 'CAPTURED',
+        'transaction' => [
+            'created' => (string) (time() * 1000),
+        ],
+    ];
+
+    $response = $this->postJson(route('tap.webhook'), $payload, [
         'hashstring' => 'invalid_signature',
     ]);
 

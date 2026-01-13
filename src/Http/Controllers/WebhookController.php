@@ -4,24 +4,38 @@ declare(strict_types=1);
 
 namespace TapPay\Tap\Http\Controllers;
 
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
-use TapPay\Tap\Http\Handlers\WebhookHandler;
-use TapPay\Tap\Http\Requests\WebhookRequest;
+use TapPay\Tap\Http\Handlers\WebhookProcessor;
+
+use function config;
+use function is_string;
 
 class WebhookController extends Controller
 {
     public function __construct(
-        protected WebhookHandler $handler
+        private WebhookProcessor $processor,
     ) {}
 
-    public function __invoke(WebhookRequest $request): Response
+    public function __invoke(Request $request): Response
     {
-        $this->handler->handle(
-            $request->validated(),
-            $request->ip() ?? 'unknown'
+        $result = $this->processor->process(
+            content: $request->getContent(),
+            signature: $request->header('hashstring', ''),
+            ip: $request->ip() ?? 'unknown',
         );
 
-        return new Response('Webhook received', 200);
+        $statusCode = $result->isSuccess() ? 200 : 400;
+        $message = $this->getMessage($result->code, $result->message);
+
+        return new Response($message, $statusCode);
+    }
+
+    private function getMessage(string $code, string $fallback): string
+    {
+        $configMessage = config("tap.webhook.messages.{$code}", $fallback);
+
+        return is_string($configMessage) ? $configMessage : $fallback;
     }
 }
