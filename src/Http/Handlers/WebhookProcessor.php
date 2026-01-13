@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace TapPay\Tap\Http\Handlers;
 
+use const JSON_ERROR_NONE;
+
 use TapPay\Tap\Events\WebhookValidationFailed;
 use TapPay\Tap\Webhooks\WebhookValidator;
 
 use function is_array;
 use function json_decode;
 use function json_last_error;
-
-use const JSON_ERROR_NONE;
 
 final class WebhookProcessor
 {
@@ -20,7 +20,7 @@ final class WebhookProcessor
 
     public function __construct(
         private readonly WebhookValidator $validator,
-        private readonly WebhookHandler   $handler,
+        private readonly WebhookHandler $handler,
     ) {}
 
     public function process(string $content, string $signature, string $ip): WebhookResult
@@ -73,7 +73,7 @@ final class WebhookProcessor
     }
 
     /**
-     * @param array<string, mixed> $payload
+     * @param  array<string, mixed>  $payload
      */
     private function hasRequiredFields(array $payload): bool
     {
