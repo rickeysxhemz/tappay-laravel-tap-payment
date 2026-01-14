@@ -10,6 +10,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use PHPUnit\Framework\Attributes\Test;
 use TapPay\Tap\Concerns\Billable;
+use TapPay\Tap\Contracts\ClientResolver;
 use TapPay\Tap\Http\Client;
 use TapPay\Tap\Tests\TestCase;
 
@@ -37,10 +38,21 @@ class BillableTraitTest extends TestCase
         // Bind mocked client to container
         $this->app->instance(Client::class, $httpClient);
 
-        // Rebind Tap singleton with mocked client
-        $this->app->singleton('tap', function ($app) use ($httpClient) {
+        // Create a mock resolver that returns our mocked client
+        $mockResolver = new class($httpClient) implements ClientResolver
+        {
+            public function __construct(private Client $client) {}
+
+            public function resolve(): Client
+            {
+                return $this->client;
+            }
+        };
+
+        // Rebind Tap singleton with mocked resolver
+        $this->app->singleton('tap', function ($app) use ($mockResolver) {
             return new \TapPay\Tap\Tap(
-                $httpClient,
+                $mockResolver,
                 $app->make(\TapPay\Tap\Contracts\MoneyContract::class)
             );
         });

@@ -20,6 +20,8 @@ interface MoneyContract
 
     public function format(int $amount, ?string $currency = null): string;
 
+    public function formatAmount(float|string $amount, ?string $currency = null): string;
+
     public function isSupported(string $currency): bool;
 
     /**

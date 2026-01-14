@@ -270,6 +270,8 @@ The package automatically:
 - Prevents replay attacks with timestamp tolerance
 - Dispatches events for each webhook type
 
+> **Note:** Tap signs webhook amounts with full decimal places (e.g., `100.00`), but sends them without trailing zeros (`100.0`). This package handles the conversion automatically.
+
 ### Security Features
 
 - HMAC-SHA256 webhook signature validation

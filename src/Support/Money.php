@@ -130,6 +130,15 @@ final class Money implements MoneyContract
         return number_format($decimal, $decimals) . ' ' . $currency;
     }
 
+    public function formatAmount(float|string $amount, ?string $currency = null): string
+    {
+        $currency = $currency !== null
+            ? $this->normalizeCurrency($currency)
+            : $this->currency;
+
+        return number_format((float) $amount, $this->getDecimalPlaces($currency), '.', '');
+    }
+
     public function isSupported(string $currency): bool
     {
         return isset(self::CURRENCY_DECIMALS[strtoupper(trim($currency))]);

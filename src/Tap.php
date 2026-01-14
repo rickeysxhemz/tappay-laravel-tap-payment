@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TapPay\Tap;
 
+use TapPay\Tap\Contracts\ClientResolver;
 use TapPay\Tap\Contracts\MoneyContract;
 use TapPay\Tap\Http\Client;
 use TapPay\Tap\Services\AuthorizeService;
@@ -21,9 +22,14 @@ use TapPay\Tap\Services\TokenService;
 class Tap
 {
     public function __construct(
-        protected Client $client,
+        protected ClientResolver $clientResolver,
         protected MoneyContract $money
     ) {}
+
+    protected function client(): Client
+    {
+        return $this->clientResolver->resolve();
+    }
 
     public static function registersRoutes(): bool
     {
@@ -32,56 +38,56 @@ class Tap
 
     public function charges(): ChargeService
     {
-        return new ChargeService($this->client, $this->money);
+        return new ChargeService($this->client(), $this->money);
     }
 
     public function customers(): CustomerService
     {
-        return new CustomerService($this->client);
+        return new CustomerService($this->client());
     }
 
     public function refunds(): RefundService
     {
-        return new RefundService($this->client);
+        return new RefundService($this->client());
     }
 
     public function authorizations(): AuthorizeService
     {
-        return new AuthorizeService($this->client, $this->money);
+        return new AuthorizeService($this->client(), $this->money);
     }
 
     public function tokens(): TokenService
     {
-        return new TokenService($this->client);
+        return new TokenService($this->client());
     }
 
     public function cards(): CardService
     {
-        return new CardService($this->client);
+        return new CardService($this->client());
     }
 
     public function invoices(): InvoiceService
     {
-        return new InvoiceService($this->client);
+        return new InvoiceService($this->client());
     }
 
     public function subscriptions(): SubscriptionService
     {
-        return new SubscriptionService($this->client);
+        return new SubscriptionService($this->client());
     }
 
     public function merchants(): MerchantService
     {
-        return new MerchantService($this->client);
+        return new MerchantService($this->client());
     }
 
     public function destinations(): DestinationService
     {
-        return new DestinationService($this->client);
+        return new DestinationService($this->client());
     }
 
     public function payouts(): PayoutService
     {
-        return new PayoutService($this->client);
+        return new PayoutService($this->client());
     }
 }

@@ -10,6 +10,7 @@ use PHPUnit\Framework\Attributes\Test;
 use TapPay\Tap\Events\WebhookProcessingFailed;
 use TapPay\Tap\Events\WebhookReceived;
 use TapPay\Tap\Http\Handlers\WebhookHandler;
+use TapPay\Tap\Support\Money;
 use TapPay\Tap\Tests\TestCase;
 use TapPay\Tap\Webhooks\WebhookValidator;
 
@@ -26,7 +27,10 @@ class WebhookTest extends TestCase
         parent::setUp();
 
         config(['tap.secret_key' => $this->secretKey]);
-        $this->validator = new WebhookValidator($this->secretKey);
+        $this->validator = new WebhookValidator(
+            $this->secretKey,
+            new Money('USD')
+        );
         $this->handler = new WebhookHandler;
     }
 
@@ -470,15 +474,17 @@ class WebhookTest extends TestCase
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Webhook secret key is not configured');
-        new WebhookValidator(null);
+        app(WebhookValidator::class);
     }
 
     #[Test]
     public function it_throws_exception_with_empty_secret_key(): void
     {
+        config(['tap.secret_key' => '', 'tap.webhook.secret' => '']);
+
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Webhook secret key is not configured');
-        new WebhookValidator('');
+        app(WebhookValidator::class);
     }
 
     #[Test]
@@ -578,18 +584,94 @@ class WebhookTest extends TestCase
         $this->assertStringContainsString('created', $result->getError());
     }
 
+    #[Test]
+    public function it_validates_signature_with_normalized_amount(): void
+    {
+        // JSON drops trailing zeros: 120.00 becomes 120.0
+        $payload = [
+            'id' => 'chg_test_123',
+            'object' => 'charge',
+            'amount' => 120.0, // Tap sends 120.0, signs with 120.00
+            'currency' => 'SAR',
+            'status' => 'CAPTURED',
+            'transaction' => [
+                'created' => (string) (time() * 1000),
+            ],
+            'reference' => [
+                'gateway' => 'gw_ref_123',
+                'payment' => 'pay_ref_456',
+            ],
+        ];
+
+        $signature = $this->generateSignature($payload);
+        $result = $this->validator->validatePayload($payload, $signature);
+
+        $this->assertTrue($result->isValid());
+    }
+
+    #[Test]
+    public function it_validates_signature_with_three_decimal_currency(): void
+    {
+        // KWD uses 3 decimal places: 50.5 should become 50.500
+        $payload = [
+            'id' => 'chg_test_456',
+            'object' => 'charge',
+            'amount' => 50.5,
+            'currency' => 'KWD',
+            'status' => 'CAPTURED',
+            'transaction' => [
+                'created' => (string) (time() * 1000),
+            ],
+            'reference' => [
+                'gateway' => 'gw_ref_789',
+                'payment' => 'pay_ref_012',
+            ],
+        ];
+
+        $signature = $this->generateSignature($payload);
+        $result = $this->validator->validatePayload($payload, $signature);
+
+        $this->assertTrue($result->isValid());
+    }
+
+    #[Test]
+    public function it_validates_signature_with_integer_amount(): void
+    {
+        // Integer 100 should become 100.00 for SAR
+        $payload = [
+            'id' => 'ref_test_789',
+            'object' => 'refund',
+            'amount' => 100,
+            'currency' => 'SAR',
+            'status' => 'SUCCEEDED',
+            'created' => time(),
+        ];
+
+        $signature = $this->generateSignature($payload);
+        $result = $this->validator->validatePayload($payload, $signature);
+
+        $this->assertTrue($result->isValid());
+    }
+
     /**
      * @param  array<string, mixed>  $payload
      */
     protected function generateSignatureWithNonScalar(array $payload): string
     {
         $id = isset($payload['id']) && is_scalar($payload['id']) ? $payload['id'] : '';
-        $amount = isset($payload['amount']) && is_scalar($payload['amount']) ? $payload['amount'] : '';
-        $currency = isset($payload['currency']) && is_scalar($payload['currency']) ? $payload['currency'] : '';
+        $currency = isset($payload['currency']) && is_scalar($payload['currency']) ? $payload['currency'] : 'USD';
         $gatewayRef = $payload['gateway']['reference'] ?? $payload['reference']['gateway'] ?? '';
         $paymentRef = $payload['reference']['payment'] ?? '';
         $status = isset($payload['status']) && is_scalar($payload['status']) ? $payload['status'] : '';
         $created = $this->extractCreatedForSignature($payload);
+
+        // For non-scalar amount, use empty string (matching WebhookValidator behavior)
+        $rawAmount = $payload['amount'] ?? '';
+        if (! is_scalar($rawAmount)) {
+            $amount = '';
+        } else {
+            $amount = $this->formatAmountForSignature($payload);
+        }
 
         $hashString = 'x_id' . $id
                     . 'x_amount' . $amount
@@ -609,11 +691,12 @@ class WebhookTest extends TestCase
     {
         $type = strtolower($payload['object'] ?? 'refund');
         $created = $this->extractCreatedForSignature($payload);
+        $amount = $this->formatAmountForSignature($payload);
 
         // Invoice uses 'updated' instead of gateway/payment reference
         if ($type === 'invoice') {
             $hashString = 'x_id' . ($payload['id'] ?? '')
-                        . 'x_amount' . ($payload['amount'] ?? '')
+                        . 'x_amount' . $amount
                         . 'x_currency' . ($payload['currency'] ?? '')
                         . 'x_updated' . ($payload['updated'] ?? '')
                         . 'x_status' . ($payload['status'] ?? '')
@@ -626,7 +709,7 @@ class WebhookTest extends TestCase
         $paymentRef = $payload['reference']['payment'] ?? '';
 
         $hashString = 'x_id' . ($payload['id'] ?? '')
-                    . 'x_amount' . ($payload['amount'] ?? '')
+                    . 'x_amount' . $amount
                     . 'x_currency' . ($payload['currency'] ?? '')
                     . 'x_gateway_reference' . (is_scalar($gatewayRef) ? $gatewayRef : '')
                     . 'x_payment_reference' . (is_scalar($paymentRef) ? $paymentRef : '')
@@ -634,6 +717,27 @@ class WebhookTest extends TestCase
                     . 'x_created' . $created;
 
         return hash_hmac('sha256', $hashString, $this->secretKey);
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    protected function formatAmountForSignature(array $payload): string
+    {
+        $rawAmount = $payload['amount'] ?? '';
+        $currency = $payload['currency'] ?? 'USD';
+
+        if (! is_scalar($rawAmount)) {
+            return '';
+        }
+
+        try {
+            $money = new Money($currency);
+
+            return $money->formatAmount((string) $rawAmount, $currency);
+        } catch (\Throwable) {
+            return number_format((float) $rawAmount, 2, '.', '');
+        }
     }
 
     /**

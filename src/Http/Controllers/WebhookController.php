@@ -15,7 +15,7 @@ use function is_string;
 class WebhookController extends Controller
 {
     public function __construct(
-        private WebhookProcessor $processor,
+        private readonly WebhookProcessor $processor,
     ) {}
 
     public function __invoke(Request $request): Response

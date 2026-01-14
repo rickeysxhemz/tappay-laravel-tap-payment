@@ -5,26 +5,18 @@ declare(strict_types=1);
 namespace TapPay\Tap\Webhooks;
 
 use Illuminate\Http\Request;
-use RuntimeException;
+use TapPay\Tap\Contracts\MoneyContract;
+use Throwable;
 
 use function in_array;
 
-class WebhookValidator
+readonly class WebhookValidator
 {
-    protected string $secret;
-
-    public function __construct(?string $secretKey = null)
-    {
-        $secret = $secretKey
-            ?? config('tap.webhook.secret')
-            ?? config('tap.secret_key');
-
-        if (! is_string($secret) || $secret === '') {
-            throw new RuntimeException('Webhook secret key is not configured. Please set tap.webhook.secret or tap.secret_key in config.');
-        }
-
-        $this->secret = $secret;
-    }
+    public function __construct(
+        protected string $secret,
+        protected MoneyContract $money,
+        protected int $tolerance = 300
+    ) {}
 
     public function validate(Request $request): WebhookValidationResult
     {
@@ -153,9 +145,11 @@ class WebhookValidator
     protected function buildHashString(array $data): string
     {
         $id = $this->getScalarValue($data, 'id');
-        $amount = $this->getScalarValue($data, 'amount');
         $currency = $this->getScalarValue($data, 'currency');
         $status = $this->getScalarValue($data, 'status');
+
+        $rawAmount = $this->getScalarValue($data, 'amount');
+        $amount = $this->formatAmountForHash($rawAmount, $currency);
 
         $createdValue = $this->extractCreatedTimestamp($data);
         $created = is_scalar($createdValue) ? (string) $createdValue : '';
@@ -186,6 +180,19 @@ class WebhookValidator
              . 'x_payment_reference' . (is_scalar($paymentRef) ? $paymentRef : '')
              . 'x_status' . $status
              . 'x_created' . $created;
+    }
+
+    protected function formatAmountForHash(string $amount, string $currency): string
+    {
+        if ($amount === '') {
+            return '';
+        }
+
+        try {
+            return $this->money->formatAmount($amount, $currency);
+        } catch (Throwable) {
+            return number_format((float) $amount, 2, '.', '');
+        }
     }
 
     private function getScalarValue(array $data, string $key): string
@@ -242,8 +249,6 @@ class WebhookValidator
     /** @param array<string, mixed> $data */
     public function checkTolerance(array $data): WebhookValidationResult
     {
-        $configTolerance = config('tap.webhook.tolerance', 300);
-        $tolerance = is_numeric($configTolerance) ? (int) $configTolerance : 300;
         $clockSkew = 30;
 
         $createdValue = $this->extractCreatedTimestamp($data);
@@ -268,10 +273,10 @@ class WebhookValidator
             );
         }
 
-        if ($diff > $tolerance) {
+        if ($diff > $this->tolerance) {
             return WebhookValidationResult::failed(
                 'Webhook expired',
-                ['created' => $created, 'now' => $now, 'tolerance' => $tolerance]
+                ['created' => $created, 'now' => $now, 'tolerance' => $this->tolerance]
             );
         }
 

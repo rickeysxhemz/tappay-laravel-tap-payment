@@ -6,6 +6,7 @@ namespace TapPay\Tap\Http\Handlers;
 
 use const JSON_ERROR_NONE;
 
+use TapPay\Tap\Contracts\WebhookValidatorResolver;
 use TapPay\Tap\Events\WebhookValidationFailed;
 use TapPay\Tap\Webhooks\WebhookValidator;
 
@@ -19,9 +20,14 @@ final class WebhookProcessor
     private const REQUIRED_FIELDS = ['id', 'object', 'amount', 'currency', 'status'];
 
     public function __construct(
-        private readonly WebhookValidator $validator,
+        private readonly WebhookValidatorResolver $validatorResolver,
         private readonly WebhookHandler $handler,
     ) {}
+
+    private function validator(): WebhookValidator
+    {
+        return $this->validatorResolver->resolve();
+    }
 
     public function process(string $content, string $signature, string $ip): WebhookResult
     {
@@ -37,13 +43,13 @@ final class WebhookProcessor
         }
 
         // 3. Validate signature
-        $signatureResult = $this->validator->validatePayload($payload, $signature);
+        $signatureResult = $this->validator()->validatePayload($payload, $signature);
         if (! $signatureResult->isValid()) {
             return $this->fail($signatureResult->getError() ?? 'Invalid signature', 'invalid_signature', $ip);
         }
 
         // 4. Check tolerance
-        $toleranceResult = $this->validator->checkTolerance($payload);
+        $toleranceResult = $this->validator()->checkTolerance($payload);
         if (! $toleranceResult->isValid()) {
             return $this->fail($toleranceResult->getError() ?? 'Webhook expired', 'expired', $ip);
         }

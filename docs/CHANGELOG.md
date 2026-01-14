@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.4] - 2025-01-14
+
+### Added
+- `ClientResolver` interface for lazy HTTP client resolution
+- `WebhookValidatorResolver` interface for lazy webhook validator resolution
+- `ContainerClientResolver` implementation using Laravel container
+- `ContainerWebhookValidatorResolver` implementation using Laravel container
+
+### Changed
+- `Tap` class now uses `ClientResolver` instead of direct `Client` injection
+- `WebhookProcessor` now uses `WebhookValidatorResolver` instead of direct `WebhookValidator` injection
+- Service provider bindings updated to use a resolver pattern
+
+### Fixed
+- Multi-tenant support: credentials are now resolved at request time, not boot time
+- Laravel Octane compatibility: scoped bindings work correctly with lazy resolution
+- Config override timing: tenant middleware can now set credentials before resolution
+- Webhook signature mismatch: Tap signs amounts with full decimals (`100.00`) but sends without trailing zeros (`100.0`)
+
 ## [1.3.3] - 2025-01-13
 
 ### Changed

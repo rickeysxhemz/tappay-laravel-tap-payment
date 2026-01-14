@@ -471,10 +471,13 @@ function generateWebhookSignatureFromJson(string $jsonPayload): string
         $created = $payload['created'] ?? '';
     }
 
+    // Format amount using Money class
+    $amount = formatAmountForWebhookSignature($payload);
+
     // Invoice uses 'updated' instead of gateway/payment reference
     if ($type === 'invoice') {
         $hashString = 'x_id' . ($payload['id'] ?? '')
-                    . 'x_amount' . ($payload['amount'] ?? '')
+                    . 'x_amount' . $amount
                     . 'x_currency' . ($payload['currency'] ?? '')
                     . 'x_updated' . ($payload['updated'] ?? '')
                     . 'x_status' . ($payload['status'] ?? '')
@@ -487,7 +490,7 @@ function generateWebhookSignatureFromJson(string $jsonPayload): string
     $paymentRef = $payload['reference']['payment'] ?? '';
 
     $hashString = 'x_id' . ($payload['id'] ?? '')
-                . 'x_amount' . ($payload['amount'] ?? '')
+                . 'x_amount' . $amount
                 . 'x_currency' . ($payload['currency'] ?? '')
                 . 'x_gateway_reference' . (is_scalar($gatewayRef) ? $gatewayRef : '')
                 . 'x_payment_reference' . (is_scalar($paymentRef) ? $paymentRef : '')
@@ -495,4 +498,22 @@ function generateWebhookSignatureFromJson(string $jsonPayload): string
                 . 'x_created' . $created;
 
     return hash_hmac('sha256', $hashString, $secretKey);
+}
+
+function formatAmountForWebhookSignature(array $payload): string
+{
+    $rawAmount = $payload['amount'] ?? '';
+    $currency = $payload['currency'] ?? 'USD';
+
+    if (! is_scalar($rawAmount)) {
+        return '';
+    }
+
+    try {
+        $money = new \TapPay\Tap\Support\Money($currency);
+
+        return $money->formatAmount((string) $rawAmount, $currency);
+    } catch (\Throwable) {
+        return number_format((float) $rawAmount, 2, '.', '');
+    }
 }

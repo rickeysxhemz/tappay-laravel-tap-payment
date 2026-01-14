@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace TapPay\Tap\Tests\Unit;
 
 use PHPUnit\Framework\Attributes\Test;
+use TapPay\Tap\Contracts\ClientResolver;
 use TapPay\Tap\Contracts\MoneyContract;
+use TapPay\Tap\Http\Client;
 use TapPay\Tap\Services\AuthorizeService;
 use TapPay\Tap\Services\CardService;
 use TapPay\Tap\Services\ChargeService;
@@ -30,7 +32,18 @@ class TapClassTest extends TestCase
 
         $client = $this->mockHttpClient();
         $money = app(MoneyContract::class);
-        $this->tap = new Tap($client, $money);
+
+        $mockResolver = new class($client) implements ClientResolver
+        {
+            public function __construct(private readonly Client $client) {}
+
+            public function resolve(): Client
+            {
+                return $this->client;
+            }
+        };
+
+        $this->tap = new Tap($mockResolver, $money);
     }
 
     #[Test]

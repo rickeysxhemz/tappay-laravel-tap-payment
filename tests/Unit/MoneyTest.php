@@ -261,4 +261,35 @@ describe('Money', function () {
         $money2 = new Money('SAR');
         expect($money2->getDivisor())->toBe(100);
     })->group('unit');
+
+    test('formats amount with two decimals for SAR', function () {
+        $money = new Money('SAR');
+
+        expect($money->formatAmount('120.0', 'SAR'))->toBe('120.00')
+            ->and($money->formatAmount('120', 'SAR'))->toBe('120.00')
+            ->and($money->formatAmount(120.0, 'SAR'))->toBe('120.00')
+            ->and($money->formatAmount('99.9', 'SAR'))->toBe('99.90');
+    })->group('unit');
+
+    test('formats amount with three decimals for KWD', function () {
+        $money = new Money('KWD');
+
+        expect($money->formatAmount('120.0', 'KWD'))->toBe('120.000')
+            ->and($money->formatAmount('99.9', 'KWD'))->toBe('99.900');
+    })->group('unit');
+
+    test('formats amount without thousand separator', function () {
+        $money = new Money('SAR');
+
+        expect($money->formatAmount('1000', 'SAR'))->toBe('1000.00')
+            ->and($money->formatAmount('1000000', 'SAR'))->toBe('1000000.00');
+    })->group('unit');
+
+    test('formatAmount uses default currency when not specified', function () {
+        $money = new Money('KWD');
+        expect($money->formatAmount('120.0'))->toBe('120.000');
+
+        $money2 = new Money('SAR');
+        expect($money2->formatAmount('120.0'))->toBe('120.00');
+    })->group('unit');
 });
