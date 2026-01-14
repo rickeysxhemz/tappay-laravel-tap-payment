@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace TapPay\Tap\Builders;
 
+use InvalidArgumentException;
 use TapPay\Tap\Builders\Concerns\HasChargeCapabilities;
 use TapPay\Tap\Contracts\MoneyContract;
+use TapPay\Tap\Enums\SourceObject;
 use TapPay\Tap\Resources\Charge;
 use TapPay\Tap\Services\ChargeService;
 
@@ -114,6 +116,42 @@ class ChargeBuilder extends AbstractBuilder
         );
 
         return $this;
+    }
+
+    #[\Override]
+    protected function validateMinimumAmount(): void
+    {
+        $sourceId = $this->data['source']['id'] ?? null;
+
+        if ($sourceId === SourceObject::SRC_TABBY->value) {
+            $this->validateTabbyMinimumAmount();
+        }
+
+        parent::validateMinimumAmount();
+    }
+
+    private function validateTabbyMinimumAmount(): void
+    {
+        $amount = $this->rawAmount ?? 0;
+        $currency = strtoupper($this->data['currency'] ?? config('tap.currency', 'SAR'));
+
+        $tabbyMinimums = [
+            'SAR' => 1000,
+            'AED' => 1000,
+            'KWD' => 1000,
+            'BHD' => 1000,
+        ];
+
+        $minimum = $tabbyMinimums[$currency] ?? 1000;
+
+        if ($amount < $minimum) {
+            $decimal = in_array($currency, ['KWD', 'BHD', 'OMR'], true) ? 3 : 2;
+            $formatted = number_format($minimum / (10 ** $decimal), $decimal);
+
+            throw new InvalidArgumentException(
+                "Tabby requires minimum amount of {$formatted} {$currency}"
+            );
+        }
     }
 
     #[\Override]

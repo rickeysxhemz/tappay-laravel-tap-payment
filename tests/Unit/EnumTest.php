@@ -254,14 +254,14 @@ class EnumTest extends TestCase
     }
 
     #[Test]
-    public function source_naps_is_regional_method_from_qatar(): void
+    public function source_qpay_is_regional_method_from_qatar(): void
     {
-        $source = SourceObject::SRC_NAPS;
+        $source = SourceObject::SRC_QPAY;
 
         $this->assertTrue(SourceObject::sourceRequiresRedirect($source->value));
         $this->assertTrue($source->isRegionalMethod());
         $this->assertSame('QA', $source->getCountry());
-        $this->assertSame('NAPS', $source->label());
+        $this->assertSame('QPay', $source->label());
     }
 
     #[Test]

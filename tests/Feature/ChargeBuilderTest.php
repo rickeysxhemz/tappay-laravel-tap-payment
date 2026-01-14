@@ -278,16 +278,16 @@ class ChargeBuilderTest extends TestCase
         $builder = $this->createBuilder();
         $data = $builder->amount(1000)->withOmanNet()->toArray();
 
-        $this->assertSame('src_om.omannet', $data['source']['id']);
+        $this->assertSame('src_omannet', $data['source']['id']);
     }
 
     #[Test]
-    public function it_can_use_naps_payment(): void
+    public function it_can_use_qpay_payment(): void
     {
         $builder = $this->createBuilder();
-        $data = $builder->amount(1000)->withNAPS()->toArray();
+        $data = $builder->amount(1000)->withQPay()->toArray();
 
-        $this->assertSame('src_qa.naps', $data['source']['id']);
+        $this->assertSame('src_qa.qpay', $data['source']['id']);
     }
 
     #[Test]

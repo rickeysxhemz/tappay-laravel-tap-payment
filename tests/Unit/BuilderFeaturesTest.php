@@ -236,14 +236,14 @@ describe('New Trait Methods', function () {
         $this->builder->amount(1000)->withSTCPay();
         $data = $this->builder->toArray();
 
-        expect($data['source']['id'])->toBe('src_stcpay');
+        expect($data['source']['id'])->toBe('src_sa.stcpay');
     });
 
     it('supports withTabby method', function () {
         $this->builder->amount(1000)->withTabby();
         $data = $this->builder->toArray();
 
-        expect($data['source']['id'])->toBe('src_tabby');
+        expect($data['source']['id'])->toBe('src_tabby.installement');
     });
 });
 

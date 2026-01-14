@@ -62,9 +62,9 @@ trait HasSource
         return $this->source(SourceObject::SRC_OMANNET);
     }
 
-    public function withNAPS(): static
+    public function withQPay(): static
     {
-        return $this->source(SourceObject::SRC_NAPS);
+        return $this->source(SourceObject::SRC_QPAY);
     }
 
     public function withFawry(): static
@@ -80,6 +80,11 @@ trait HasSource
     public function withTabby(): static
     {
         return $this->source(SourceObject::SRC_TABBY);
+    }
+
+    public function withDeema(): static
+    {
+        return $this->source(SourceObject::SRC_DEEMA);
     }
 
     public function withToken(string $tokenId): static

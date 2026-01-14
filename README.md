@@ -119,7 +119,7 @@ $user->charge(10000, 'SAR', [
 | Saudi Arabia | Mada, STC Pay |
 | Bahrain | Benefit |
 | Oman | OmanNet |
-| Qatar | NAPS |
+| Qatar | QPay |
 | Egypt | Fawry |
 | BNPL | Tabby, Deema |
 

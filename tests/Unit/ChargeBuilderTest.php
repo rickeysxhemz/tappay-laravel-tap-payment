@@ -501,4 +501,21 @@ describe('ChargeBuilder', function () {
             ->toHaveKey('platform')
             ->toHaveKey('transaction');
     })->group('unit');
+
+    test('throws exception for Tabby amount below minimum in SAR', function () {
+        $this->builder->amount(500)->currency('SAR')->withTabby()->toArray();
+    })->throws(InvalidArgumentException::class, 'Tabby requires minimum amount of 10.00 SAR')
+        ->group('unit');
+
+    test('throws exception for Tabby amount below minimum in KWD', function () {
+        $this->builder->amount(500)->currency('KWD')->withTabby()->toArray();
+    })->throws(InvalidArgumentException::class, 'Tabby requires minimum amount of 1.000 KWD')
+        ->group('unit');
+
+    test('allows Tabby charge with valid minimum amount', function () {
+        $this->builder->amount(1000)->currency('SAR')->withTabby();
+        $array = $this->builder->toArray();
+
+        expect($array['source']['id'])->toBe('src_tabby.installement');
+    })->group('unit');
 });

@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.5] - 2025-01-14
+
+### Fixed
+- Tabby source ID (`src_tabby` → `src_tabby.installement`)
+- OmanNet source ID (`src_om.omannet` → `src_omannet`)
+- QPay source ID (`src_qa.naps` → `src_qa.qpay`)
+- STC Pay source ID (`src_stcpay` → `src_sa.stcpay`)
+
+### Added
+- Tabby minimum amount validation (10 SAR/AED, 1 KWD)
+- `withDeema()` builder method
+- `withQPay()` builder method (renamed from `withNAPS()`)
+- Payment method requirements in documentation
+
+### Changed
+- Renamed `SRC_NAPS` to `SRC_QPAY` in SourceObject enum
+- Renamed `withNAPS()` to `withQPay()` in HasSource trait
+
 ## [1.3.4] - 2025-01-14
 
 ### Added

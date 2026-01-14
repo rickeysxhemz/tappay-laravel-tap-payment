@@ -51,25 +51,93 @@ $charge = Tap::charges()
 
 ### Regional Payment Methods
 
+| Method | Currency | Notes |
+|--------|----------|-------|
+| `withKNET()` | KWD only | Kuwait debit cards |
+| `withKFAST()` | KWD only | Kuwait fast payment (contact Tap to enable) |
+| `withMADA()` | SAR only | Saudi debit cards |
+| `withBenefit()` | BHD only | Bahrain debit cards, no authorization support |
+| `withOmanNet()` | OMR only | Oman debit cards |
+| `withQPay()` | QAR only | Qatar debit cards |
+| `withFawry()` | EGP only | Egypt, async payment (may take days to confirm) |
+
 ```php
-// Kuwait - KNET
-->withKNET()
-
-// Saudi Arabia - Mada
-->withMADA()
-
-// Bahrain - Benefit
-->withBenefit()
-
-// Oman - OmanNet
-->withOmanNet()
-
-// Qatar - NAPS
-->withNAPS()
-
-// All enabled methods
-->withAllMethods()
+// Example: KNET payment
+$charge = Tap::charges()->newBuilder()
+    ->amount(1000)
+    ->currency('KWD')
+    ->withKNET()
+    ->redirectUrl('https://example.com/callback')
+    ->create();
 ```
+
+### STC Pay
+
+Saudi digital wallet.
+
+```php
+$charge = Tap::charges()->newBuilder()
+    ->amount(5000)
+    ->currency('SAR')
+    ->withSTCPay()
+    ->customer([
+        'first_name' => 'Ahmed',
+        'phone' => [
+            'country_code' => '966',
+            'number' => '500000000',
+        ],
+    ])
+    ->redirectUrl('https://example.com/callback')
+    ->create();
+```
+
+**Requirements:**
+- Currency: SAR only
+- Phone number required
+- No authorization or recurring support
+
+### Tabby
+
+Buy now, pay later in installments.
+
+```php
+$charge = Tap::charges()->newBuilder()
+    ->amount(5000)
+    ->currency('SAR')
+    ->withTabby()
+    ->customer([
+        'first_name' => 'Ahmed',
+        'email' => 'ahmed@example.com',
+        'phone' => [
+            'country_code' => '966',
+            'number' => '500000000',
+        ],
+    ])
+    ->redirectUrl('https://example.com/callback')
+    ->create();
+```
+
+**Requirements:**
+- Minimum: 10 SAR/AED or 1 KWD
+- Mobile phone number required
+- Supported currencies: SAR, AED, KWD
+
+### Deema
+
+Buy now, pay later for Kuwait.
+
+```php
+$charge = Tap::charges()->newBuilder()
+    ->amount(10000)
+    ->currency('KWD')
+    ->withDeema()
+    ->redirectUrl('https://example.com/callback')
+    ->create();
+```
+
+**Requirements:**
+- Currency: KWD only
+- Minimum: 10 KWD
 
 ### Tokenized Card (Saved Card)
 
