@@ -26,7 +26,7 @@ jobs:
 
       - name: Get release info
         id: release
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             // Support both release event and manual workflow_dispatch
@@ -64,7 +64,7 @@ jobs:
 
       - name: Update CHANGELOG.md
         if: steps.release.outputs.result != 'null'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         env:
           RELEASE_DATA: ${{ steps.release.outputs.result }}
         with:
