@@ -11,7 +11,9 @@ use Illuminate\Support\Facades\Schema;
 use PHPUnit\Framework\Attributes\Test;
 use TapPay\Tap\Concerns\Billable;
 use TapPay\Tap\Contracts\ClientResolver;
+use TapPay\Tap\Contracts\MoneyContract;
 use TapPay\Tap\Http\Client;
+use TapPay\Tap\Tap;
 use TapPay\Tap\Tests\TestCase;
 
 class BillableTraitTest extends TestCase
@@ -51,9 +53,9 @@ class BillableTraitTest extends TestCase
 
         // Rebind Tap singleton with mocked resolver
         $this->app->singleton('tap', function ($app) use ($mockResolver) {
-            return new \TapPay\Tap\Tap(
+            return new Tap(
                 $mockResolver,
-                $app->make(\TapPay\Tap\Contracts\MoneyContract::class)
+                $app->make(MoneyContract::class)
             );
         });
     }

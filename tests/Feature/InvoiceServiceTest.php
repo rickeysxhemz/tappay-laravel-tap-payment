@@ -7,6 +7,7 @@ namespace TapPay\Tap\Tests\Feature;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\Attributes\Test;
 use TapPay\Tap\Enums\InvoiceStatus;
+use TapPay\Tap\Exceptions\InvalidRequestException;
 use TapPay\Tap\Services\InvoiceService;
 use TapPay\Tap\Tests\TestCase;
 
@@ -157,7 +158,7 @@ class InvoiceServiceTest extends TestCase
     #[Test]
     public function it_throws_exception_for_invalid_finalize_id(): void
     {
-        $this->expectException(\TapPay\Tap\Exceptions\InvalidRequestException::class);
+        $this->expectException(InvalidRequestException::class);
         $this->expectExceptionMessage('Invoice ID must start with "inv_"');
 
         $this->invoiceService->finalize('invalid_id');
@@ -166,7 +167,7 @@ class InvoiceServiceTest extends TestCase
     #[Test]
     public function it_throws_exception_for_invalid_remind_id(): void
     {
-        $this->expectException(\TapPay\Tap\Exceptions\InvalidRequestException::class);
+        $this->expectException(InvalidRequestException::class);
         $this->expectExceptionMessage('Invoice ID must start with "inv_"');
 
         $this->invoiceService->remind('bad_invoice_id');
@@ -175,7 +176,7 @@ class InvoiceServiceTest extends TestCase
     #[Test]
     public function it_throws_exception_for_invalid_cancel_id(): void
     {
-        $this->expectException(\TapPay\Tap\Exceptions\InvalidRequestException::class);
+        $this->expectException(InvalidRequestException::class);
         $this->expectExceptionMessage('Invoice ID must start with "inv_"');
 
         $this->invoiceService->cancel('chg_wrong_prefix');

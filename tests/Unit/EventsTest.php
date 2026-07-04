@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TapPay\Tap\Tests\Unit;
 
+use Illuminate\Http\Request;
 use PHPUnit\Framework\Attributes\Test;
 use TapPay\Tap\Events\PaymentFailed;
 use TapPay\Tap\Events\PaymentSucceeded;
@@ -280,7 +281,7 @@ class EventsTest extends TestCase
     #[Test]
     public function webhook_validation_failed_event_from_request(): void
     {
-        $request = \Illuminate\Http\Request::create(
+        $request = Request::create(
             'https://example.com/webhook',
             'POST',
             [],

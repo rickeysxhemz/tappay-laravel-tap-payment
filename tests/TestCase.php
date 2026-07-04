@@ -10,6 +10,7 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Facades\Http;
 use Orchestra\Testbench\TestCase as Orchestra;
+use TapPay\Tap\Facades\Tap;
 use TapPay\Tap\Http\Client;
 use TapPay\Tap\TapServiceProvider;
 
@@ -62,7 +63,7 @@ abstract class TestCase extends Orchestra
     protected function getPackageAliases($app): array
     {
         return [
-            'Tap' => \TapPay\Tap\Facades\Tap::class,
+            'Tap' => Tap::class,
         ];
     }
 

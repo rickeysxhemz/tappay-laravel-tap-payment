@@ -33,7 +33,7 @@ Welcome to the Laravel Tap Payments documentation. This package provides a fluen
 ## Requirements
 
 - PHP 8.2+
-- Laravel 11.x or 12.x
+- Laravel 11.x, 12.x, or 13.x
 
 ## Quick Start
 

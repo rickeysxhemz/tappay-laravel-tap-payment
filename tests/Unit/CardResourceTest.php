@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use TapPay\Tap\Exceptions\InvalidCardException;
 use TapPay\Tap\Resources\Card;
 
 test('can create card resource from array', function () {
@@ -142,31 +143,31 @@ test('isExpired returns true for past expiry date', function () {
 test('isExpired throws exception when year is zero', function () {
     $card = new Card(['exp_month' => 12, 'exp_year' => 0]);
 
-    expect(fn () => $card->isExpired())->toThrow(TapPay\Tap\Exceptions\InvalidCardException::class);
+    expect(fn () => $card->isExpired())->toThrow(InvalidCardException::class);
 })->group('unit');
 
 test('isExpired throws exception when month is zero', function () {
     $card = new Card(['exp_month' => 0, 'exp_year' => 2028]);
 
-    expect(fn () => $card->isExpired())->toThrow(TapPay\Tap\Exceptions\InvalidCardException::class);
+    expect(fn () => $card->isExpired())->toThrow(InvalidCardException::class);
 })->group('unit');
 
 test('isExpired throws exception when month is greater than 12', function () {
     $card = new Card(['exp_month' => 13, 'exp_year' => 2028]);
 
-    expect(fn () => $card->isExpired())->toThrow(TapPay\Tap\Exceptions\InvalidCardException::class);
+    expect(fn () => $card->isExpired())->toThrow(InvalidCardException::class);
 })->group('unit');
 
 test('isExpired throws exception when month is negative', function () {
     $card = new Card(['exp_month' => -1, 'exp_year' => 2028]);
 
-    expect(fn () => $card->isExpired())->toThrow(TapPay\Tap\Exceptions\InvalidCardException::class);
+    expect(fn () => $card->isExpired())->toThrow(InvalidCardException::class);
 })->group('unit');
 
 test('isExpired throws exception when year is negative', function () {
     $card = new Card(['exp_month' => 12, 'exp_year' => -1]);
 
-    expect(fn () => $card->isExpired())->toThrow(TapPay\Tap\Exceptions\InvalidCardException::class);
+    expect(fn () => $card->isExpired())->toThrow(InvalidCardException::class);
 })->group('unit');
 
 test('isExpired handles 2-digit year format', function () {

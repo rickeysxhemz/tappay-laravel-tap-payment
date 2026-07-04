@@ -6,13 +6,12 @@ namespace TapPay\Tap\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Routing\Controller;
 use TapPay\Tap\Http\Handlers\WebhookProcessor;
 
 use function config;
 use function is_string;
 
-class WebhookController extends Controller
+class WebhookController
 {
     public function __construct(
         private readonly WebhookProcessor $processor,

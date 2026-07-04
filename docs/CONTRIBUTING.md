@@ -38,7 +38,7 @@ This project follows Laravel's Code of Conduct. Please be respectful and constru
 
 - PHP 8.2 or higher
 - Composer
-- Laravel 11+ or 12+
+- Laravel 11+, 12+, or 13+
 
 ### Installation
 
@@ -196,8 +196,8 @@ vendor/bin/phpstan analyse
 
 All pull requests are automatically tested using GitHub Actions:
 
-- Tests on PHP 8.2 and 8.3
-- Tests on Laravel 11 and 12
+- Tests on PHP 8.2, 8.3, and 8.4
+- Tests on Laravel 11, 12, and 13
 - Tests with `prefer-lowest` and `prefer-stable` dependencies
 - Code coverage reporting
 - Integration tests (scheduled daily)

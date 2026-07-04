@@ -60,10 +60,14 @@ function mockTapResponse(array $data, int $statusCode = 200): array
 
 /**
  * Get fixture file path
+ *
+ * Guarded because Pest 4+ ships its own global fixture() helper.
  */
-function fixture(string $name): string
-{
-    return __DIR__ . '/Fixtures/' . $name;
+if (! function_exists('fixture')) {
+    function fixture(string $name): string
+    {
+        return __DIR__ . '/Fixtures/' . $name;
+    }
 }
 
 /**

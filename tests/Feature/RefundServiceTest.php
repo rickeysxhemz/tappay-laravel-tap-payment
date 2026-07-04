@@ -10,6 +10,7 @@ use TapPay\Tap\Enums\RefundStatus;
 use TapPay\Tap\Exceptions\ApiErrorException;
 use TapPay\Tap\Exceptions\AuthenticationException;
 use TapPay\Tap\Exceptions\InvalidRequestException;
+use TapPay\Tap\Exceptions\InvalidStatusException;
 use TapPay\Tap\Services\RefundService;
 use TapPay\Tap\Tests\TestCase;
 
@@ -342,7 +343,7 @@ class RefundServiceTest extends TestCase
 
         $refund = $this->refundService->retrieve('ref_test_invalid');
 
-        $this->expectException(\TapPay\Tap\Exceptions\InvalidStatusException::class);
+        $this->expectException(InvalidStatusException::class);
         $this->expectExceptionMessage("Unknown refund status: 'UNKNOWN_STATUS'");
         $refund->status();
     }

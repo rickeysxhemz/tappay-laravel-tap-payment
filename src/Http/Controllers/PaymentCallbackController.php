@@ -5,22 +5,18 @@ declare(strict_types=1);
 namespace TapPay\Tap\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Routing\Controller;
 use TapPay\Tap\Http\Handlers\PaymentCallbackHandler;
-use TapPay\Tap\Http\Middleware\VerifyRedirectUrl;
 use TapPay\Tap\Http\Requests\PaymentCallbackRequest;
 
 use function config;
 use function is_string;
 use function redirect;
 
-class PaymentCallbackController extends Controller
+class PaymentCallbackController
 {
     public function __construct(
         protected PaymentCallbackHandler $handler
-    ) {
-        $this->middleware(VerifyRedirectUrl::class);
-    }
+    ) {}
 
     public function __invoke(PaymentCallbackRequest $request): RedirectResponse
     {

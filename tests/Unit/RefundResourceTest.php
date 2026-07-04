@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use TapPay\Tap\Enums\RefundStatus;
+use TapPay\Tap\Exceptions\InvalidAmountException;
 use TapPay\Tap\Resources\Refund;
 use TapPay\Tap\ValueObjects\Money;
 
@@ -120,7 +121,7 @@ test('returns empty string for missing id', function () {
 test('throws exception for missing amount', function () {
     $refund = new Refund(['currency' => 'SAR']);
 
-    expect(fn () => $refund->amount())->toThrow(TapPay\Tap\Exceptions\InvalidAmountException::class);
+    expect(fn () => $refund->amount())->toThrow(InvalidAmountException::class);
 })->group('unit');
 
 test('uses default currency from config when not provided', function () {
