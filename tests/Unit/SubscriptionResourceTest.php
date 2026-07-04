@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Carbon\Carbon;
 use TapPay\Tap\Enums\SubscriptionInterval;
 use TapPay\Tap\Enums\SubscriptionStatus;
+use TapPay\Tap\Exceptions\InvalidAmountException;
 use TapPay\Tap\Resources\Subscription;
 use TapPay\Tap\ValueObjects\Money;
 
@@ -189,7 +190,7 @@ test('returns empty string for missing id', function () {
 test('throws exception for missing amount', function () {
     $subscription = new Subscription(['currency' => 'SAR']);
 
-    expect(fn () => $subscription->amount())->toThrow(TapPay\Tap\Exceptions\InvalidAmountException::class);
+    expect(fn () => $subscription->amount())->toThrow(InvalidAmountException::class);
 })->group('unit');
 
 test('uses default currency from config when not provided', function () {

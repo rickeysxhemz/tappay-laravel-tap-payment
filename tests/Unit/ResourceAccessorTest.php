@@ -9,6 +9,8 @@ use PHPUnit\Framework\TestCase;
 use TapPay\Tap\Enums\AuthorizeStatus;
 use TapPay\Tap\Enums\ChargeStatus;
 use TapPay\Tap\Enums\RefundStatus;
+use TapPay\Tap\Exceptions\InvalidAmountException;
+use TapPay\Tap\Exceptions\InvalidStatusException;
 use TapPay\Tap\Resources\Authorize;
 use TapPay\Tap\Resources\Charge;
 use TapPay\Tap\Resources\Customer;
@@ -83,7 +85,7 @@ class ResourceAccessorTest extends TestCase
     {
         $charge = new Charge(['currency' => 'USD']);
 
-        $this->expectException(\TapPay\Tap\Exceptions\InvalidAmountException::class);
+        $this->expectException(InvalidAmountException::class);
         $charge->amount();
     }
 
@@ -374,7 +376,7 @@ class ResourceAccessorTest extends TestCase
     {
         $charge = new Charge(['status' => 'INVALID_STATUS']);
 
-        $this->expectException(\TapPay\Tap\Exceptions\InvalidStatusException::class);
+        $this->expectException(InvalidStatusException::class);
         $this->expectExceptionMessage("Unknown charge status: 'INVALID_STATUS'");
         $charge->status();
     }
@@ -384,7 +386,7 @@ class ResourceAccessorTest extends TestCase
     {
         $refund = new Refund(['status' => 'INVALID_STATUS']);
 
-        $this->expectException(\TapPay\Tap\Exceptions\InvalidStatusException::class);
+        $this->expectException(InvalidStatusException::class);
         $this->expectExceptionMessage("Unknown refund status: 'INVALID_STATUS'");
         $refund->status();
     }
@@ -394,7 +396,7 @@ class ResourceAccessorTest extends TestCase
     {
         $authorize = new Authorize(['status' => 'INVALID_STATUS']);
 
-        $this->expectException(\TapPay\Tap\Exceptions\InvalidStatusException::class);
+        $this->expectException(InvalidStatusException::class);
         $this->expectExceptionMessage("Unknown authorize status: 'INVALID_STATUS'");
         $authorize->status();
     }

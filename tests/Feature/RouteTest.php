@@ -13,6 +13,7 @@ use TapPay\Tap\Exceptions\AuthenticationException;
 use TapPay\Tap\Exceptions\InvalidRequestException;
 use TapPay\Tap\Facades\Tap;
 use TapPay\Tap\Resources\Charge;
+use TapPay\Tap\Support\Money;
 
 beforeEach(function () {
     config(['tap.secret_key' => 'sk_test_XKokBfNWv6FIYuTMg5sLPjhJ']);
@@ -510,10 +511,10 @@ function formatAmountForWebhookSignature(array $payload): string
     }
 
     try {
-        $money = new \TapPay\Tap\Support\Money($currency);
+        $money = new Money($currency);
 
         return $money->formatAmount((string) $rawAmount, $currency);
-    } catch (\Throwable) {
+    } catch (Throwable) {
         return number_format((float) $rawAmount, 2, '.', '');
     }
 }

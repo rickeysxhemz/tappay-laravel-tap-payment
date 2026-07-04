@@ -2,7 +2,7 @@ name: Tests
 
 on:
   push:
-    branches: [main, '*.x']
+    branches: [main]
   pull_request:
   schedule:
     - cron: '0 0 * * 0'  # Weekly on Sunday at midnight (for integration tests)
@@ -19,14 +19,21 @@ jobs:
       fail-fast: false
       matrix:
         php: [8.2, 8.3, 8.4]
-        laravel: [11.*, 12.*]
+        laravel: [11.*, 12.*, 13.*]
+        stability: [prefer-lowest, prefer-stable]
         include:
           - laravel: 11.*
             testbench: ^9.0
           - laravel: 12.*
             testbench: ^10.0
+          - laravel: 13.*
+            testbench: ^11.0
+        exclude:
+          # Laravel 13 requires PHP 8.3+
+          - php: 8.2
+            laravel: 13.*
 
-    name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
+    name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }} - ${{ matrix.stability }}
 
     steps:
       - name: Checkout code
@@ -44,18 +51,18 @@ jobs:
       - name: Install dependencies
         run: |
           composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
-          composer update --prefer-stable --prefer-dist --no-interaction
+          composer update --${{ matrix.stability }} --prefer-dist --no-interaction
 
       - name: Execute tests
-        if: "!(matrix.php == '8.3' && matrix.laravel == '12.*')"
+        if: "!(matrix.php == '8.3' && matrix.laravel == '12.*' && matrix.stability == 'prefer-stable')"
         run: vendor/bin/pest --colors=always
 
       - name: Execute tests with coverage
-        if: matrix.php == '8.3' && matrix.laravel == '12.*'
+        if: matrix.php == '8.3' && matrix.laravel == '12.*' && matrix.stability == 'prefer-stable'
         run: vendor/bin/pest --coverage --min=70 --colors=always --coverage-clover coverage.xml
 
       - name: Upload coverage to Codecov
-        if: matrix.php == '8.3' && matrix.laravel == '12.*'
+        if: matrix.php == '8.3' && matrix.laravel == '12.*' && matrix.stability == 'prefer-stable'
         uses: codecov/codecov-action@v5
         with:
           files: ./coverage.xml

@@ -37,7 +37,7 @@ class ChargeBuilder extends AbstractBuilder
     public function statementDescriptor(string $descriptor): static
     {
         if (mb_strlen($descriptor, 'UTF-8') > 22) {
-            throw new \InvalidArgumentException('Statement descriptor must be 22 characters or less');
+            throw new InvalidArgumentException('Statement descriptor must be 22 characters or less');
         }
 
         $this->data['statement_descriptor'] = $descriptor;
@@ -62,7 +62,7 @@ class ChargeBuilder extends AbstractBuilder
     public function expiresIn(int $minutes): static
     {
         if ($minutes < 1 || $minutes > 43200) {
-            throw new \InvalidArgumentException('Expiry must be between 1 and 43200 minutes (30 days)');
+            throw new InvalidArgumentException('Expiry must be between 1 and 43200 minutes (30 days)');
         }
 
         $this->data['transaction'] = [
@@ -100,7 +100,7 @@ class ChargeBuilder extends AbstractBuilder
     public function transactionExpiry(int $minutes): static
     {
         if ($minutes < 5 || $minutes > 60) {
-            throw new \InvalidArgumentException('Transaction expiry must be between 5 and 60 minutes');
+            throw new InvalidArgumentException('Transaction expiry must be between 5 and 60 minutes');
         }
 
         /** @var array<string, mixed> $existingTransaction */

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use TapPay\Tap\Enums\SourceObject;
+use TapPay\Tap\Exceptions\InvalidCurrencyException;
 use TapPay\Tap\ValueObjects\Authentication;
 use TapPay\Tap\ValueObjects\Customer;
 use TapPay\Tap\ValueObjects\Destination;
@@ -303,7 +304,7 @@ describe('Money Value Object', function () {
 
     it('throws exception for unsupported currency', function () {
         Money::fromSmallestUnit(100, 'XYZ');
-    })->throws(\TapPay\Tap\Exceptions\InvalidCurrencyException::class);
+    })->throws(InvalidCurrencyException::class);
 
     it('normalizes currency to uppercase', function () {
         $money = Money::fromSmallestUnit(100, 'sar');

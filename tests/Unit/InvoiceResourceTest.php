@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Carbon\Carbon;
 use TapPay\Tap\Enums\InvoiceStatus;
+use TapPay\Tap\Exceptions\InvalidAmountException;
 use TapPay\Tap\Exceptions\InvalidDateTimeException;
 use TapPay\Tap\Resources\Invoice;
 use TapPay\Tap\ValueObjects\Money;
@@ -167,7 +168,7 @@ test('returns empty string for missing id', function () {
 test('throws exception for missing amount', function () {
     $invoice = new Invoice(['currency' => 'SAR']);
 
-    expect(fn () => $invoice->amount())->toThrow(TapPay\Tap\Exceptions\InvalidAmountException::class);
+    expect(fn () => $invoice->amount())->toThrow(InvalidAmountException::class);
 })->group('unit');
 
 test('uses default currency from config when not provided', function () {

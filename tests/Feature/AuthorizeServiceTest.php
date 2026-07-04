@@ -6,11 +6,13 @@ namespace TapPay\Tap\Tests\Feature;
 
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\Attributes\Test;
+use TapPay\Tap\Builders\AuthorizationBuilder;
 use TapPay\Tap\Contracts\MoneyContract;
 use TapPay\Tap\Enums\AuthorizeStatus;
 use TapPay\Tap\Exceptions\ApiErrorException;
 use TapPay\Tap\Exceptions\AuthenticationException;
 use TapPay\Tap\Exceptions\InvalidRequestException;
+use TapPay\Tap\Exceptions\InvalidStatusException;
 use TapPay\Tap\Services\AuthorizeService;
 use TapPay\Tap\Tests\TestCase;
 
@@ -267,7 +269,7 @@ class AuthorizeServiceTest extends TestCase
 
         $authorization = $this->authorizeService->retrieve('auth_test_unknown');
 
-        $this->expectException(\TapPay\Tap\Exceptions\InvalidStatusException::class);
+        $this->expectException(InvalidStatusException::class);
         $this->expectExceptionMessage("Unknown authorize status: 'INVALID_STATUS'");
         $authorization->status();
     }
@@ -453,7 +455,7 @@ class AuthorizeServiceTest extends TestCase
     {
         $builder = $this->authorizeService->newBuilder();
 
-        $this->assertInstanceOf(\TapPay\Tap\Builders\AuthorizationBuilder::class, $builder);
+        $this->assertInstanceOf(AuthorizationBuilder::class, $builder);
     }
 
     #[Test]
