@@ -15,6 +15,7 @@ use TapPay\Tap\Contracts\MoneyContract;
 use TapPay\Tap\Http\Client;
 use TapPay\Tap\Tap;
 use TapPay\Tap\Tests\TestCase;
+use TapPay\Tap\ValueObjects\Money;
 
 class BillableTraitTest extends TestCase
 {
@@ -553,6 +554,87 @@ class BillableTraitTest extends TestCase
 
         $this->assertSame('cus_test_setter', $user->fresh()->tap_customer_id);
     }
+
+    #[Test]
+    public function it_can_charge_using_a_money_value_object(): void
+    {
+        // Mock customer creation
+        $this->mockHandler->append(new Response(200, [], json_encode([
+            'id' => 'cus_money_123',
+            'first_name' => 'John Doe',
+            'email' => 'john@example.com',
+        ])));
+
+        // Mock charge creation
+        $this->mockHandler->append(new Response(200, [], json_encode([
+            'id' => 'chg_money_789',
+            'amount' => 50.00,
+            'currency' => 'USD',
+            'status' => 'INITIATED',
+        ])));
+
+        $user = User::create([
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
+        ]);
+
+        $charge = $user->charge(Money::fromSmallestUnit(5000, 'USD'));
+
+        $this->assertSame('chg_money_789', $charge->id());
+        $this->assertSame(50.00, $charge->amount()->toDecimal());
+    }
+
+    #[Test]
+    public function it_throws_when_charge_amount_is_below_the_minimum(): void
+    {
+        $user = User::create([
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
+        ]);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Amount must be at least');
+
+        // 1 fils is below the USD minimum (10), so this throws before any API call
+        $user->charge(1, 'USD');
+    }
+
+    #[Test]
+    public function it_throws_when_the_customer_id_cannot_be_resolved(): void
+    {
+        $user = UserWithoutCustomerCreation::create([
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
+        ]);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Failed to create or retrieve Tap customer ID');
+
+        $user->charge(5000, 'USD', ['source' => ['id' => 'src_card']]);
+    }
+
+    #[Test]
+    public function it_can_build_a_charge_from_a_money_value_object(): void
+    {
+        // Mock customer creation
+        $this->mockHandler->append(new Response(200, [], json_encode([
+            'id' => 'cus_newcharge_money',
+            'first_name' => 'John Doe',
+            'email' => 'john@example.com',
+        ])));
+
+        $user = User::create([
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
+        ]);
+
+        $builder = $user->newCharge(Money::fromSmallestUnit(5000, 'USD'));
+        $data = $builder->toArray();
+
+        $this->assertSame(50.0, $data['amount']);
+        $this->assertSame('USD', $data['currency']);
+        $this->assertNotNull($user->fresh()->tap_customer_id);
+    }
 }
 
 /**
@@ -607,4 +689,24 @@ class UserMinimal extends Model
     protected $guarded = [];
 
     public $timestamps = true;
+}
+
+/**
+ * Test User model whose customer resolution is a no-op, used to exercise the
+ * getValidCustomerId() guard that throws when no customer id can be resolved.
+ */
+class UserWithoutCustomerCreation extends Model
+{
+    use Billable;
+
+    protected $table = 'users';
+
+    protected $guarded = [];
+
+    public $timestamps = true;
+
+    protected function ensureTapCustomerExists(): void
+    {
+        // Intentionally does nothing so tapCustomerId() stays null.
+    }
 }
