@@ -22,7 +22,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -49,7 +49,7 @@ jobs:
     # environment: production  # Uncomment when repo is public to enable required reviewers
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -87,7 +87,7 @@ jobs:
 
       - name: Generate release notes
         id: release_notes
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         env:
           PREVIOUS_TAG: ${{ steps.previous_tag.outputs.tag }}
         with:
@@ -187,7 +187,7 @@ jobs:
 
       - name: Create GitHub Release
         id: create_release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           name: ${{ github.ref_name }}
           body: ${{ steps.release_notes.outputs.result }}
@@ -200,7 +200,7 @@ jobs:
 
       - name: Notify on release failure
         if: failure()
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             await github.rest.issues.create({
@@ -302,7 +302,7 @@ jobs:
 
       - name: Notify on verification failure
         if: failure()
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             await github.rest.issues.create({
@@ -323,7 +323,7 @@ jobs:
 
     steps:
       - name: Delete broken release
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const tag = context.ref.replace('refs/tags/', '');

@@ -17,7 +17,7 @@ jobs:
     steps:
       - name: Check if first-time contributor
         id: check
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const creator = context.payload.pull_request.user.login;
@@ -34,7 +34,7 @@ jobs:
 
       - name: Welcome first-time contributor
         if: steps.check.outputs.result == 'true'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             await github.rest.issues.createComment({
@@ -52,7 +52,7 @@ jobs:
     steps:
       - name: Get changed files
         id: files
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const { data: files } = await github.rest.pulls.listFiles({
@@ -64,7 +64,7 @@ jobs:
           result-encoding: json
 
       - name: Add labels based on files
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const files = ${{ steps.files.outputs.result }};
@@ -115,7 +115,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Label PR size
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const { data: pr } = await github.rest.pulls.get({
@@ -178,7 +178,7 @@ jobs:
     if: github.event.action == 'opened'
     steps:
       - name: Check PR title
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const title = context.payload.pull_request.title;

@@ -15,7 +15,7 @@ jobs:
     if: github.event.action == 'opened'
     steps:
       - name: Auto-label based on title
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const title = context.payload.issue.title.toLowerCase();
@@ -53,7 +53,7 @@ jobs:
     if: github.event.action == 'labeled' && github.event.label.name == 'help wanted'
     steps:
       - name: Add comment for help wanted
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             github.rest.issues.createComment({
@@ -70,7 +70,7 @@ jobs:
     if: github.event.action == 'labeled' && github.event.label.name == 'wontfix'
     steps:
       - name: Comment and close issue
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             await github.rest.issues.createComment({
@@ -95,7 +95,7 @@ jobs:
     if: github.event.action == 'labeled' && github.event.label.name == 'duplicate'
     steps:
       - name: Close and comment on duplicate
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             await github.rest.issues.createComment({
